@@ -1,0 +1,189 @@
+{
+  "metadata": {
+    "spec-version": "1.0"
+  },
+  "display-name": "ServiceNow",
+  "configuration-groups": [
+    {
+      "label": "Basic",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Reference Name",
+          "name": "referenceName",
+          "widget-attributes": {
+            "placeholder": "Name used to identify this source for lineage"
+          }
+        },
+        {
+          "widget-type": "select",
+          "label": "Mode",
+          "name": "queryMode",
+          "widget-attributes": {
+            "values": [
+              "Reporting",
+              "Table"
+            ],
+            "default": "Reporting"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Reporting Mode",
+      "properties": [
+        {
+          "widget-type": "select",
+          "label": "Application Name",
+          "name": "applicationName",
+          "widget-attributes": {
+            "values": [
+              "Contract Management",
+              "Product Catalog",
+              "Procurement"
+            ],
+            "default": "Contract Management"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Table Name Field",
+          "name": "tableNameField",
+          "widget-attributes": {
+            "placeholder": "The name of the field that holds the table name.",
+            "default": "tablename"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Table Mode",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Table Name",
+          "name": "tableName",
+          "widget-attributes": {
+            "placeholder": "ServiceNow table name from which data to be fetched"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Credentials",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Client ID",
+          "name": "clientId",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow Client ID"
+          }
+        },
+        {
+          "widget-type": "password",
+          "label": "Client Secret",
+          "name": "clientSecret",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow Client Secret Key"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "REST API Endpoint",
+          "name": "restApiEndpoint",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow API Endpoint e.g. https://instance.service-now.com"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "User Name",
+          "name": "user",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow User Name"
+          }
+        },
+        {
+          "widget-type": "password",
+          "label": "Password",
+          "name": "password",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow User Password"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Advanced",
+      "properties": [
+        {
+          "widget-type": "select",
+          "label": "Type of values",
+          "name": "valueType",
+          "widget-attributes": {
+            "values": [
+              "Actual",
+              "Display"
+            ],
+            "default": "Actual"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Start Date",
+          "name": "startDate",
+          "widget-attributes" : {
+            "placeholder": "Start date to be used to filter the data"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "End Date",
+          "name": "endDate",
+          "widget-attributes" : {
+            "placeholder": "End date to be used to filter the data"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": [ ],
+  "jump-config": {
+    "datasets": [
+      {
+        "ref-property-name": "referenceName"
+      }
+    ]
+  },
+  "filters": [
+    {
+      "name": "showReportingMode",
+      "condition": {
+        "expression": "queryMode == 'Reporting'"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "applicationName"
+        },
+        {
+          "type": "property",
+          "name": "tableNameField"
+        }
+      ]
+    },
+    {
+      "name": "showTableMode",
+      "condition": {
+        "expression": "queryMode == 'Table'"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "tableName"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "name": "Test_ServiceNow_Source_Table_Mode",
+  "description": "Data Pipeline Application",
+  "artifact": {
+    "name": "cdap-data-pipeline",
+    "version": "6.1.1",
+    "scope": "SYSTEM"
+  },
+  "config": {
+    "resources": {
+      "memoryMB": 2048,
+      "virtualCores": 1
+    },
+    "driverResources": {
+      "memoryMB": 2048,
+      "virtualCores": 1
+    },
+    "connections": [
+      {
+        "from": "ServiceNow",
+        "to": "File"
+      }
+    ],
+    "comments": [],
+    "postActions": [],
+    "properties": {},
+    "processTimingEnabled": true,
+    "stageLoggingEnabled": false,
+    "stages": [
+      {
+        "name": "ServiceNow",
+        "plugin": {
+          "name": "ServiceNow",
+          "type": "batchsource",
+          "label": "ServiceNow",
+          "artifact": {
+            "name": "servicenow-plugins",
+            "version": "1.0.0-SNAPSHOT",
+            "scope": "USER"
+          },
+          "properties": {
+            "queryMode": "Table",
+            "applicationName": "Contract Management",
+            "tableNameField": "tablename",
+            "referenceName": "ref1",
+            "tableName": "${TABLE_NAME}",
+            "restApiEndpoint": "${API_ENDPOINT}",
+            "user": "${USERNAME}",
+            "password": "${PASSWORD}",
+            "clientId": "${CLIENT_ID}",
+            "clientSecret": "${CLIENT_SECRET}",
+            "startDate": "${START_DATE}",
+            "endDate": "${END_DATE}",
+            "valueType": "Actual"
+          }
+        },
+        "outputSchema": [
+          {
+            "name": "etlSchemaBody",
+            "schema": ""
+          }
+        ],
+        "type": "batchsource",
+        "label": "ServiceNow",
+        "icon": "fa-plug"
+      },
+      {
+        "name": "File",
+        "plugin": {
+          "name": "File",
+          "type": "batchsink",
+          "label": "File",
+          "artifact": {
+            "name": "core-plugins",
+            "version": "2.3.4",
+            "scope": "SYSTEM"
+          },
+          "properties": {
+            "suffix": "${OUTPUT_PATH_SUFFIX}",
+            "format": "json",
+            "referenceName": "ref2",
+            "path": "${OUTPUT_FILE_PATH}"
+          }
+        },
+        "inputSchema": [
+          {
+            "name": "ServiceNow",
+            "schema": ""
+          }
+        ],
+        "type": "batchsink",
+        "label": "File",
+        "icon": "icon-file"
+      }
+    ],
+    "schedule": "0 * * * *",
+    "engine": "spark",
+    "numOfRecordsPreview": 100,
+    "description": "Data Pipeline Application",
+    "maxConcurrentRuns": 1
+  }
+}
