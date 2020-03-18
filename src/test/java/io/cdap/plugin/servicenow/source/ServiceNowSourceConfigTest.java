@@ -1,0 +1,426 @@
+/*
+ * Copyright © 2019 Cask Data, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package io.cdap.plugin.servicenow.source;
+
+import io.cdap.cdap.etl.api.FailureCollector;
+import io.cdap.cdap.etl.api.validation.CauseAttributes;
+import io.cdap.cdap.etl.api.validation.ValidationException;
+import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
+import io.cdap.plugin.servicenow.source.util.SourceApplication;
+import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
+import io.cdap.plugin.servicenow.source.util.SourceValueType;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
+
+import static io.cdap.plugin.servicenow.source.ServiceNowSourceConfigHelper.TEST_API_ENDPOINT;
+import static io.cdap.plugin.servicenow.source.ServiceNowSourceConfigHelper.TEST_CLIENT_ID;
+import static io.cdap.plugin.servicenow.source.ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET;
+import static io.cdap.plugin.servicenow.source.ServiceNowSourceConfigHelper.TEST_PASSWORD;
+import static io.cdap.plugin.servicenow.source.ServiceNowSourceConfigHelper.TEST_USER;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_API_ENDPOINT;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_APPLICATION_NAME;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_CLIENT_ID;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_CLIENT_SECRET;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_END_DATE;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_PASSWORD;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_QUERY_MODE;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_START_DATE;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_TABLE_NAME;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_TABLE_NAME_FIELD;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_USER;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_VALUE_TYPE;
+
+/**
+ * Tests for {@link ServiceNowSourceConfig}.
+ */
+public class ServiceNowSourceConfigTest {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+
+  @Test
+  public void testQueryModeTable() {
+    SourceQueryMode queryMode = SourceQueryMode.TABLE;
+    ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setQueryMode("Table")
+      .build();
+
+    MockFailureCollector collector = new MockFailureCollector();
+    Assert.assertEquals(queryMode, config.getQueryMode(collector));
+    Assert.assertEquals(0, collector.getValidationFailures().size());
+  }
+
+  @Test
+  public void testQueryModeReporting() {
+    SourceQueryMode queryMode = SourceQueryMode.REPORTING;
+    ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setQueryMode("Reporting")
+      .build();
+
+    MockFailureCollector collector = new MockFailureCollector();
+    Assert.assertEquals(queryMode, config.getQueryMode(collector));
+    Assert.assertEquals(0, collector.getValidationFailures().size());
+  }
+
+  @Test
+  public void testQueryModeInvalid() {
+    ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setQueryMode(null)
+      .build();
+
+    try {
+      MockFailureCollector collector = new MockFailureCollector();
+      config.getQueryMode(collector);
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_QUERY_MODE, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testApplicationValid() {
+    SourceApplication application = SourceApplication.CONTRACT_MANAGEMENT;
+    ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setApplicationName("Contract Management")
+      .build();
+
+    MockFailureCollector collector = new MockFailureCollector();
+    Assert.assertEquals(application, config.getApplicationName(collector));
+    Assert.assertEquals(0, collector.getValidationFailures().size());
+  }
+
+  @Test
+  public void testApplicationInvalid() {
+    ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setApplicationName(null)
+      .build();
+
+    try {
+      MockFailureCollector collector = new MockFailureCollector();
+      config.getApplicationName(collector);
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_APPLICATION_NAME, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testValueTypeValid() {
+    SourceValueType application = SourceValueType.SHOW_DISPLAY_VALUE;
+    ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setValueType("Display")
+      .build();
+
+    MockFailureCollector collector = new MockFailureCollector();
+    Assert.assertEquals(application, config.getValueType(collector));
+    Assert.assertEquals(0, collector.getValidationFailures().size());
+  }
+
+  @Test
+  public void testValueTypeInvalid() {
+    ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setValueType(null)
+      .build();
+
+    try {
+      MockFailureCollector collector = new MockFailureCollector();
+      config.getValueType(collector);
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_VALUE_TYPE, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testValidateClientIdNull() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(null)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(TEST_USER)
+      .setPassword(TEST_PASSWORD)
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_CLIENT_ID, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testValidateClientSecretNull() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(null)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(TEST_USER)
+      .setPassword(TEST_PASSWORD)
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_CLIENT_SECRET, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testValidateApiEndpointNull() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(null)
+      .setUser(TEST_USER)
+      .setPassword(TEST_PASSWORD)
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_API_ENDPOINT, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testValidateUserNull() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(null)
+      .setPassword(TEST_PASSWORD)
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_USER, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testValidatePasswordNull() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(TEST_USER)
+      .setPassword(null)
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_PASSWORD, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testValidCredentials() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(TEST_USER)
+      .setPassword(TEST_PASSWORD)
+      .build(), collector);
+
+    config.validate(collector);
+
+    Assert.assertEquals(0, collector.getValidationFailures().size());
+  }
+
+  @Test
+  public void testTableModeMissingTableName() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(TEST_USER)
+      .setPassword(TEST_PASSWORD)
+      .setQueryMode("Table")
+      .setTableName(null)
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_TABLE_NAME, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testReportingModeMissingApplication() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(TEST_USER)
+      .setPassword(TEST_PASSWORD)
+      .setQueryMode("Reporting")
+      .setApplicationName(null)
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_APPLICATION_NAME, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testReportingModeMissingTableNameField() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(TEST_USER)
+      .setPassword(TEST_PASSWORD)
+      .setQueryMode("Reporting")
+      .setApplicationName("Contract Management")
+      .setTableNameField(null)
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_TABLE_NAME_FIELD, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testStartDateInvalid() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(TEST_USER)
+      .setPassword(TEST_PASSWORD)
+      .setQueryMode("Table")
+      .setTableName("ast-contract")
+      .setStartDate("2020")
+      .setEndDate("2020-03-01")
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_START_DATE, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testEndDateInvalid() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(TEST_USER)
+      .setPassword(TEST_PASSWORD)
+      .setQueryMode("Table")
+      .setTableName("ast-contract")
+      .setStartDate("2020-03-01")
+      .setEndDate("2020")
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_END_DATE, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  @Test
+  public void testEndDateLessThanStartDate() {
+    MockFailureCollector collector = new MockFailureCollector();
+    ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(TEST_CLIENT_ID)
+      .setClientSecret(TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(TEST_API_ENDPOINT)
+      .setUser(TEST_USER)
+      .setPassword(TEST_PASSWORD)
+      .setQueryMode("Table")
+      .setTableName("ast-contract")
+      .setStartDate("2020-03-01")
+      .setEndDate("2020-02-29")
+      .build(), collector);
+
+    try {
+      config.validate(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, e.getFailures().size());
+      Assert.assertEquals(PROPERTY_START_DATE, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+  }
+
+  private ServiceNowSourceConfig withServiceNowValidationMock(ServiceNowSourceConfig config,
+                                                              FailureCollector collector) {
+    ServiceNowSourceConfig spy = Mockito.spy(config);
+    Mockito.doNothing().when(spy).validateServiceNowConnection(collector);
+    return spy;
+  }
+}
