@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017-2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -22,6 +22,7 @@ import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.source.util.SchemaBuilder;
+import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -31,14 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-
-import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PAGE_SIZE;
 
 /**
  * Record reader that reads the entire contents of a ServiceNow table.
@@ -121,11 +118,6 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
 
   @Override
   public void close() throws IOException {
-    SQLException exception = null;
-
-    if (exception != null) {
-      throw new IOException(exception);
-    }
   }
 
   private void fetchData() {
@@ -134,9 +126,9 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
 
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(pluginConf);
 
-    //Get the table data
+    // Get the table data
     results = restApi.fetchTableRecords(tableName, pluginConf.getStartDate(), pluginConf.getEndDate(),
-      split.getOffset(), PAGE_SIZE);
+      split.getOffset(), ServiceNowConstants.PAGE_SIZE);
 
     LOG.debug("size={}", results.size());
     if (!results.isEmpty()) {
@@ -147,14 +139,14 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
   }
 
   private void fetchSchema(ServiceNowTableAPIClientImpl restApi) {
-    //Fetch the column definition
+    // Fetch the column definition
     ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, null, null,
       false);
     if (response == null) {
       return;
     }
 
-    //Build schema
+    // Build schema
     SchemaBuilder schemaBuilder = new SchemaBuilder();
     Schema tempSchema = schemaBuilder.constructSchema(tableName, response.getColumns());
     tableFields = tempSchema.getFields();
@@ -180,28 +172,6 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
         return convertToIntegerValue(fieldValue);
       case BOOLEAN:
         return convertToBooleanValue(fieldValue);
-      //case RECORD:
-        //return convertToRecordValue(fieldName, fieldSchema, fieldValue);
-        /*
-        if (fieldValue instanceof Map) {
-          Map<String, Object> nestedRecord = (Map<String, Object>) fieldValue;
-          StructuredRecord.Builder nestedRecordBuilder = StructuredRecord.builder(fieldSchema);
-          Objects.requireNonNull(fieldSchema.getFields(), "Nested Schema fields cannot be empty").forEach(
-            nestedField -> {
-              String nestedFieldName = nestedField.getName();
-              Object nestedFieldValue = convertToValue(nestedFieldName, nestedField.getSchema(), nestedRecord);
-              nestedRecordBuilder.set(nestedFieldName, nestedFieldValue);
-            }
-          );
-          return nestedRecordBuilder.build();
-        } else if (fieldValue instanceof String && Strings.isNullOrEmpty(String.valueOf(fieldValue))) {
-          return null;
-        } else {
-          throw new IllegalStateException(
-            String.format("Field '%s' is of unexpected type '%s'. Declared 'RECORD' types: %s",
-              fieldName, record.get(fieldName).getClass().getSimpleName(), fieldSchema.toString()));
-        }
-        */
       case UNION:
         if (fieldSchema.isNullable()) {
           return convertToValue(fieldName, fieldSchema.getNonNullable(), record);
@@ -241,28 +211,5 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
     }
 
     return Boolean.parseBoolean(String.valueOf(fieldValue));
-  }
-
-  private StructuredRecord convertToRecordValue(String fieldName, Schema fieldSchema, Object fieldValue) {
-    if (fieldValue instanceof String && Strings.isNullOrEmpty(String.valueOf(fieldValue))) {
-      return null;
-    }
-
-    if (fieldValue instanceof Map) {
-      Map<String, Object> nestedRecord = (Map<String, Object>) fieldValue;
-      StructuredRecord.Builder nestedRecordBuilder = StructuredRecord.builder(fieldSchema);
-      Objects.requireNonNull(fieldSchema.getFields(), "Nested Schema fields cannot be empty").forEach(
-        nestedField -> {
-          String nestedFieldName = nestedField.getName();
-          Object nestedFieldValue = convertToValue(nestedFieldName, nestedField.getSchema(), nestedRecord);
-          nestedRecordBuilder.set(nestedFieldName, nestedFieldValue);
-        }
-      );
-      return nestedRecordBuilder.build();
-    } else {
-      throw new IllegalStateException(
-        String.format("Field '%s' is of unexpected type '%s'. Declared 'RECORD' types: %s",
-          fieldName, fieldValue.getClass().getSimpleName(), fieldSchema.toString()));
-    }
   }
 }

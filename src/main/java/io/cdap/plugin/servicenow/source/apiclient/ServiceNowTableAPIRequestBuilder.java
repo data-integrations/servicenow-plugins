@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -24,7 +24,7 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 
 /**
- * ServiceNowTableAPIRequestBuilder
+ * ServiceNowTableAPIRequestBuilder.
  */
 public class ServiceNowTableAPIRequestBuilder extends RestAPIRequest.Builder {
   private static final String TABLE_API_URL_TEMPLATE = "%s/api/now/table/%s";
@@ -33,6 +33,12 @@ public class ServiceNowTableAPIRequestBuilder extends RestAPIRequest.Builder {
     super(String.format(TABLE_API_URL_TEMPLATE, instanceBaseUrl, tableName));
   }
 
+  /**
+   * Sets the filter query for ServiceNow Rest API request.
+   *
+   * @param query the filter query for ServiceNow Rest API request.
+   * @return
+   */
   public ServiceNowTableAPIRequestBuilder setQuery(String query) {
     try {
       this.parameters.put("sysparm_query", URLEncoder.encode(query, "UTF-8"));
@@ -51,6 +57,12 @@ public class ServiceNowTableAPIRequestBuilder extends RestAPIRequest.Builder {
     return this;
   }
 
+  /**
+   * Sets the list of fields to be added in the JSON response.
+   *
+   * @param fields The list of fields to be added in the JSON response
+   * @return
+   */
   public ServiceNowTableAPIRequestBuilder setFields(String... fields) {
     if (fields == null || fields.length == 0) {
       return this;

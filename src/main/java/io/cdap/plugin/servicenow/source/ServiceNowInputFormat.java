@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017-2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -22,6 +22,7 @@ import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.source.util.SchemaBuilder;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
+import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
 import org.apache.hadoop.conf.Configuration;
@@ -39,20 +40,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PAGE_SIZE;
-
 /**
- * ServiceNow input format
+ * ServiceNow input format.
  */
 public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredRecord> {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowInputFormat.class);
 
   /**
-   * Configure the input format to read tables from ServiceNow. Should be called from the mapreduce client.
+   * Updates the jobConfig with the ServiceNow table information, which will then be read in getSplit() function.
    *
    * @param jobConfig the job configuration
-   * @param mode
-   * @param conf      the database conf
+   * @param mode the query mode
+   * @param conf the database conf
    * @return Collection of ServiceNowTableInfo containing table and schema.
    */
   public static List<ServiceNowTableInfo> setInput(Configuration jobConfig, SourceQueryMode mode,
@@ -60,8 +59,8 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
     ServiceNowJobConfiguration jobConf = new ServiceNowJobConfiguration(jobConfig);
     jobConf.setPluginConfiguration(conf);
 
-    //Depending on conf value fetch the list of fields for each table and create schema object
-    //return the schema object for each table as ServiceNowTableInfo
+    // Depending on conf value fetch the list of fields for each table and create schema object
+    // return the schema object for each table as ServiceNowTableInfo
     List<ServiceNowTableInfo> tableInfos = fetchTableInfo(mode, conf);
 
     jobConf.setTableInfos(tableInfos);
@@ -70,14 +69,14 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
   }
 
   private static List<ServiceNowTableInfo> fetchTableInfo(SourceQueryMode mode, ServiceNowSourceConfig conf) {
-    //When mode = Table, fetch details from the table name provided in plugin config
+    // When mode = Table, fetch details from the table name provided in plugin config
     if (mode == SourceQueryMode.TABLE) {
       ServiceNowTableInfo tableInfo = getTableMetaData(conf.getTableName(), conf);
       return (tableInfo == null) ? Collections.emptyList() : Collections.singletonList(tableInfo);
     }
 
-    //When mode = Reporting, get the list of tables for application name provided in plugin config
-    //and then fetch details from each of the tables.
+    // When mode = Reporting, get the list of tables for application name provided in plugin config
+    // and then fetch details from each of the tables.
     List<ServiceNowTableInfo> tableInfos = new ArrayList<>();
 
     List<String> tableNames = conf.getApplicationName().getTableNames();
@@ -93,7 +92,7 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
   }
 
   private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowSourceConfig conf) {
-    //Call API to fetch first record from the table
+    // Call API to fetch first record from the table
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(conf);
 
     ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, conf.getStartDate(), conf.getEndDate(),
@@ -116,7 +115,6 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
   @Override
   public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(jobContext.getConfiguration());
-    ServiceNowSourceConfig pluginConf = jobConfig.getPluginConf();
 
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
     List<InputSplit> resultSplits = new ArrayList<>();
@@ -124,23 +122,21 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
     for (ServiceNowTableInfo tableInfo : tableInfos) {
       String tableName = tableInfo.getTableName();
       int totalRecords = tableInfo.getRecordCount();
-      if (totalRecords < PAGE_SIZE) {
-        //add single split for table and continue
-        resultSplits.add(new ServiceNowInputSplit(tableName, 0, totalRecords));
+      if (totalRecords <= ServiceNowConstants.PAGE_SIZE) {
+        // add single split for table and continue
+        resultSplits.add(new ServiceNowInputSplit(tableName, 0));
         continue;
       }
 
-      int pages = (tableInfo.getRecordCount() / PAGE_SIZE) + 1;
+      int pages = (tableInfo.getRecordCount() / ServiceNowConstants.PAGE_SIZE);
+      if (tableInfo.getRecordCount() % ServiceNowConstants.PAGE_SIZE > 0) {
+        pages++;
+      }
       int offset = 0;
-      int recordsOnPage = PAGE_SIZE;
 
       for (int page = 1; page <= pages; page++) {
-        if (page == pages) {
-          recordsOnPage = totalRecords - offset;
-        }
-        resultSplits.add(new ServiceNowInputSplit(tableName, offset, recordsOnPage));
-        offset += PAGE_SIZE;
-        recordsOnPage -= PAGE_SIZE;
+        resultSplits.add(new ServiceNowInputSplit(tableName, offset));
+        offset += ServiceNowConstants.PAGE_SIZE;
       }
     }
 

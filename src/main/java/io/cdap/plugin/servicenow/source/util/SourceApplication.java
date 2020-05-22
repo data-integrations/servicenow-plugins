@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -28,20 +28,20 @@ import java.util.stream.Stream;
 public enum SourceApplication {
 
   /**
-   * Data from tables related to Contract Management will be fetched
+   * Data from tables related to Contract Management will be fetched.
    */
   CONTRACT_MANAGEMENT("Contract Management", Arrays.asList("clm_m2m_contract_asset", "clm_m2m_rate_card_asset",
     "clm_condition_checker", "clm_condition_check", "ast_contract", "clm_contract_history",
     "clm_terms_and_conditions", "clm_m2m_contract_and_terms", "clm_m2m_contract_user")),
 
   /**
-   * Data from tables related to Product Catalog will be fetched
+   * Data from tables related to Product Catalog will be fetched.
    */
   PRODUCT_CATALOG("Product Catalog", Arrays.asList("new_call", "pc_hardware_cat_item", "pc_product_cat_item",
     "pc_software_cat_item", "pc_vendor_cat_item")),
 
   /**
-   * Data from tables related to Procurement will be fetched
+   * Data from tables related to Procurement will be fetched.
    */
   PROCUREMENT("Procurement", Arrays.asList("proc_po", "proc_po_item", "proc_rec_slip", "proc_rec_slip_item"));
 

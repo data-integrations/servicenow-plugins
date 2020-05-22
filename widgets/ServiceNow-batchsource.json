@@ -155,5 +155,35 @@
         "ref-property-name": "referenceName"
       }
     ]
-  }
+  },
+  "filters": [
+    {
+      "name": "showReportingMode",
+      "condition": {
+        "expression": "queryMode == 'Reporting'"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "applicationName"
+        },
+        {
+          "type": "property",
+          "name": "tableNameField"
+        }
+      ]
+    },
+    {
+      "name": "showTableMode",
+      "condition": {
+        "expression": "queryMode == 'Table'"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "tableName"
+        }
+      ]
+    }
+  ]
 }

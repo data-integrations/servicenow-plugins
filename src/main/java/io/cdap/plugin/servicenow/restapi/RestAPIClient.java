@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017-2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -30,9 +30,15 @@ import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 
 /**
- * An abstract class to call Rest API
+ * An abstract class to call Rest API.
  */
 public abstract class RestAPIClient {
+  /**
+   * Executes the Rest API request and returns the response.
+   *
+   * @param request the Rest API request
+   * @return an instance of RestAPIResponse object.
+   */
   protected RestAPIResponse executeGet(RestAPIRequest request) {
     HttpGet httpGet = new HttpGet(request.getUrl());
     request.getHeaders().entrySet().forEach(e -> httpGet.addHeader(e.getKey(), e.getValue()));
@@ -41,8 +47,6 @@ public abstract class RestAPIClient {
     try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
       try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
         apiResponse = RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
-
-
       }
     } catch (Exception e) {
       apiResponse = RestAPIResponse.defaultErrorResponse(e.getMessage());
@@ -51,6 +55,18 @@ public abstract class RestAPIClient {
     return apiResponse;
   }
 
+  /**
+   * Generates access token and returns the same.
+   *
+   * @param restApiEndpoint The rest API endpoint for ServiceNow
+   * @param clientId The Client Id for ServiceNow
+   * @param clientSecret The Client Secret for ServiceNow
+   * @param user the user id for ServiceNow
+   * @param password The password for ServiceNow
+   * @return The access token
+   * @throws OAuthSystemException
+   * @throws OAuthProblemException
+   */
   protected String generateAccessToken(String restApiEndpoint, String clientId, String clientSecret, String user,
                                        String password) throws OAuthSystemException, OAuthProblemException {
     String token = "NO-VALUE";

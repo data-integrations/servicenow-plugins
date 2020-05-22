@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017-2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Pojo class to capture the API response
+ * Pojo class to capture the API response.
  */
 public class RestAPIResponse {
   private static List<Integer> successCodes = new ArrayList<Integer>() {
@@ -60,6 +60,13 @@ public class RestAPIResponse {
       String.format(JSON_ERROR_RESPONSE_TEMPLATE, message));
   }
 
+  /**
+   * Parses HttpResponse into RestAPIResponse object.
+   *
+   * @param httpResponse The HttpResponse object to parse
+   * @param headerNames The list of header names to be extracted
+   * @return An instance of RestAPIResponse object.
+   */
   public static RestAPIResponse parse(HttpResponse httpResponse, String... headerNames) {
     List<String> headerNameList = headerNames == null ? Collections.emptyList() : Arrays.asList(headerNames);
     int httpStatus = httpResponse.getStatusLine().getStatusCode();

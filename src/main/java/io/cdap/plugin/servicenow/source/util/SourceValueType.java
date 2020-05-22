@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -22,17 +22,17 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Indicates type of value to be returned from ServiceNow Table API
+ * Indicates type of value to be returned from ServiceNow Table API.
  */
 public enum SourceValueType {
 
   /**
-   * Actual values will be returned by ServiceNow Table API
+   * Actual values will be returned by ServiceNow Table API.
    */
   SHOW_ACTUAL_VALUE("Actual", "false"),
 
   /**
-   * Display values will be returned by ServiceNow Table API
+   * Display values will be returned by ServiceNow Table API.
    */
   SHOW_DISPLAY_VALUE("Display", "true");
 

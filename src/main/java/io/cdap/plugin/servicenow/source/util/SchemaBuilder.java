@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017-2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -24,9 +24,16 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Utility class to build schema
+ * Utility class to build schema.
  */
 public class SchemaBuilder {
+  /**
+   * Constructs Schema object using input parameters.
+   *
+   * @param tableName The table name to be used in Schema object
+   * @param columns The list of ServiceNowColumn objects that will be added as Schema.Field
+   * @return The instance of Schema object
+   */
   public Schema constructSchema(String tableName, List<ServiceNowColumn> columns) {
     SchemaBuilder schemaBuilder = new SchemaBuilder();
     List<Schema.Field> fields = schemaBuilder.constructSchemaFields(columns);
@@ -66,13 +73,6 @@ public class SchemaBuilder {
       case "boolean":
         return Schema.of(Schema.Type.BOOLEAN);
       case "reference":
-        /*
-        List<Schema.Field> fields = Arrays.asList(
-          Schema.Field.of("link", Schema.nullableOf(Schema.of(Schema.Type.STRING))),
-          Schema.Field.of("value", Schema.nullableOf(Schema.of(Schema.Type.STRING)))
-        );
-        return Schema.recordOf(column.getFieldName(), fields);
-        */
       case "currency":
       case "glide_date":
       case "glide_date_time":

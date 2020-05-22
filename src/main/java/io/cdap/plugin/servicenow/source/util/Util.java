@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -26,10 +26,23 @@ import java.util.Date;
  * Utility class.
  */
 public class Util {
+  /**
+   * Utility function to check if incoming string is empty or not.
+   *
+   * @param string The value to be checked for emptyness
+   * @return true if string is empty otherwise false
+   */
   public static boolean isNullOrEmpty(String string) {
     return Strings.isNullOrEmpty(Strings.nullToEmpty(string).trim());
   }
 
+  /**
+   * Utility function to check if the date is in valid format.
+   *
+   * @param dateFormat The date format for which the value to be checked for validity
+   * @param value The date value to be checked for validity
+   * @return true if date is in valid format otherwise false
+   */
   public static boolean isValidDateFormat(String dateFormat, String value) {
     final SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
     try {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ServiceNowTableAPIRequestBuilder
+ * Pojo class to represent Rest API Request.
  */
 public class RestAPIRequest {
   private String url;
@@ -56,7 +56,7 @@ public class RestAPIRequest {
   }
 
   /**
-   * Builder
+   * The Builder class for RestAPIRequest.
    */
   public abstract static class Builder {
     protected String url;
@@ -78,6 +78,11 @@ public class RestAPIRequest {
       return this;
     }
 
+    /**
+     * Builds an instance of RestAPIRequest.
+     *
+     * @return An instance of RestAPIRequest
+     */
     public RestAPIRequest build() {
       RestAPIRequest request = new RestAPIRequest();
 

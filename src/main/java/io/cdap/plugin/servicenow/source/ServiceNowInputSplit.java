@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -24,21 +24,19 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * ServiceNow input split
+ * ServiceNow input split.
  */
 public class ServiceNowInputSplit extends InputSplit implements Writable {
   private String tableName;
   private int offset;
-  private int length;
 
   // used by mapreduce
   public ServiceNowInputSplit() {
   }
 
-  public ServiceNowInputSplit(String tableName, int offset, int length) {
+  public ServiceNowInputSplit(String tableName, int offset) {
     this.tableName = tableName;
     this.offset = offset;
-    this.length = length;
   }
 
   public String getTableName() {
@@ -63,7 +61,7 @@ public class ServiceNowInputSplit extends InputSplit implements Writable {
 
   @Override
   public long getLength() throws IOException, InterruptedException {
-    return this.length;
+    return 0;
   }
 
   @Override

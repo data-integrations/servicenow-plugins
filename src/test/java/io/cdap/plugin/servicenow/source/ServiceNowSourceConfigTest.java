@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -80,19 +80,37 @@ public class ServiceNowSourceConfigTest {
   }
 
   @Test
-  public void testQueryModeInvalid() {
+  public void testQueryModeNull() {
     ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
       .setQueryMode(null)
       .build();
+    MockFailureCollector collector = new MockFailureCollector();
 
     try {
-      MockFailureCollector collector = new MockFailureCollector();
       config.getQueryMode(collector);
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_QUERY_MODE, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
+  }
+
+  @Test
+  public void testQueryModeInvalid() {
+    ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setQueryMode("Invalid")
+      .build();
+    MockFailureCollector collector = new MockFailureCollector();
+
+    try {
+      config.getQueryMode(collector);
+    } catch (ValidationException e) {
+      Assert.assertEquals(PROPERTY_QUERY_MODE, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -112,15 +130,16 @@ public class ServiceNowSourceConfigTest {
     ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
       .setApplicationName(null)
       .build();
+    MockFailureCollector collector = new MockFailureCollector();
 
     try {
-      MockFailureCollector collector = new MockFailureCollector();
       config.getApplicationName(collector);
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_APPLICATION_NAME, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -140,15 +159,16 @@ public class ServiceNowSourceConfigTest {
     ServiceNowSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
       .setValueType(null)
       .build();
+    MockFailureCollector collector = new MockFailureCollector();
 
     try {
-      MockFailureCollector collector = new MockFailureCollector();
       config.getValueType(collector);
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_VALUE_TYPE, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -166,10 +186,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_CLIENT_ID, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -187,10 +208,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_CLIENT_SECRET, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -208,10 +230,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_API_ENDPOINT, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -229,10 +252,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_USER, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -250,10 +274,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_PASSWORD, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -289,10 +314,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_TABLE_NAME, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -312,10 +338,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_APPLICATION_NAME, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -336,10 +363,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_TABLE_NAME_FIELD, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -361,10 +389,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_START_DATE, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -386,10 +415,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_END_DATE, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   @Test
@@ -411,10 +441,11 @@ public class ServiceNowSourceConfigTest {
       config.validate(collector);
       collector.getOrThrowException();
     } catch (ValidationException e) {
-      Assert.assertEquals(1, e.getFailures().size());
       Assert.assertEquals(PROPERTY_START_DATE, e.getFailures().get(0).getCauses().get(0)
         .getAttribute(CauseAttributes.STAGE_CONFIG));
     }
+
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 
   private ServiceNowSourceConfig withServiceNowValidationMock(ServiceNowSourceConfig config,

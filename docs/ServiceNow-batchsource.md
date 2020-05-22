@@ -22,11 +22,14 @@ Properties
 
 **Application Name**: Application name for which data to be fetched. The application can be one of three values:  
 
-`Contract Management` - will fetch data for all tables under Contract Management application, 
+`Contract Management` - will fetch data for all tables under [Contract Management](https://docs.servicenow.com/bundle/newyork-it-service-management/page/product/contract-management/reference/r_TablesInstalledWContractMgmt.html) 
+application, 
 
-`Product Catalog` - will fetch data for all tables under Product Catalog application,
+`Product Catalog` - will fetch data for all tables under [Product Catalog](https://docs.servicenow.com/bundle/newyork-it-service-management/page/product/product-catalog/reference/r_TablesProductCatalog.html) 
+application,
 
-`Procurement` - will fetch data for all tables under Procurement application.
+`Procurement` - will fetch data for all tables under [Procurement](https://docs.servicenow.com/bundle/newyork-it-service-management/page/product/procurement/reference/r_TablesProcurement.html) 
+application.
 
 Note, the Application name value will be ignored if the Mode is set to `Table`.
 
@@ -55,3 +58,24 @@ ignored if the Mode is set to `Reporting`.
 `Actual` -  will fetch the actual values from the ServiceNow tables,  
 
 `Display` - will fetch the display values from the ServiceNow tables.
+
+Data Types Mapping
+----------
+
+    | ServiceNow Data Type           | CDAP Schema Data Type | Comment                                            |
+    | ------------------------------ | --------------------- | -------------------------------------------------- |
+    | decimal                        | double                |                                                    |
+    | integer                        | int                   |                                                    |
+    | boolean                        | boolean               |                                                    |
+    | reference                      | string                |                                                    |
+    | currency                       | string                |                                                    |
+    | glide_date                     | string                |                                                    |
+    | glide_date_time                | string                |                                                    |
+    | sys_class_name                 | string                |                                                    |
+    | domain_id                      | string                |                                                    |
+    | domain_path                    | string                |                                                    |
+    | guid                           | string                |                                                    |
+    | translated_html                | string                |                                                    |
+    | journal                        | string                |                                                    |
+    | string                         | string                |                                                    |
+

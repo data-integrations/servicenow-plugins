@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017-2019 Cask Data, Inc.
+ * Copyright © 2020 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -26,6 +26,13 @@ public class ServiceNowTableInfo {
   private final Schema schema;
   private final int recordCount;
 
+  /**
+   * Constructor for ServiceNowTableInfo object.
+   *
+   * @param tableName The table name
+   * @param schema The instance of Schema object
+   * @param recordCount The record count
+   */
   public ServiceNowTableInfo(String tableName, Schema schema, int recordCount) {
     this.tableName = tableName;
     this.schema = schema;
