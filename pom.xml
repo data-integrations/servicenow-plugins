@@ -38,7 +38,7 @@
     <cdap.version>6.1.1</cdap.version>
     <cdap.plugin.version>2.3.4</cdap.plugin.version>
     <hadoop.version>2.9.2</hadoop.version>
-    <httpclient.version>4.3.4</httpclient.version>
+    <httpclient.version>4.5.13</httpclient.version>
     <jackson.core.version>2.8.11.1</jackson.core.version>
     <junit.version>4.12</junit.version>
     <slf4j.version>1.7.5</slf4j.version>
