@@ -41,7 +41,6 @@ public class ServiceNowSourceConfigHelper {
     private String password = TEST_PASSWORD;
     private String queryMode = "Table";
     private String applicationName = "";
-    private String tableNameField = "tablename";
     private String tableName = "tablename";
     private String valueType = "Actual";
     private String startDate = "";
@@ -59,11 +58,6 @@ public class ServiceNowSourceConfigHelper {
 
     public ConfigBuilder setApplicationName(String applicationName) {
       this.applicationName = applicationName;
-      return this;
-    }
-
-    public ConfigBuilder setTableNameField(String tableNameField) {
-      this.tableNameField = tableNameField;
       return this;
     }
 
@@ -113,7 +107,7 @@ public class ServiceNowSourceConfigHelper {
     }
 
     public ServiceNowSourceConfig build() {
-      return new ServiceNowSourceConfig(referenceName, queryMode, applicationName, tableNameField, tableName,
+      return new ServiceNowSourceConfig(referenceName, queryMode, applicationName, tableName,
         clientId, clientSecret, restApiEndpoint, user, password, valueType, startDate, endDate);
     }
 

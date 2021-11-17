@@ -37,11 +37,6 @@ public interface ServiceNowConstants {
   String PROPERTY_APPLICATION_NAME = "applicationName";
 
   /**
-   * Configuration property name used to specify the table name field.
-   */
-  String PROPERTY_TABLE_NAME_FIELD = "tableNameField";
-
-  /**
    * Configuration property name used to specify table name.
    */
   String PROPERTY_TABLE_NAME = "tableName";

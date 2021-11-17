@@ -41,7 +41,6 @@
           "properties": {
             "queryMode": "Table",
             "applicationName": "Contract Management",
-            "tableNameField": "tablename",
             "referenceName": "ref1",
             "tableName": "${TABLE_NAME}",
             "restApiEndpoint": "${API_ENDPOINT}",

@@ -41,7 +41,6 @@
           "properties": {
             "queryMode": "Reporting",
             "applicationName": "${APPLICATION_NAME}",
-            "tableNameField": "tablename",
             "referenceName": "ref1",
             "tableName": "ast_contract",
             "restApiEndpoint": "${API_ENDPOINT}",

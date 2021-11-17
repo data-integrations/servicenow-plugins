@@ -44,15 +44,6 @@
             ],
             "default": "Contract Management"
           }
-        },
-        {
-          "widget-type": "textbox",
-          "label": "Table Name Field",
-          "name": "tableNameField",
-          "widget-attributes": {
-            "placeholder": "The name of the field that holds the table name.",
-            "default": "tablename"
-          }
         }
       ]
     },
@@ -166,10 +157,6 @@
         {
           "type": "property",
           "name": "applicationName"
-        },
-        {
-          "type": "property",
-          "name": "tableNameField"
         }
       ]
     },

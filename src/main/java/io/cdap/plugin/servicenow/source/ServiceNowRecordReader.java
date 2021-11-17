@@ -23,7 +23,7 @@ import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.source.util.SchemaBuilder;
 import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
-import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
+
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
@@ -49,7 +49,6 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
   private Schema schema;
 
   private String tableName;
-  private String tableNameField;
   private List<Map<String, Object>> results;
   private Iterator<Map<String, Object>> iterator;
   private Map<String, Object> row;
@@ -94,10 +93,6 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
   public StructuredRecord getCurrentValue() throws IOException {
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(schema);
 
-    if (pluginConf.getQueryMode() == SourceQueryMode.REPORTING) {
-      recordBuilder.set(tableNameField, tableName);
-    }
-
     try {
       for (Schema.Field field : tableFields) {
         String fieldName = field.getName();
@@ -122,7 +117,6 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
 
   private void fetchData() {
     tableName = split.getTableName();
-    tableNameField = pluginConf.getTableNameField();
 
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(pluginConf);
 
@@ -151,10 +145,6 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
     Schema tempSchema = schemaBuilder.constructSchema(tableName, response.getColumns());
     tableFields = tempSchema.getFields();
     List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
-
-    if (pluginConf.getQueryMode() == SourceQueryMode.REPORTING) {
-      schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
-    }
 
     schema = Schema.recordOf(tableName, schemaFields);
   }

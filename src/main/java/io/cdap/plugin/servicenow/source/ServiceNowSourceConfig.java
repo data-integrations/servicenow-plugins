@@ -61,14 +61,6 @@ public class ServiceNowSourceConfig extends PluginConfig {
     "Note, the Application name value will be ignored if the Mode is set to `Table`.")
   private String applicationName;
 
-  @Name(ServiceNowConstants.PROPERTY_TABLE_NAME_FIELD)
-  @Macro
-  @Nullable
-  @Description("The name of the field that holds the table name. Must not be the name of any table column that " +
-    "will be read. Defaults to `tablename`. Note, the Table name field value will be ignored if the Mode " +
-    "is set to `Table`.")
-  private String tableNameField;
-
   @Name(ServiceNowConstants.PROPERTY_TABLE_NAME)
   @Macro
   @Nullable
@@ -123,28 +115,26 @@ public class ServiceNowSourceConfig extends PluginConfig {
   /**
    * Constructor for ServiceNowSourceConfig object.
    *
-   * @param referenceName The reference name
-   * @param queryMode The query mode
+   * @param referenceName   The reference name
+   * @param queryMode       The query mode
    * @param applicationName The application name
-   * @param tableNameField The field name to hold the table name value
-   * @param tableName The table name
-   * @param clientId The Client Id for ServiceNow
-   * @param clientSecret The Client Secret for ServiceNow
+   * @param tableName       The table name
+   * @param clientId        The Client Id for ServiceNow
+   * @param clientSecret    The Client Secret for ServiceNow
    * @param restApiEndpoint The rest API endpoint for ServiceNow
-   * @param user The user id for ServiceNow
-   * @param password The password for ServiceNow
-   * @param valueType The value type
-   * @param startDate The start date
-   * @param endDate The end date
+   * @param user            The user id for ServiceNow
+   * @param password        The password for ServiceNow
+   * @param valueType       The value type
+   * @param startDate       The start date
+   * @param endDate         The end date
    */
   public ServiceNowSourceConfig(String referenceName, String queryMode, @Nullable String applicationName,
-                                @Nullable String tableNameField, @Nullable String tableName, String clientId,
+                                @Nullable String tableName, String clientId,
                                 String clientSecret, String restApiEndpoint, String user, String password,
                                 String valueType, @Nullable String startDate, @Nullable String endDate) {
     this.referenceName = referenceName;
     this.queryMode = queryMode;
     this.applicationName = applicationName;
-    this.tableNameField = tableNameField;
     this.tableName = tableName;
     this.clientId = clientId;
     this.clientSecret = clientSecret;
@@ -173,7 +163,7 @@ public class ServiceNowSourceConfig extends PluginConfig {
     }
 
     collector.addFailure("Unsupported query mode value: " + queryMode,
-      String.format("Supported modes are: %s", SourceQueryMode.getSupportedModes()))
+        String.format("Supported modes are: %s", SourceQueryMode.getSupportedModes()))
       .withConfigProperty(ServiceNowConstants.PROPERTY_QUERY_MODE);
     collector.getOrThrowException();
     return null;
@@ -203,7 +193,7 @@ public class ServiceNowSourceConfig extends PluginConfig {
     }
 
     collector.addFailure("Unsupported application name value: " + applicationName,
-      String.format("Supported applications are: %s", SourceApplication.getSupportedApplications()))
+        String.format("Supported applications are: %s", SourceApplication.getSupportedApplications()))
       .withConfigProperty(ServiceNowConstants.PROPERTY_APPLICATION_NAME);
     collector.getOrThrowException();
     return null;
@@ -219,11 +209,6 @@ public class ServiceNowSourceConfig extends PluginConfig {
     Optional<SourceApplication> sourceApplication = SourceApplication.fromValue(applicationName);
 
     return sourceApplication.isPresent() ? sourceApplication.get() : null;
-  }
-
-  @Nullable
-  public String getTableNameField() {
-    return tableNameField;
   }
 
   @Nullable
@@ -264,7 +249,7 @@ public class ServiceNowSourceConfig extends PluginConfig {
     }
 
     collector.addFailure("Unsupported type value: " + valueType,
-      String.format("Supported value types are: %s", SourceValueType.getSupportedValueTypes()))
+        String.format("Supported value types are: %s", SourceValueType.getSupportedValueTypes()))
       .withConfigProperty(ServiceNowConstants.PROPERTY_VALUE_TYPE);
     collector.getOrThrowException();
     return null;
@@ -345,8 +330,8 @@ public class ServiceNowSourceConfig extends PluginConfig {
       restApi.getAccessToken();
     } catch (Exception e) {
       collector.addFailure("Unable to connect to ServiceNow Instance.",
-        "Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
-          "are correct.")
+          "Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
+            "are correct.")
         .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_ID)
         .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_SECRET)
         .withConfigProperty(ServiceNowConstants.PROPERTY_API_ENDPOINT)
@@ -374,15 +359,6 @@ public class ServiceNowSourceConfig extends PluginConfig {
   private void validateReportingQueryMode(FailureCollector collector) {
     if (!containsMacro(ServiceNowConstants.PROPERTY_APPLICATION_NAME)) {
       getApplicationName(collector);
-    }
-
-    if (containsMacro(ServiceNowConstants.PROPERTY_TABLE_NAME_FIELD)) {
-      return;
-    }
-
-    if (Util.isNullOrEmpty(tableNameField)) {
-      collector.addFailure("Table name field must be specified.", null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_TABLE_NAME_FIELD);
     }
   }
 
@@ -418,14 +394,14 @@ public class ServiceNowSourceConfig extends PluginConfig {
     // validate the date formats for both start date & end date
     if (!Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, startDate)) {
       collector.addFailure("Invalid format for Start date. Correct Format: " +
-                             ServiceNowConstants.DATE_FORMAT, null)
+          ServiceNowConstants.DATE_FORMAT, null)
         .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE);
       return;
     }
 
     if (!Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, endDate)) {
       collector.addFailure("Invalid format for End date. Correct Format:" +
-                             ServiceNowConstants.DATE_FORMAT, null)
+          ServiceNowConstants.DATE_FORMAT, null)
         .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
       return;
     }
