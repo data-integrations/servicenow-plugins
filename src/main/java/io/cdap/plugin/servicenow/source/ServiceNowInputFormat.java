@@ -68,7 +68,7 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
     return tableInfos;
   }
 
-  private static List<ServiceNowTableInfo> fetchTableInfo(SourceQueryMode mode, ServiceNowSourceConfig conf) {
+  public static List<ServiceNowTableInfo> fetchTableInfo(SourceQueryMode mode, ServiceNowSourceConfig conf) {
     // When mode = Table, fetch details from the table name provided in plugin config
     if (mode == SourceQueryMode.TABLE) {
       ServiceNowTableInfo tableInfo = getTableMetaData(conf.getTableName(), conf);

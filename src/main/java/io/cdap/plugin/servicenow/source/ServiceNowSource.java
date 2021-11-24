@@ -35,6 +35,7 @@ import io.cdap.plugin.common.SourceInputFormatProvider;
 import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.slf4j.Logger;
@@ -74,6 +75,10 @@ public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord
     // Since we have validated all the properties, throw an exception if there are any errors in the collector.
     // This is to avoid adding same validation errors again in getSchema method call
     collector.getOrThrowException();
+    if (conf.shouldGetSchema()) {
+      stageConfigurer.setOutputSchema(
+        ServiceNowInputFormat.fetchTableInfo(conf.getQueryMode(collector), conf).get(0).getSchema());
+    }
   }
 
   @Override

@@ -34,6 +34,7 @@ import io.cdap.plugin.servicenow.source.util.Util;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+
 import javax.annotation.Nullable;
 
 /**
@@ -452,4 +453,14 @@ public class ServiceNowSourceConfig extends PluginConfig {
       !containsMacro(ServiceNowConstants.PROPERTY_USER) &&
       !containsMacro(ServiceNowConstants.PROPERTY_PASSWORD);
   }
+
+  public boolean shouldGetSchema() {
+    return !containsMacro(ServiceNowConstants.PROPERTY_QUERY_MODE)
+      && !containsMacro(ServiceNowConstants.PROPERTY_APPLICATION_NAME)
+      && !containsMacro(ServiceNowConstants.PROPERTY_TABLE_NAME_FIELD)
+      && !containsMacro(ServiceNowConstants.PROPERTY_TABLE_NAME)
+      && shouldConnect()
+      && !containsMacro(ServiceNowConstants.PROPERTY_VALUE_TYPE);
+  }
+
 }
