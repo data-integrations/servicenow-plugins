@@ -23,7 +23,6 @@ import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.source.util.SourceApplication;
 import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
 import io.cdap.plugin.servicenow.source.util.SourceValueType;
-
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;

@@ -115,18 +115,18 @@ public class ServiceNowSourceConfig extends PluginConfig {
   /**
    * Constructor for ServiceNowSourceConfig object.
    *
-   * @param referenceName   The reference name
-   * @param queryMode       The query mode
+   * @param referenceName The reference name
+   * @param queryMode The query mode
    * @param applicationName The application name
-   * @param tableName       The table name
-   * @param clientId        The Client Id for ServiceNow
-   * @param clientSecret    The Client Secret for ServiceNow
+   * @param tableName The table name
+   * @param clientId The Client Id for ServiceNow
+   * @param clientSecret The Client Secret for ServiceNow
    * @param restApiEndpoint The rest API endpoint for ServiceNow
-   * @param user            The user id for ServiceNow
-   * @param password        The password for ServiceNow
-   * @param valueType       The value type
-   * @param startDate       The start date
-   * @param endDate         The end date
+   * @param user The user id for ServiceNow
+   * @param password The password for ServiceNow
+   * @param valueType The value type
+   * @param startDate The start date
+   * @param endDate The end date
    */
   public ServiceNowSourceConfig(String referenceName, String queryMode, @Nullable String applicationName,
                                 @Nullable String tableName, String clientId,
@@ -163,7 +163,7 @@ public class ServiceNowSourceConfig extends PluginConfig {
     }
 
     collector.addFailure("Unsupported query mode value: " + queryMode,
-        String.format("Supported modes are: %s", SourceQueryMode.getSupportedModes()))
+      String.format("Supported modes are: %s", SourceQueryMode.getSupportedModes()))
       .withConfigProperty(ServiceNowConstants.PROPERTY_QUERY_MODE);
     collector.getOrThrowException();
     return null;
@@ -193,7 +193,7 @@ public class ServiceNowSourceConfig extends PluginConfig {
     }
 
     collector.addFailure("Unsupported application name value: " + applicationName,
-        String.format("Supported applications are: %s", SourceApplication.getSupportedApplications()))
+      String.format("Supported applications are: %s", SourceApplication.getSupportedApplications()))
       .withConfigProperty(ServiceNowConstants.PROPERTY_APPLICATION_NAME);
     collector.getOrThrowException();
     return null;
@@ -249,7 +249,7 @@ public class ServiceNowSourceConfig extends PluginConfig {
     }
 
     collector.addFailure("Unsupported type value: " + valueType,
-        String.format("Supported value types are: %s", SourceValueType.getSupportedValueTypes()))
+      String.format("Supported value types are: %s", SourceValueType.getSupportedValueTypes()))
       .withConfigProperty(ServiceNowConstants.PROPERTY_VALUE_TYPE);
     collector.getOrThrowException();
     return null;
@@ -330,8 +330,8 @@ public class ServiceNowSourceConfig extends PluginConfig {
       restApi.getAccessToken();
     } catch (Exception e) {
       collector.addFailure("Unable to connect to ServiceNow Instance.",
-          "Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
-            "are correct.")
+        "Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
+          "are correct.")
         .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_ID)
         .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_SECRET)
         .withConfigProperty(ServiceNowConstants.PROPERTY_API_ENDPOINT)
@@ -394,14 +394,14 @@ public class ServiceNowSourceConfig extends PluginConfig {
     // validate the date formats for both start date & end date
     if (!Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, startDate)) {
       collector.addFailure("Invalid format for Start date. Correct Format: " +
-          ServiceNowConstants.DATE_FORMAT, null)
+                             ServiceNowConstants.DATE_FORMAT, null)
         .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE);
       return;
     }
 
     if (!Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, endDate)) {
       collector.addFailure("Invalid format for End date. Correct Format:" +
-          ServiceNowConstants.DATE_FORMAT, null)
+                             ServiceNowConstants.DATE_FORMAT, null)
         .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
       return;
     }
