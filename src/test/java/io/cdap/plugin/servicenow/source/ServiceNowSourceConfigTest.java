@@ -23,6 +23,7 @@ import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.source.util.SourceApplication;
 import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
 import io.cdap.plugin.servicenow.source.util.SourceValueType;
+
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,6 +44,7 @@ import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY
 import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_QUERY_MODE;
 import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_START_DATE;
 import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_TABLE_NAME;
+import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_TABLE_NAMES;
 import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_TABLE_NAME_FIELD;
 import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_USER;
 import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.PROPERTY_VALUE_TYPE;
@@ -453,5 +455,36 @@ public class ServiceNowSourceConfigTest {
     ServiceNowSourceConfig spy = Mockito.spy(config);
     Mockito.doNothing().when(spy).validateServiceNowConnection(collector);
     return spy;
+  }
+
+  @Test
+  public void testValidateTableNames() {
+    MockFailureCollector collector = new MockFailureCollector();
+    String tableNames = "tablenames";
+    ServiceNowMultiSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setTableNames(tableNames)
+      .buildMultiSource();
+    config.validateTableNames(collector);
+    collector.getOrThrowException();
+
+    Assert.assertEquals(0, collector.getValidationFailures().size());
+  }
+
+  @Test
+  public void testValidateTableNamesWhenEmpty() {
+    MockFailureCollector collector = new MockFailureCollector();
+    String tableNames = "";
+    ServiceNowMultiSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setTableNames(tableNames)
+      .buildMultiSource();
+
+    try {
+      config.validateTableNames(collector);
+      collector.getOrThrowException();
+    } catch (ValidationException e) {
+      Assert.assertEquals(PROPERTY_TABLE_NAMES, e.getFailures().get(0).getCauses().get(0)
+        .getAttribute(CauseAttributes.STAGE_CONFIG));
+    }
+    Assert.assertEquals(1, collector.getValidationFailures().size());
   }
 }

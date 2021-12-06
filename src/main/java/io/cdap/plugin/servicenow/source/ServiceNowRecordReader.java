@@ -43,16 +43,20 @@ import java.util.Map;
 public class ServiceNowRecordReader extends RecordReader<NullWritable, StructuredRecord> {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowRecordReader.class);
   private final ServiceNowSourceConfig pluginConf;
-  private ServiceNowInputSplit split;
-  private int pos;
-  private List<Schema.Field> tableFields;
-  private Schema schema;
+  protected ServiceNowInputSplit split;
+  protected int pos;
+  protected List<Schema.Field> tableFields;
+  protected Schema schema;
 
-  private String tableName;
-  private String tableNameField;
-  private List<Map<String, Object>> results;
-  private Iterator<Map<String, Object>> iterator;
-  private Map<String, Object> row;
+  protected String tableName;
+  protected String tableNameField;
+  protected List<Map<String, Object>> results;
+  protected Iterator<Map<String, Object>> iterator;
+  protected Map<String, Object> row;
+
+  public ServiceNowRecordReader() {
+    pluginConf = null;
+  }
 
   ServiceNowRecordReader(ServiceNowSourceConfig pluginConf) {
     this.pluginConf = pluginConf;
@@ -68,7 +72,7 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
   public boolean nextKeyValue() throws IOException {
     try {
       if (results == null) {
-        fetchData();
+         fetchData();
       }
 
       if (!iterator.hasNext()) {
@@ -129,7 +133,6 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
     // Get the table data
     results = restApi.fetchTableRecords(tableName, pluginConf.getStartDate(), pluginConf.getEndDate(),
       split.getOffset(), ServiceNowConstants.PAGE_SIZE);
-
     LOG.debug("size={}", results.size());
     if (!results.isEmpty()) {
       fetchSchema(restApi);
@@ -159,7 +162,7 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
     schema = Schema.recordOf(tableName, schemaFields);
   }
 
-  private Object convertToValue(String fieldName, Schema fieldSchema, Map<String, Object> record) {
+  public Object convertToValue(String fieldName, Schema fieldSchema, Map<String, Object> record) {
     Schema.Type fieldType = fieldSchema.getType();
     Object fieldValue = record.get(fieldName);
 
@@ -185,11 +188,11 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
     }
   }
 
-  private String convertToStringValue(Object fieldValue) {
+  public String convertToStringValue(Object fieldValue) {
     return String.valueOf(fieldValue);
   }
 
-  private Double convertToDoubleValue(Object fieldValue) {
+  public Double convertToDoubleValue(Object fieldValue) {
     if (fieldValue instanceof String && Strings.isNullOrEmpty(String.valueOf(fieldValue))) {
       return null;
     }
@@ -197,7 +200,7 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
     return Double.parseDouble(String.valueOf(fieldValue));
   }
 
-  private Integer convertToIntegerValue(Object fieldValue) {
+  public Integer convertToIntegerValue(Object fieldValue) {
     if (fieldValue instanceof String && Strings.isNullOrEmpty(String.valueOf(fieldValue))) {
       return null;
     }
@@ -205,7 +208,7 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
     return Integer.parseInt(String.valueOf(fieldValue));
   }
 
-  private Boolean convertToBooleanValue(Object fieldValue) {
+  public Boolean convertToBooleanValue(Object fieldValue) {
     if (fieldValue instanceof String && Strings.isNullOrEmpty(String.valueOf(fieldValue))) {
       return null;
     }

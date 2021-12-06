@@ -43,6 +43,7 @@ public class ServiceNowSourceConfigHelper {
     private String applicationName = "";
     private String tableNameField = "tablename";
     private String tableName = "tablename";
+    private String tableNames = "tablesnames";
     private String valueType = "Actual";
     private String startDate = "";
     private String endDate = "";
@@ -69,6 +70,11 @@ public class ServiceNowSourceConfigHelper {
 
     public ConfigBuilder setTableName(String tableName) {
       this.tableName = tableName;
+      return this;
+    }
+
+    public ConfigBuilder setTableNames(String tableNames) {
+      this.tableNames = tableNames;
       return this;
     }
 
@@ -116,6 +122,12 @@ public class ServiceNowSourceConfigHelper {
       return new ServiceNowSourceConfig(referenceName, queryMode, applicationName, tableNameField, tableName,
         clientId, clientSecret, restApiEndpoint, user, password, valueType, startDate, endDate);
     }
+
+    public ServiceNowMultiSourceConfig buildMultiSource() {
+      return new ServiceNowMultiSourceConfig(referenceName, tableNameField,
+        clientId, clientSecret, restApiEndpoint, user, password, valueType, startDate, endDate, tableNames);
+    }
+
 
   }
 

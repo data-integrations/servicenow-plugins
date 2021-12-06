@@ -34,7 +34,6 @@ import io.cdap.plugin.common.LineageRecorder;
 import io.cdap.plugin.common.SourceInputFormatProvider;
 import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
-import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
@@ -44,22 +43,23 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * A {@link BatchSource} that reads data from multiple tables in Service Now.
  */
 @Plugin(type = BatchSource.PLUGIN_TYPE)
-@Name(ServiceNowConstants.PLUGIN_NAME)
+@Name(ServiceNowConstants.PLUGIN_NAME_MULTI_SOURCE)
 @Description("Reads from multiple tables in Service Now. " +
   "Outputs one record for each row in each table, with the table name as a record field. " +
   "Also sets a pipeline argument for each table read, which contains the table schema. ")
-public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord, StructuredRecord> {
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowSource.class);
+public class ServiceNowMultiSource extends BatchSource<NullWritable, StructuredRecord, StructuredRecord> {
+  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiSource.class);
 
-  private final ServiceNowSourceConfig conf;
+  private final ServiceNowMultiSourceConfig conf;
 
-  public ServiceNowSource(ServiceNowSourceConfig conf) {
+  public ServiceNowMultiSource(ServiceNowMultiSourceConfig conf) {
     this.conf = conf;
   }
 
@@ -72,31 +72,29 @@ public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord
     FailureCollector collector = stageConfigurer.getFailureCollector();
 
     conf.validate(collector);
+    collector.getOrThrowException();
     // Since we have validated all the properties, throw an exception if there are any errors in the collector.
     // This is to avoid adding same validation errors again in getSchema method call
-    collector.getOrThrowException();
     if (conf.shouldGetSchema()) {
-      List<ServiceNowTableInfo> tableInfo = ServiceNowInputFormat.fetchTableInfo(conf.getQueryMode(collector), conf);
-      if (tableInfo.isEmpty()) {
-        collector.addFailure("Table: " + conf.getTableName() + " has no data.", "")
+      Set<ServiceNowTableInfo> tableInfos = ServiceNowMultiInputFormat.fetchTablesInfo(conf);
+      if (tableInfos.isEmpty()) {
+        collector.addFailure("Table(s): " + conf.getTableNames() + " have no data.", "")
           .withConfigProperty(ServiceNowConstants.PROPERTY_TABLE_NAMES);
       } else {
-        stageConfigurer.setOutputSchema(
-          tableInfo.get(0).getSchema());
+        stageConfigurer.setOutputSchema(tableInfos.stream().findFirst().get().getSchema());
       }
+
     }
   }
 
   @Override
-  public void prepareRun(BatchSourceContext context) {
+  public void prepareRun(BatchSourceContext context) throws Exception {
     FailureCollector collector = context.getFailureCollector();
     conf.validate(collector);
     collector.getOrThrowException();
 
-    SourceQueryMode mode = conf.getQueryMode(collector);
-
     Configuration hConf = new Configuration();
-    Collection<ServiceNowTableInfo> tables = ServiceNowInputFormat.setInput(hConf, mode, conf);
+    Collection<ServiceNowTableInfo> tables = ServiceNowMultiInputFormat.setInput(hConf, conf);
     SettableArguments arguments = context.getArguments();
     for (ServiceNowTableInfo tableInfo : tables) {
       arguments.set(ServiceNowConstants.TABLE_PREFIX + tableInfo.getTableName(), tableInfo.getSchema().toString());
@@ -104,7 +102,7 @@ public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord
     }
 
     context.setInput(Input.of(conf.getReferenceName(),
-      new SourceInputFormatProvider(ServiceNowInputFormat.class, hConf)));
+      new SourceInputFormatProvider(ServiceNowMultiInputFormat.class, hConf)));
   }
 
   @Override

@@ -23,9 +23,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
-import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
+import io.cdap.plugin.servicenow.source.ServiceNowBaseSourceConfig;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.source.util.Util;
+
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
@@ -49,9 +50,9 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   private static final String HEADER_NAME_TOTAL_COUNT = "X-Total-Count";
   private static final String OAUTH_URL_TEMPLATE = "%s/oauth_token.do";
 
-  private ServiceNowSourceConfig conf;
+  private ServiceNowBaseSourceConfig conf;
 
-  public ServiceNowTableAPIClientImpl(ServiceNowSourceConfig conf) {
+  public ServiceNowTableAPIClientImpl(ServiceNowBaseSourceConfig conf) {
     this.conf = conf;
   }
 
@@ -196,7 +197,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     return Strings.isNullOrEmpty(headerValue) ? 0 : Integer.parseInt(headerValue);
   }
 
-  private List<Map<String, Object>> parseResponseToResultListOfMap(String responseBody) {
+  public List<Map<String, Object>> parseResponseToResultListOfMap(String responseBody) {
     Gson gson = new Gson();
     JsonObject jo = gson.fromJson(responseBody, JsonObject.class);
     JsonArray ja = jo.getAsJsonArray("result");

@@ -1,0 +1,130 @@
+{
+  "metadata": {
+    "spec-version": "1.0"
+  },
+  "display-name": "ServiceNow Multi Source",
+  "configuration-groups": [
+    {
+      "label": "Basic",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Reference Name",
+          "name": "referenceName",
+          "widget-attributes": {
+            "placeholder": "Name used to identify this source for lineage"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Table specification",
+      "properties": [
+        {
+          "widget-type": "csv",
+          "label": "Table Names",
+          "name": "tableNames",
+          "widget-attributes": {
+            "delimiter": ",",
+            "value-placeholder": "List of tables"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Credentials",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Client ID",
+          "name": "clientId",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow Client ID"
+          }
+        },
+        {
+          "widget-type": "password",
+          "label": "Client Secret",
+          "name": "clientSecret",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow Client Secret Key"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "REST API Endpoint",
+          "name": "restApiEndpoint",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow API Endpoint e.g. https://instance.service-now.com"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "User Name",
+          "name": "user",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow User Name"
+          }
+        },
+        {
+          "widget-type": "password",
+          "label": "Password",
+          "name": "password",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow User Password"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Advanced",
+      "properties": [
+        {
+          "widget-type": "select",
+          "label": "Type of values",
+          "name": "valueType",
+          "widget-attributes": {
+            "values": [
+              "Actual",
+              "Display"
+            ],
+            "default": "Actual"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Start Date",
+          "name": "startDate",
+          "widget-attributes" : {
+            "placeholder": "Start date to be used to filter the data"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "End Date",
+          "name": "endDate",
+          "widget-attributes" : {
+            "placeholder": "End date to be used to filter the data"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Table Name Field",
+          "name": "tableNameField",
+          "widget-attributes": {
+            "placeholder": "The name of the field that holds the table name.",
+            "default": "tablename"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": [ ],
+  "jump-config": {
+    "datasets": [
+      {
+        "ref-property-name": "referenceName"
+      }
+    ]
+  }
+}
