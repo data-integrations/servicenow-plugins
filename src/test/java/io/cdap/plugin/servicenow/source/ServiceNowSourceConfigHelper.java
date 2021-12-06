@@ -41,8 +41,20 @@ public class ServiceNowSourceConfigHelper {
     private String password = TEST_PASSWORD;
     private String queryMode = "Table";
     private String applicationName = "";
+    /*
+    The name of the field that holds the table name. Must not be the name of any table column that will be read.
+    Defaults to `tablename`. Note, the Table name field value will be ignored if the Mode is set to `Table`.
+     */
     private String tableNameField = "tablename";
+    /*
+    The name of the ServiceNow table from which data to be fetched. Note, the Table name value will be ignored if the
+    Mode is set to `Reporting`.
+     */
     private String tableName = "tablename";
+    /*
+    The name of the ServiceNow table(s) from which data to be fetched.
+     */
+    private String tableNames = "tablesnames";
     private String valueType = "Actual";
     private String startDate = "";
     private String endDate = "";
@@ -69,6 +81,11 @@ public class ServiceNowSourceConfigHelper {
 
     public ConfigBuilder setTableName(String tableName) {
       this.tableName = tableName;
+      return this;
+    }
+
+    public ConfigBuilder setTableNames(String tableNames) {
+      this.tableNames = tableNames;
       return this;
     }
 
@@ -116,6 +133,12 @@ public class ServiceNowSourceConfigHelper {
       return new ServiceNowSourceConfig(referenceName, queryMode, applicationName, tableNameField, tableName,
         clientId, clientSecret, restApiEndpoint, user, password, valueType, startDate, endDate);
     }
+
+    public ServiceNowMultiSourceConfig buildMultiSource() {
+      return new ServiceNowMultiSourceConfig(referenceName, tableNameField,
+        clientId, clientSecret, restApiEndpoint, user, password, valueType, startDate, endDate, tableNames);
+    }
+
 
   }
 

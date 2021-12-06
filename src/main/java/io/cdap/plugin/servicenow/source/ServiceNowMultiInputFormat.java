@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Cask Data, Inc.
+ * Copyright © 2022 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.common.base.Strings;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
@@ -24,7 +25,7 @@ import io.cdap.plugin.servicenow.source.util.SchemaBuilder;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
-import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -38,60 +39,56 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * ServiceNow input format.
  */
-public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredRecord> {
+public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, StructuredRecord> {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowInputFormat.class);
 
   /**
    * Updates the jobConfig with the ServiceNow table information, which will then be read in getSplit() function.
    *
    * @param jobConfig the job configuration
-   * @param mode the query mode
    * @param conf the database conf
    * @return Collection of ServiceNowTableInfo containing table and schema.
    */
-  public static List<ServiceNowTableInfo> setInput(Configuration jobConfig, SourceQueryMode mode,
-                                                   ServiceNowSourceConfig conf) {
+  public static Set<ServiceNowTableInfo> setInput(Configuration jobConfig,
+                                                  ServiceNowMultiSourceConfig conf) {
     ServiceNowJobConfiguration jobConf = new ServiceNowJobConfiguration(jobConfig);
-    jobConf.setPluginConfiguration(conf);
+    jobConf.setMultiSourcePluginConfiguration(conf);
 
     // Depending on conf value fetch the list of fields for each table and create schema object
     // return the schema object for each table as ServiceNowTableInfo
-    List<ServiceNowTableInfo> tableInfos = fetchTableInfo(mode, conf);
+    Set<ServiceNowTableInfo> tableInfos = fetchTablesInfo(conf);
 
-    jobConf.setTableInfos(tableInfos);
+    jobConf.setTableInfos(tableInfos.stream().collect(Collectors.toList()));
 
     return tableInfos;
   }
 
-  static List<ServiceNowTableInfo> fetchTableInfo(SourceQueryMode mode, ServiceNowSourceConfig conf) {
-    // When mode = Table, fetch details from the table name provided in plugin config
-    if (mode == SourceQueryMode.TABLE) {
-      ServiceNowTableInfo tableInfo = getTableMetaData(conf.getTableName(), conf);
-      return (tableInfo == null) ? Collections.emptyList() : Collections.singletonList(tableInfo);
-    }
+  static Set<ServiceNowTableInfo> fetchTablesInfo(ServiceNowMultiSourceConfig conf) {
 
-    // When mode = Reporting, get the list of tables for application name provided in plugin config
-    // and then fetch details from each of the tables.
-    List<ServiceNowTableInfo> tableInfos = new ArrayList<>();
+    Set<ServiceNowTableInfo> tablesInfos = new LinkedHashSet<>();
 
-    List<String> tableNames = conf.getApplicationName().getTableNames();
+    Set<String> tableNames = getList(conf.getTableNames());
     for (String tableName : tableNames) {
       ServiceNowTableInfo tableInfo = getTableMetaData(tableName, conf);
       if (tableInfo == null) {
         continue;
       }
-      tableInfos.add(tableInfo);
+      tablesInfos.add(tableInfo);
     }
 
-    return tableInfos;
+    return tablesInfos;
   }
 
-  private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowSourceConfig conf) {
+  private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowMultiSourceConfig conf) {
     // Call API to fetch first record from the table
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(conf);
 
@@ -121,11 +118,6 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
     for (ServiceNowTableInfo tableInfo : tableInfos) {
       String tableName = tableInfo.getTableName();
       int totalRecords = tableInfo.getRecordCount();
-      if (totalRecords <= ServiceNowConstants.PAGE_SIZE) {
-        // add single split for table and continue
-        resultSplits.add(new ServiceNowInputSplit(tableName, 0));
-        continue;
-      }
 
       int pages = (tableInfo.getRecordCount() / ServiceNowConstants.PAGE_SIZE);
       if (tableInfo.getRecordCount() % ServiceNowConstants.PAGE_SIZE > 0) {
@@ -144,11 +136,20 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
 
   @Override
   public RecordReader<NullWritable, StructuredRecord> createRecordReader(InputSplit inputSplit,
-                                                                         TaskAttemptContext taskAttemptContext)
-    throws IOException, InterruptedException {
+                                                                         TaskAttemptContext taskAttemptContext) {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(taskAttemptContext.getConfiguration());
-    ServiceNowSourceConfig pluginConf = jobConfig.getPluginConf();
+    ServiceNowMultiSourceConfig pluginConf = jobConfig.getMultiSourcePluginConf();
 
-    return new ServiceNowRecordReader(pluginConf);
+    return new ServiceNowMultiRecordReader(pluginConf);
+  }
+
+  public static Set<String> getList(String value) {
+    return Strings.isNullOrEmpty(value)
+      ? Collections.emptySet()
+      : Stream.of(value.split(","))
+      .map(String::trim)
+      .filter(name -> !name.isEmpty())
+      .collect(Collectors.toSet());
   }
 }
+

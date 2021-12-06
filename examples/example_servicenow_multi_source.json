@@ -1,0 +1,101 @@
+{
+    "artifact": {
+        "name": "cdap-data-pipeline",
+        "version": "6.5.0",
+        "scope": "SYSTEM"
+    },
+    "description": "Data Pipeline Application",
+    "name": "Test_ServiceNow_Multi_Source",
+    "config": {
+        "resources": {
+            "memoryMB": 2048,
+            "virtualCores": 1
+        },
+        "driverResources": {
+            "memoryMB": 2048,
+            "virtualCores": 1
+        },
+        "connections": [
+            {
+                "from": "ServiceNowMultiSource",
+                "to": "BigQuery Multi Table"
+            }
+        ],
+        "comments": [],
+        "postActions": [],
+        "properties": {},
+        "processTimingEnabled": true,
+        "stageLoggingEnabled": false,
+        "stages": [
+            {
+                "name": "ServiceNowMultiSource",
+                "plugin": {
+                    "name": "ServiceNowMultiSource",
+                    "type": "batchsource",
+                    "label": "ServiceNowMultiSource",
+                    "artifact": {
+                        "name": "servicenow-plugins",
+                        "version": "1.0.0-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "valueType": "Actual",
+                        "clientId": "${CLIENT_ID}",
+                        "clientSecret": "${CLIENT_SECRET}",
+                        "restApiEndpoint": "${API_ENDPOINT}",
+                        "user": "${USERNAME}",
+                        "password": "${PASSWORD}",
+                        "tableNames": "pc_hardware_cat_item,pc_software_cat_item",
+                        "referenceName": "ref1",
+                        "tableNameField": "tablename",
+                        "startDate": "${START_DATE}",
+                        "endDate": "${END_DATE}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "id": "ServiceNowMultiSource"
+            },
+            {
+                "name": "BigQuery Multi Table",
+                "plugin": {
+                    "name": "BigQueryMultiTable",
+                    "type": "batchsink",
+                    "label": "BigQuery Multi Table",
+                    "artifact": {
+                        "name": "google-cloud",
+                        "version": "0.19.0-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "referenceName": "ref2",
+                        "project": "${GCP_PROJECT_ID}",
+                        "dataset": "${GCS_BUCKET_PATH}",
+                        "truncateTable": "false",
+                        "serviceAccountType": "JSON",
+                        "allowFlexibleSchema": "off",
+                        "allowSchemaRelaxation": "false",
+                        "location": "US",
+                        "serviceAccountJSON": "${GCS_SERVICE_ACCOUNT_JSON}"
+                    }
+                },
+                "inputSchema": [
+                    {
+                        "name": "ServiceNowMultiSource",
+                        "schema": ""
+                    }
+                ],
+                "id": "BigQuery-Multi-Table"
+            }
+        ],
+        "schedule": "0 1 */1 * *",
+        "engine": "spark",
+        "numOfRecordsPreview": 100,
+        "description": "Data Pipeline Application",
+        "maxConcurrentRuns": 1
+    }
+}

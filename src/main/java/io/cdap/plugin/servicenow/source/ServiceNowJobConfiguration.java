@@ -33,6 +33,8 @@ public class ServiceNowJobConfiguration {
 
   private static final Type PLUGIN_CONF_TYPE = new TypeToken<ServiceNowSourceConfig>() {
   }.getType();
+  private static final Type MULTI_SOURCE_PLUGIN_CONF_TYPE = new TypeToken<ServiceNowMultiSourceConfig>() {
+  }.getType();
   private static final Type INFO_TYPE = new TypeToken<List<ServiceNowTableInfo>>() {
   }.getType();
 
@@ -52,8 +54,16 @@ public class ServiceNowJobConfiguration {
     set(PLUGIN_CONF_FIELD, GSON.toJson(conf));
   }
 
+  public void setMultiSourcePluginConfiguration(ServiceNowMultiSourceConfig conf) {
+    set(PLUGIN_CONF_FIELD, GSON.toJson(conf));
+  }
+
   public ServiceNowSourceConfig getPluginConf() {
     return GSON.fromJson(getConf().get(PLUGIN_CONF_FIELD), PLUGIN_CONF_TYPE);
+  }
+
+  public ServiceNowMultiSourceConfig getMultiSourcePluginConf() {
+    return GSON.fromJson(getConf().get(PLUGIN_CONF_FIELD), MULTI_SOURCE_PLUGIN_CONF_TYPE);
   }
 
   public List<ServiceNowTableInfo> getTableInfos() {

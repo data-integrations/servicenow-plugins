@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Cask Data, Inc.
+ * Copyright © 2022 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -22,7 +22,6 @@ import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.source.util.SchemaBuilder;
 import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
-import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +32,13 @@ import java.util.List;
 /**
  * Record reader that reads the entire contents of a ServiceNow table.
  */
-public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowRecordReader.class);
-  private final ServiceNowSourceConfig pluginConf;
+public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
+  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiRecordReader.class);
+  private final ServiceNowMultiSourceConfig multiSourcePluginConf;
 
-
-  ServiceNowRecordReader(ServiceNowSourceConfig pluginConf) {
+  ServiceNowMultiRecordReader(ServiceNowMultiSourceConfig multiSourcePluginConf) {
     super();
-    this.pluginConf = pluginConf;
+    this.multiSourcePluginConf = multiSourcePluginConf;
   }
 
   @Override
@@ -58,7 +56,6 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
 
       pos++;
     } catch (Exception e) {
-      LOG.error("Error in nextKeyValue", e);
       throw new IOException("Exception in nextKeyValue", e);
     }
     return true;
@@ -67,10 +64,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
   @Override
   public StructuredRecord getCurrentValue() throws IOException {
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(schema);
-
-    if (pluginConf.getQueryMode() == SourceQueryMode.REPORTING) {
-      recordBuilder.set(tableNameField, tableName);
-    }
+    recordBuilder.set(tableNameField, tableName);
 
     try {
       for (Schema.Field field : tableFields) {
@@ -79,21 +73,22 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
         recordBuilder.set(fieldName, fieldValue);
       }
     } catch (Exception e) {
-      LOG.error("Error decoding row from table " + tableName, e);
       throw new IOException("Error decoding row from table " + tableName, e);
     }
     return recordBuilder.build();
   }
 
-  private void fetchData() {
+  public void fetchData() {
     tableName = split.getTableName();
-    tableNameField = pluginConf.getTableNameField();
+    tableNameField = multiSourcePluginConf.getTableNameField();
 
-    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(pluginConf);
+    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(multiSourcePluginConf);
 
     // Get the table data
-    results = restApi.fetchTableRecords(tableName, pluginConf.getStartDate(), pluginConf.getEndDate(),
-                                        split.getOffset(), ServiceNowConstants.PAGE_SIZE);
+    results =
+      restApi.fetchTableRecords(tableName, multiSourcePluginConf.getStartDate(), multiSourcePluginConf.getEndDate(),
+                                split.getOffset(), ServiceNowConstants.PAGE_SIZE);
+
     LOG.debug("size={}", results.size());
     if (!results.isEmpty()) {
       fetchSchema(restApi);
@@ -114,10 +109,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     Schema tempSchema = SchemaBuilder.constructSchema(tableName, response.getColumns());
     tableFields = tempSchema.getFields();
     List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
-
-    if (pluginConf.getQueryMode() == SourceQueryMode.REPORTING) {
-      schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
-    }
+    schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
 
     schema = Schema.recordOf(tableName, schemaFields);
   }

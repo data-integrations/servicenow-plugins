@@ -39,7 +39,7 @@ public abstract class RestAPIClient {
    * @param request the Rest API request
    * @return an instance of RestAPIResponse object.
    */
-  protected RestAPIResponse executeGet(RestAPIRequest request) {
+  public RestAPIResponse executeGet(RestAPIRequest request) {
     HttpGet httpGet = new HttpGet(request.getUrl());
     request.getHeaders().entrySet().forEach(e -> httpGet.addHeader(e.getKey(), e.getValue()));
     RestAPIResponse apiResponse = null;
