@@ -10,8 +10,6 @@ Properties
 
 **Reference Name**: Name used to uniquely identify this source for lineage, annotating metadata, etc.
 
-
-
 **Table Names**: The name of the ServiceNow table(s) from which data to be fetched. Note, the Table name value will be 
 ignored if the Mode is set to `Reporting`.
 
@@ -57,4 +55,3 @@ Data Types Mapping
     | translated_html                | string                |                                                    |
     | journal                        | string                |                                                    |
     | string                         | string                |                                                    |
-

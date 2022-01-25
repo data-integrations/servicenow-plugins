@@ -19,8 +19,6 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.TABLE_NAME_FIELD_DEFAULT;
-
 /**
  * Base ServiceNow Batch Source config. Contains common configuration properties and methods.
  */
@@ -136,7 +134,7 @@ public class ServiceNowBaseSourceConfig extends PluginConfig {
 
   @Nullable
   public String getTableNameField() {
-    return Strings.isNullOrEmpty(tableNameField) ? TABLE_NAME_FIELD_DEFAULT : tableNameField;
+    return Strings.isNullOrEmpty(tableNameField) ? ServiceNowConstants.TABLE_NAME_FIELD_DEFAULT : tableNameField;
   }
 
   /**

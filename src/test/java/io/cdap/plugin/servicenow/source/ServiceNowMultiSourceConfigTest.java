@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2022 Cask Data, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package io.cdap.plugin.servicenow.source;
 
 import io.cdap.cdap.etl.api.validation.ValidationFailure;
@@ -10,8 +26,6 @@ import org.junit.rules.ExpectedException;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-
 /**
  * Tests for {@link ServiceNowMultiSourceConfig}.
  */
@@ -22,14 +36,14 @@ public class ServiceNowMultiSourceConfigTest {
 
   @Test
   public void testConstructor() {
-    assertEquals("Table Names",
+    Assert.assertEquals("Table Names",
       (new ServiceNowMultiSourceConfig("Reference Name", "Table Name Field", "42", "Client Secret",
         "https://dev115725.service-now.com", "User", "password", "42", "2021-12-30", "2021-12-31",
         "Table Names")).getTableNames());
   }
 
   @Test
-  public void testValidate() throws Exception {
+  public void testValidate() {
     ServiceNowMultiSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
       .setReferenceName("test")
       .setRestApiEndpoint("https://dev115725.service-now.com")
@@ -46,7 +60,7 @@ public class ServiceNowMultiSourceConfigTest {
 
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     config.validate(mockFailureCollector);
-    Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());
+    Assert.assertEquals(2, mockFailureCollector.getValidationFailures().size());
   }
 
   @Test
@@ -56,15 +70,15 @@ public class ServiceNowMultiSourceConfigTest {
       "Actual",
       "2021-12-30", "2021-12-31", "Table Names");
     serviceNowMultiSourceConfig.validateTableNames(new MockFailureCollector("Stage Name"));
-    assertEquals("42", serviceNowMultiSourceConfig.getClientId());
-    assertEquals("Table Name Field", serviceNowMultiSourceConfig.tableNameField);
-    assertEquals("admin", serviceNowMultiSourceConfig.getUser());
-    assertEquals("Table Names", serviceNowMultiSourceConfig.getTableNames());
-    assertEquals("2021-12-30", serviceNowMultiSourceConfig.getStartDate());
-    assertEquals("https://dev115725.service-now.com/", serviceNowMultiSourceConfig.getRestApiEndpoint());
-    assertEquals("6qa8xrCJzWTV", serviceNowMultiSourceConfig.getPassword());
-    assertEquals("Client Secret", serviceNowMultiSourceConfig.getClientSecret());
-    assertEquals("2021-12-31", serviceNowMultiSourceConfig.getEndDate());
+    Assert.assertEquals("42", serviceNowMultiSourceConfig.getClientId());
+    Assert.assertEquals("Table Name Field", serviceNowMultiSourceConfig.tableNameField);
+    Assert.assertEquals("admin", serviceNowMultiSourceConfig.getUser());
+    Assert.assertEquals("Table Names", serviceNowMultiSourceConfig.getTableNames());
+    Assert.assertEquals("2021-12-30", serviceNowMultiSourceConfig.getStartDate());
+    Assert.assertEquals("https://dev115725.service-now.com/", serviceNowMultiSourceConfig.getRestApiEndpoint());
+    Assert.assertEquals("6qa8xrCJzWTV", serviceNowMultiSourceConfig.getPassword());
+    Assert.assertEquals("Client Secret", serviceNowMultiSourceConfig.getClientSecret());
+    Assert.assertEquals("2021-12-31", serviceNowMultiSourceConfig.getEndDate());
   }
 
   @Test
@@ -75,14 +89,14 @@ public class ServiceNowMultiSourceConfigTest {
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     serviceNowMultiSourceConfig.validateTableNames(mockFailureCollector);
     List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();
-    assertEquals(1, validationFailures.size());
+    Assert.assertEquals(1, validationFailures.size());
     ValidationFailure getResult = validationFailures.get(0);
     List<ValidationFailure.Cause> causes = getResult.getCauses();
-    assertEquals(1, causes.size());
-    assertEquals("Table names must be specified.", getResult.getMessage());
-    assertEquals("Stage Name", getResult.getCorrectiveAction());
-    assertEquals("Table names must be specified. Stage Name", getResult.getFullMessage());
-    assertEquals("tableNames", causes.get(0).getAttributes().get("stageConfig"));
+    Assert.assertEquals(1, causes.size());
+    Assert.assertEquals("Table names must be specified.", getResult.getMessage());
+    Assert.assertEquals("Stage Name", getResult.getCorrectiveAction());
+    Assert.assertEquals("Table names must be specified. Stage Name", getResult.getFullMessage());
+    Assert.assertEquals("tableNames", causes.get(0).getAttributes().get("stageConfig"));
   }
 }
 

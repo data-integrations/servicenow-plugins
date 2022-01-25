@@ -162,7 +162,7 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
     schema = Schema.recordOf(tableName, schemaFields);
   }
 
-  public Object convertToValue(String fieldName, Schema fieldSchema, Map<String, Object> record) {
+  protected Object convertToValue(String fieldName, Schema fieldSchema, Map<String, Object> record) {
     Schema.Type fieldType = fieldSchema.getType();
     Object fieldValue = record.get(fieldName);
 

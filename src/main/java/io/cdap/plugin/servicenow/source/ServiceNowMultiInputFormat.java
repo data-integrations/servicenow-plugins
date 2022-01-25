@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Cask Data, Inc.
+ * Copyright © 2022 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -72,7 +72,7 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     return tableInfos;
   }
 
-  public static Set<ServiceNowTableInfo> fetchTablesInfo(ServiceNowMultiSourceConfig conf) {
+  protected static Set<ServiceNowTableInfo> fetchTablesInfo(ServiceNowMultiSourceConfig conf) {
 
     Set<ServiceNowTableInfo> tablesInfos = new LinkedHashSet<>();
 
@@ -119,11 +119,6 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     for (ServiceNowTableInfo tableInfo : tableInfos) {
       String tableName = tableInfo.getTableName();
       int totalRecords = tableInfo.getRecordCount();
-      if (totalRecords <= ServiceNowConstants.PAGE_SIZE) {
-        // add single split for table and continue
-        resultSplits.add(new ServiceNowInputSplit(tableName, 0));
-        continue;
-      }
 
       int pages = (tableInfo.getRecordCount() / ServiceNowConstants.PAGE_SIZE);
       if (tableInfo.getRecordCount() % ServiceNowConstants.PAGE_SIZE > 0) {

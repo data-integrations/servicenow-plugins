@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Cask Data, Inc.
+ * Copyright © 2022 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -36,8 +36,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-
-import static io.cdap.plugin.servicenow.source.util.ServiceNowConstants.HEADER_NAME_TOTAL_COUNT;
 
 /**
  * Configuration for the {@link ServiceNowMultiSource}.
@@ -82,14 +80,8 @@ public class ServiceNowMultiSourceConfig extends ServiceNowBaseSourceConfig {
    * Validates {@link ServiceNowMultiSourceConfig} instance.
    */
   public void validate(FailureCollector collector) {
-    // Validates the given referenceName to consists of characters allowed to represent a dataset.
-    IdUtils.validateReferenceName(referenceName, collector);
-
-    validateCredentials(collector);
+    super.validate(collector);
     validateTableNames(collector);
-    validateValueType(collector);
-    validateDateRange(collector);
-    validateTableNameField(collector);
   }
 
   public void validateTableNames(FailureCollector collector) {
@@ -117,7 +109,7 @@ public class ServiceNowMultiSourceConfig extends ServiceNowBaseSourceConfig {
           requestBuilder.setAuthHeader(accessToken);
 
           // Get the response JSON and fetch the header X-Total-Count. Set the value to recordCount
-          requestBuilder.setResponseHeaders(HEADER_NAME_TOTAL_COUNT);
+          requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
 
           apiResponse = serviceNowTableAPIClient.executeGet(requestBuilder.build());
           if (!apiResponse.isSuccess()) {
@@ -130,11 +122,17 @@ public class ServiceNowMultiSourceConfig extends ServiceNowBaseSourceConfig {
               .withConfigProperty(ServiceNowConstants.PROPERTY_TABLE_NAMES);
           }
         } catch (OAuthSystemException | OAuthProblemException e) {
-          LOG.error("Error in fetchTableRecords", e);
+          collector.addFailure("Unable to connect to ServiceNow Instance.",
+              "Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
+                "are correct.")
+            .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_ID)
+            .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_SECRET)
+            .withConfigProperty(ServiceNowConstants.PROPERTY_API_ENDPOINT)
+            .withConfigProperty(ServiceNowConstants.PROPERTY_USER)
+            .withConfigProperty(ServiceNowConstants.PROPERTY_PASSWORD);
         }
       }
     }
   }
 
 }
-

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Cask Data, Inc.
+ * Copyright © 2022 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -57,7 +57,6 @@ public class ServiceNowMultiRecordReader extends ServiceNowRecordReader {
 
       pos++;
     } catch (Exception e) {
-      LOG.error("Error in nextKeyValue", e);
       throw new IOException("Exception in nextKeyValue", e);
     }
     return true;
@@ -75,7 +74,6 @@ public class ServiceNowMultiRecordReader extends ServiceNowRecordReader {
         recordBuilder.set(fieldName, fieldValue);
       }
     } catch (Exception e) {
-      LOG.error("Error decoding row from table " + tableName, e);
       throw new IOException("Error decoding row from table " + tableName, e);
     }
     return recordBuilder.build();

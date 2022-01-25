@@ -1,9 +1,26 @@
+/*
+ * Copyright © 2022 Cask Data, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package io.cdap.plugin.servicenow.source;
 
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.macro.Macros;
 import io.cdap.cdap.api.plugin.PluginProperties;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -11,12 +28,8 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 public class ServiceNowRecordReaderTest {
+
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
@@ -24,7 +37,7 @@ public class ServiceNowRecordReaderTest {
   public void testConstructor() throws IOException {
     ServiceNowRecordReader actualServiceNowRecordReader = new ServiceNowRecordReader();
     actualServiceNowRecordReader.close();
-    assertEquals(0, actualServiceNowRecordReader.pos);
+    Assert.assertEquals(0, actualServiceNowRecordReader.pos);
   }
 
   @Test
@@ -35,26 +48,26 @@ public class ServiceNowRecordReaderTest {
 
     ServiceNowRecordReader actualServiceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     actualServiceNowRecordReader.close();
-    assertEquals(0, actualServiceNowRecordReader.pos);
-    assertEquals("Table Name Field", serviceNowSourceConfig.tableNameField);
-    assertEquals("User", serviceNowSourceConfig.getUser());
-    assertEquals("Table Name Field", serviceNowSourceConfig.getTableNameField());
-    assertEquals("Table Name", serviceNowSourceConfig.getTableName());
-    assertEquals("2021-12-30", serviceNowSourceConfig.getStartDate());
-    assertEquals("https://dev115725.service-now.com/", serviceNowSourceConfig.getRestApiEndpoint());
-    assertEquals("Reference Name", serviceNowSourceConfig.getReferenceName());
-    assertEquals("password", serviceNowSourceConfig.getPassword());
-    assertEquals("42", serviceNowSourceConfig.getClientId());
-    assertEquals("2021-12-31", serviceNowSourceConfig.getEndDate());
-    assertEquals("Client Secret", serviceNowSourceConfig.getClientSecret());
+    Assert.assertEquals(0, actualServiceNowRecordReader.pos);
+    Assert.assertEquals("Table Name Field", serviceNowSourceConfig.tableNameField);
+    Assert.assertEquals("User", serviceNowSourceConfig.getUser());
+    Assert.assertEquals("Table Name Field", serviceNowSourceConfig.getTableNameField());
+    Assert.assertEquals("Table Name", serviceNowSourceConfig.getTableName());
+    Assert.assertEquals("2021-12-30", serviceNowSourceConfig.getStartDate());
+    Assert.assertEquals("https://dev115725.service-now.com/", serviceNowSourceConfig.getRestApiEndpoint());
+    Assert.assertEquals("Reference Name", serviceNowSourceConfig.getReferenceName());
+    Assert.assertEquals("password", serviceNowSourceConfig.getPassword());
+    Assert.assertEquals("42", serviceNowSourceConfig.getClientId());
+    Assert.assertEquals("2021-12-31", serviceNowSourceConfig.getEndDate());
+    Assert.assertEquals("Client Secret", serviceNowSourceConfig.getClientSecret());
     PluginProperties properties = serviceNowSourceConfig.getProperties();
-    assertEquals("PluginProperties{properties={}, macros=Macros{lookupProperties=[], macroFunctions=[]}}",
+    Assert.assertEquals("PluginProperties{properties={}, macros=Macros{lookupProperties=[], macroFunctions=[]}}",
       properties.toString());
-    assertTrue(properties.getProperties().isEmpty());
+    Assert.assertTrue(properties.getProperties().isEmpty());
     Macros macros = properties.getMacros();
-    assertEquals("Macros{lookupProperties=[], macroFunctions=[]}", macros.toString());
-    assertTrue(macros.getMacroFunctions().isEmpty());
-    assertTrue(macros.getLookups().isEmpty());
+    Assert.assertEquals("Macros{lookupProperties=[], macroFunctions=[]}", macros.toString());
+    Assert.assertTrue(macros.getMacroFunctions().isEmpty());
+    Assert.assertTrue(macros.getLookups().isEmpty());
   }
 
   @Test
@@ -91,28 +104,28 @@ public class ServiceNowRecordReaderTest {
 
   @Test
   public void testConvertToStringValue() {
-    assertEquals("Field Value", (new ServiceNowRecordReader()).convertToStringValue("Field Value"));
+    Assert.assertEquals("Field Value", (new ServiceNowRecordReader()).convertToStringValue("Field Value"));
   }
 
   @Test
   public void testConvertToDoubleValue() {
-    assertEquals(42.0, (new ServiceNowRecordReader()).convertToDoubleValue("42").doubleValue(), 0.0);
-    assertEquals(42.0, (new ServiceNowRecordReader()).convertToDoubleValue(42).doubleValue(), 0.0);
-    assertNull((new ServiceNowRecordReader()).convertToDoubleValue(""));
+    Assert.assertEquals(42.0, (new ServiceNowRecordReader()).convertToDoubleValue("42").doubleValue(), 0.0);
+    Assert.assertEquals(42.0, (new ServiceNowRecordReader()).convertToDoubleValue(42).doubleValue(), 0.0);
+    Assert.assertNull(new ServiceNowRecordReader().convertToDoubleValue(""));
   }
 
   @Test
   public void testConvertToIntegerValue() {
-    assertEquals(42, (new ServiceNowRecordReader()).convertToIntegerValue("42").intValue());
-    assertEquals(42, (new ServiceNowRecordReader()).convertToIntegerValue(42).intValue());
-    assertNull((new ServiceNowRecordReader()).convertToIntegerValue(""));
+    Assert.assertEquals(42, (new ServiceNowRecordReader()).convertToIntegerValue("42").intValue());
+    Assert.assertEquals(42, (new ServiceNowRecordReader()).convertToIntegerValue(42).intValue());
+    Assert.assertNull(new ServiceNowRecordReader().convertToIntegerValue(""));
   }
 
   @Test
   public void testConvertToBooleanValue() {
-    assertFalse((new ServiceNowRecordReader()).convertToBooleanValue("Field Value"));
-    assertFalse((new ServiceNowRecordReader()).convertToBooleanValue(42));
-    assertNull((new ServiceNowRecordReader()).convertToBooleanValue(""));
+    Assert.assertFalse(new ServiceNowRecordReader().convertToBooleanValue("Field Value"));
+    Assert.assertFalse(new ServiceNowRecordReader().convertToBooleanValue(42));
+    Assert.assertNull(new ServiceNowRecordReader().convertToBooleanValue(""));
   }
 }
 
