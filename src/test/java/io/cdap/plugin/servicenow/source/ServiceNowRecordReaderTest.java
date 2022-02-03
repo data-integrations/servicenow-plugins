@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.gson.internal.LinkedTreeMap;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.macro.Macros;
 import io.cdap.cdap.api.plugin.PluginProperties;
@@ -42,6 +43,7 @@ public class ServiceNowRecordReaderTest {
 
   @Test
   public void testConstructor2() throws IOException {
+    LinkedTreeMap<String, Object> map = new LinkedTreeMap<>();
     ServiceNowSourceConfig serviceNowSourceConfig = new ServiceNowSourceConfig("Reference Name", "Query Mode",
       "Application Name", "Table Name Field", "Table Name", "42", "Client Secret",
       "https://dev115725.service-now.com/", "User", "password", "Actual", "2021-12-30", "2021-12-31");

@@ -16,10 +16,21 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import io.cdap.cdap.etl.api.PipelineConfigurer;
+import io.cdap.cdap.etl.api.StageConfigurer;
+import io.cdap.cdap.etl.mock.common.MockPipelineConfigurer;
+import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 
 public class ServiceNowMultiSourceTest {
 
@@ -30,6 +41,9 @@ public class ServiceNowMultiSourceTest {
   protected static final String PASSWORD = System.getProperty("servicenow.test.password");
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiInputFormatTest.class);
 
+  @Mock
+  PipelineConfigurer pipelineConfigurer;
+
   ServiceNowMultiSource serviceNowMultiSource;
   ServiceNowMultiSourceConfig serviceNowMultiSourceConfig;
 
@@ -39,10 +53,5 @@ public class ServiceNowMultiSourceTest {
       CLIENT_ID, CLIENT_SECRET, REST_API_ENDPOINT, USER, PASSWORD, "Actual", "2012-12-31", "2021-12-31"
     );
     serviceNowMultiSource = new ServiceNowMultiSource(serviceNowMultiSourceConfig);
-  }
-
-  @Test
-  public void test() {
-    //TODO
   }
 }

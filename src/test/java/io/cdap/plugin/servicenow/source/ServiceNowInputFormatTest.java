@@ -75,7 +75,7 @@ public class ServiceNowInputFormatTest {
     columns.add(column2);
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setColumns(columns);
-    assertEquals(ServiceNowInputFormat.fetchTableInfo(mode, config).size(), 1);
+    assertEquals(1, ServiceNowInputFormat.fetchTableInfo(mode, config).size());
     assertTrue("TABLE", true);
   }
 

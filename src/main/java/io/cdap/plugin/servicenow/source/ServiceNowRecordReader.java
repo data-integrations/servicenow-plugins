@@ -124,7 +124,7 @@ public class ServiceNowRecordReader extends RecordReader<NullWritable, Structure
   public void close() throws IOException {
   }
 
-  private void fetchData() {
+  protected void fetchData() {
     tableName = split.getTableName();
     tableNameField = pluginConf.getTableNameField();
 

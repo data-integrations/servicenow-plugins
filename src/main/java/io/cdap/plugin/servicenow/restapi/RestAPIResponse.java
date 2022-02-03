@@ -49,7 +49,7 @@ public class RestAPIResponse {
   private Map<String, String> headers;
   private String responseBody;
 
-  RestAPIResponse(int httpStatus, Map<String, String> headers, String responseBody) {
+  public RestAPIResponse(int httpStatus, Map<String, String> headers, String responseBody) {
     this.httpStatus = httpStatus;
     this.headers = headers;
     this.responseBody = responseBody;
