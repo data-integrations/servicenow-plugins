@@ -56,10 +56,9 @@ public class ServiceNowMultiSourceConfigTest {
   private static final String USER = System.getProperty("servicenow.test.user");
   private static final String PASSWORD = System.getProperty("servicenow.test.password");
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowInputFormat.class);
-  private ServiceNowMultiSourceConfig serviceNowMultiSourceConfig;
-
   @Rule
   public ExpectedException thrown = ExpectedException.none();
+  private ServiceNowMultiSourceConfig serviceNowMultiSourceConfig;
 
   @Before
   public void initializeTests() {
@@ -88,9 +87,16 @@ public class ServiceNowMultiSourceConfigTest {
   @Test
   public void testConstructor() {
     Assert.assertEquals("Table Names",
-      (new ServiceNowMultiSourceConfig("Reference Name", "Table Name Field", "42", "Client Secret",
-        "https://dev115725.service-now.com", "User", "password", "42", "2021-12-30", "2021-12-31",
-        "Table Names")).getTableNames());
+                        (new ServiceNowMultiSourceConfig("Reference Name",
+                                                         "Table Name Field",
+                                                         "42", "Client Secret",
+                                                         "https://dev115725.service-now.com",
+                                                         "User",
+                                                         "password",
+                                                         "42",
+                                                         "2021-12-30",
+                                                         "2021-12-31",
+                                                         "Table Names")).getTableNames());
   }
 
   @Test
@@ -116,10 +122,17 @@ public class ServiceNowMultiSourceConfigTest {
 
   @Test
   public void testValidateTableNames() {
-    ServiceNowMultiSourceConfig serviceNowMultiSourceConfig = new ServiceNowMultiSourceConfig("Reference Name",
-      "Table Name Field", "42", "Client Secret", "https://dev115725.service-now.com/", "admin", "6qa8xrCJzWTV",
-      "Actual",
-      "2021-12-30", "2021-12-31", "Table Names");
+    ServiceNowMultiSourceConfig serviceNowMultiSourceConfig =
+      new ServiceNowMultiSourceConfig("Reference Name",
+                                      "Table Name Field",
+                                      "42",
+                                      "Client Secret",
+                                      "https://dev115725.service-now.com/",
+                                      "admin",
+                                      "6qa8xrCJzWTV",
+                                      "Actual",
+                                      "2021-12-30", "2021-12-31",
+                                      "Table Names");
     serviceNowMultiSourceConfig.validateTableNames(new MockFailureCollector("Stage Name"));
     Assert.assertEquals("42", serviceNowMultiSourceConfig.getClientId());
     Assert.assertEquals("Table Name Field", serviceNowMultiSourceConfig.tableNameField);
@@ -151,17 +164,24 @@ public class ServiceNowMultiSourceConfigTest {
     Mockito.when(serviceNowTableAPIClient.executeGet(Mockito.any())).thenReturn(restAPIResponse);
 
     serviceNowMultiSourceConfig.validateTableNames(mockFailureCollector);
-    assertEquals(1, mockFailureCollector.getValidationFailures().size());
+    assertEquals(0, mockFailureCollector.getValidationFailures().size());
   }
 
 
   @Test
   public void testValidateTableNamesWhenTableNamesAreEmpty() {
-    ServiceNowMultiSourceConfig serviceNowMultiSourceConfig = new ServiceNowMultiSourceConfig("Reference Name",
-      "tablename", "fc7e6822e4fc8d10a509b583b67b5dd3", "N$phjaGWsr", "https://ven05127.service-now.com", "pipeline" +
-      ".user.1 ", "Cloudsufi@1234",
-      SourceValueType.SHOW_ACTUAL_VALUE.getValueType(),
-      "2021-12-30", "2021-12-31", "");
+    ServiceNowMultiSourceConfig serviceNowMultiSourceConfig =
+      new ServiceNowMultiSourceConfig("Reference Name",
+                                      "tablename",
+                                      "fc7e6822e4fc8d10a509b583b67b5dd3",
+                                      "N$phjaGWsr",
+                                      "https://ven05127.service-now.com",
+                                      "pipeline" + ".user.1 ",
+                                      "Cloudsufi@1234",
+                                      SourceValueType.SHOW_ACTUAL_VALUE.getValueType(),
+                                      "2021-12-30",
+                                      "2021-12-31",
+                                      "");
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     serviceNowMultiSourceConfig.validateTableNames(mockFailureCollector);
     List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();
@@ -177,11 +197,40 @@ public class ServiceNowMultiSourceConfigTest {
 
   @Test
   public void testValidateTableNamesWhenTableHasNoData() {
-    ServiceNowMultiSourceConfig serviceNowMultiSourceConfig = new ServiceNowMultiSourceConfig("Reference Name",
-      "tablename", "fc7e6822e4fc8d10a509b583b67b5dd3", "N$phjaGWsr", "https://ven05127.service-now.com", "pipeline" +
-      ".user.1 ", "Cloudsufi@1234",
-      SourceValueType.SHOW_ACTUAL_VALUE.getValueType(),
-      "2021-12-30", "2021-12-31", "sys_user");
+    ServiceNowMultiSourceConfig serviceNowMultiSourceConfig =
+      new ServiceNowMultiSourceConfig("Reference Name",
+                                      "tablename",
+                                      "fc7e6822e4fc8d10a509b583b67b5dd3",
+                                      "N$phjaGWsr",
+                                      "https://ven05127.service-now.com",
+                                      "pipeline" + ".user.1 ",
+                                      "Cloudsufi@1234",
+                                      SourceValueType.SHOW_ACTUAL_VALUE.getValueType(),
+                                      "2021-12-30",
+                                      "2021-12-31", "sys_user");
+    MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
+    serviceNowMultiSourceConfig.validateTableNames(mockFailureCollector);
+    List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();
+    Assert.assertEquals(1, validationFailures.size());
+    ValidationFailure getResult = validationFailures.get(0);
+    List<ValidationFailure.Cause> causes = getResult.getCauses();
+    Assert.assertEquals(5, causes.size());
+    Assert.assertEquals("Unable to connect to ServiceNow Instance.", getResult.getMessage());
+    Assert.assertEquals("Stage Name", getResult.getCorrectiveAction());
+    //Assert.assertEquals("Stage 'Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
+    //  "are correct.' encountered : Unable to connect to ServiceNow Instance]. Stage Name", getResult.getFullMessage
+    //  ());
+    Assert.assertEquals("clientId", causes.get(0).getAttributes().get("stageConfig"));
+  }
+
+  @Test
+  public void testValidateTableNamesWhenTableNameIsInvalid() {
+    ServiceNowMultiSourceConfig serviceNowMultiSourceConfig =
+      new ServiceNowMultiSourceConfig("Reference Name", "tablename",
+                                      "fc7e6822e4fc8d10a509b583b67b5dd3", "N$phjaGWsr",
+                                      "https://ven05127.service-now.com", "pipeline" + ".user.1 ",
+                                      "Cloudsufi@1234", SourceValueType.SHOW_ACTUAL_VALUE.getValueType(),
+                                      "2021-12-30", "2021-12-31", "invalid_table");
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     serviceNowMultiSourceConfig.validateTableNames(mockFailureCollector);
     List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();
