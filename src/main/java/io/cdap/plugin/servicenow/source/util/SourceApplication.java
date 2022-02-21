@@ -37,7 +37,7 @@ public enum SourceApplication {
   /**
    * Data from tables related to Product Catalog will be fetched.
    */
-  PRODUCT_CATALOG("Product Catalog", Arrays.asList("new_call", "pc_hardware_cat_item", "pc_product_cat_item",
+  PRODUCT_CATALOG("Product Catalog", Arrays.asList("pc_hardware_cat_item", "pc_product_cat_item",
     "pc_software_cat_item", "pc_vendor_cat_item")),
 
   /**
