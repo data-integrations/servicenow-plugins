@@ -17,16 +17,9 @@
 
 package io.cdap.plugin.servicenow.source;
 
-import io.cdap.cdap.api.data.schema.Schema;
-import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
-import io.cdap.plugin.servicenow.source.util.SchemaBuilder;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
-import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
-import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
-
-import org.apache.hadoop.mapreduce.InputSplit;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,9 +48,9 @@ public class ServiceNowInputFormatTest {
   public void initializeTests() {
     try {
       config = new ServiceNowSourceConfig("Reference Name", "Query Mode",
-        "Product Catalog", "tablename", "pc_hardware_cat_item",
-        CLIENT_ID, CLIENT_SECRET,
-        REST_API_ENDPOINT, USER, PASSWORD, "Actual", "2012-12-31", "2021-12-31");
+                                          "Product Catalog", "tablename", "pc_hardware_cat_item",
+                                          CLIENT_ID, CLIENT_SECRET,
+                                          REST_API_ENDPOINT, USER, PASSWORD, "Actual", "2012-12-31", "2021-12-31");
       Assume.assumeNotNull(CLIENT_ID, CLIENT_SECRET, REST_API_ENDPOINT, USER, PASSWORD);
     } catch (AssumptionViolatedException e) {
       LOG.warn("Service Now batch Source tests are skipped. ");
@@ -80,7 +73,21 @@ public class ServiceNowInputFormatTest {
   }
 
   @Test
-  public void testFetchTableInfoEmptyWithTableName() {
+  public void testFetchTableInfoReportingMode() {
+    SourceQueryMode mode = SourceQueryMode.REPORTING;
+    ServiceNowColumn column1 = new ServiceNowColumn("sys_created_by", "string");
+    ServiceNowColumn column2 = new ServiceNowColumn("sys_updated_by", "string");
+    List<ServiceNowColumn> columns = new ArrayList<>();
+    columns.add(column1);
+    columns.add(column2);
+    ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
+    response.setColumns(columns);
+    assertEquals(3, ServiceNowInputFormat.fetchTableInfo(mode, config).size());
+    assertTrue("TABLE", true);
+  }
+
+  @Test
+  public void testFetchTableInfoWithEmptyTableName() {
     SourceQueryMode mode = SourceQueryMode.TABLE;
     assertFalse(ServiceNowInputFormat.fetchTableInfo(mode, config).isEmpty());
   }

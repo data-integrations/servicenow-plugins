@@ -22,8 +22,6 @@ import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
-import io.cdap.plugin.servicenow.source.util.SourceValueType;
-
 import org.apache.http.HttpStatus;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
@@ -55,7 +53,8 @@ public class ServiceNowMultiSourceConfigTest {
   private static final String REST_API_ENDPOINT = System.getProperty("servicenow.test.restApiEndpoint");
   private static final String USER = System.getProperty("servicenow.test.user");
   private static final String PASSWORD = System.getProperty("servicenow.test.password");
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowInputFormat.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiSourceConfigTest.class);
+
   @Rule
   public ExpectedException thrown = ExpectedException.none();
   private ServiceNowMultiSourceConfig serviceNowMultiSourceConfig;
@@ -170,18 +169,20 @@ public class ServiceNowMultiSourceConfigTest {
 
   @Test
   public void testValidateTableNamesWhenTableNamesAreEmpty() {
-    ServiceNowMultiSourceConfig serviceNowMultiSourceConfig =
-      new ServiceNowMultiSourceConfig("Reference Name",
-                                      "tablename",
-                                      "fc7e6822e4fc8d10a509b583b67b5dd3",
-                                      "N$phjaGWsr",
-                                      "https://ven05127.service-now.com",
-                                      "pipeline" + ".user.1 ",
-                                      "Cloudsufi@1234",
-                                      SourceValueType.SHOW_ACTUAL_VALUE.getValueType(),
-                                      "2021-12-30",
-                                      "2021-12-31",
-                                      "");
+    serviceNowMultiSourceConfig =
+      ServiceNowSourceConfigHelper.newConfigBuilder()
+        .setReferenceName("Reference Name")
+        .setRestApiEndpoint(REST_API_ENDPOINT)
+        .setUser(USER)
+        .setPassword(PASSWORD)
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setTableNames("")
+        .setValueType("Actual")
+        .setStartDate("2021-12-30")
+        .setEndDate("2021-12-31")
+        .setTableNameField("tablename")
+        .buildMultiSource();
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     serviceNowMultiSourceConfig.validateTableNames(mockFailureCollector);
     List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();
@@ -197,54 +198,58 @@ public class ServiceNowMultiSourceConfigTest {
 
   @Test
   public void testValidateTableNamesWhenTableHasNoData() {
-    ServiceNowMultiSourceConfig serviceNowMultiSourceConfig =
-      new ServiceNowMultiSourceConfig("Reference Name",
-                                      "tablename",
-                                      "fc7e6822e4fc8d10a509b583b67b5dd3",
-                                      "N$phjaGWsr",
-                                      "https://ven05127.service-now.com",
-                                      "pipeline" + ".user.1 ",
-                                      "Cloudsufi@1234",
-                                      SourceValueType.SHOW_ACTUAL_VALUE.getValueType(),
-                                      "2021-12-30",
-                                      "2021-12-31", "sys_user");
+    serviceNowMultiSourceConfig =
+      ServiceNowSourceConfigHelper.newConfigBuilder()
+        .setReferenceName("Reference Name")
+        .setRestApiEndpoint(REST_API_ENDPOINT)
+        .setUser(USER)
+        .setPassword(PASSWORD)
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setTableNames("clm_contract_history")
+        .setValueType("Actual")
+        .setStartDate("2021-12-30")
+        .setEndDate("2021-12-31")
+        .setTableNameField("tablename")
+        .buildMultiSource();
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     serviceNowMultiSourceConfig.validateTableNames(mockFailureCollector);
     List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();
     Assert.assertEquals(1, validationFailures.size());
     ValidationFailure getResult = validationFailures.get(0);
     List<ValidationFailure.Cause> causes = getResult.getCauses();
-    Assert.assertEquals(5, causes.size());
-    Assert.assertEquals("Unable to connect to ServiceNow Instance.", getResult.getMessage());
+    Assert.assertEquals(1, causes.size());
+    Assert.assertEquals("Table: clm_contract_history is empty.", getResult.getMessage());
     Assert.assertEquals("Stage Name", getResult.getCorrectiveAction());
-    //Assert.assertEquals("Stage 'Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
-    //  "are correct.' encountered : Unable to connect to ServiceNow Instance]. Stage Name", getResult.getFullMessage
-    //  ());
-    Assert.assertEquals("clientId", causes.get(0).getAttributes().get("stageConfig"));
+    Assert.assertEquals("tableNames", causes.get(0).getAttributes().get("stageConfig"));
   }
 
   @Test
   public void testValidateTableNamesWhenTableNameIsInvalid() {
-    ServiceNowMultiSourceConfig serviceNowMultiSourceConfig =
-      new ServiceNowMultiSourceConfig("Reference Name", "tablename",
-                                      "fc7e6822e4fc8d10a509b583b67b5dd3", "N$phjaGWsr",
-                                      "https://ven05127.service-now.com", "pipeline" + ".user.1 ",
-                                      "Cloudsufi@1234", SourceValueType.SHOW_ACTUAL_VALUE.getValueType(),
-                                      "2021-12-30", "2021-12-31", "invalid_table");
+    serviceNowMultiSourceConfig =
+      ServiceNowSourceConfigHelper.newConfigBuilder()
+        .setReferenceName("Reference Name")
+        .setRestApiEndpoint(REST_API_ENDPOINT)
+        .setUser(USER)
+        .setPassword(PASSWORD)
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setTableNames("sys_user1")
+        .setValueType("Actual")
+        .setStartDate("2021-12-30")
+        .setEndDate("2021-12-31")
+        .setTableNameField("tablename")
+        .buildMultiSource();
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     serviceNowMultiSourceConfig.validateTableNames(mockFailureCollector);
     List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();
     Assert.assertEquals(1, validationFailures.size());
     ValidationFailure getResult = validationFailures.get(0);
     List<ValidationFailure.Cause> causes = getResult.getCauses();
-    Assert.assertEquals(5, causes.size());
-    Assert.assertEquals("Unable to connect to ServiceNow Instance.", getResult.getMessage());
+    Assert.assertEquals(1, causes.size());
+    Assert.assertEquals("Bad Request. Table: sys_user1 is invalid.", getResult.getMessage());
     Assert.assertEquals("Stage Name", getResult.getCorrectiveAction());
-    //Assert.assertEquals("Stage 'Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
-    //  "are correct.' encountered : Unable to connect to ServiceNow Instance]. Stage Name", getResult.getFullMessage
-    //  ());
-    Assert.assertEquals("clientId", causes.get(0).getAttributes().get("stageConfig"));
+    Assert.assertEquals("tableNames", causes.get(0).getAttributes().get("stageConfig"));
   }
 
 }
-

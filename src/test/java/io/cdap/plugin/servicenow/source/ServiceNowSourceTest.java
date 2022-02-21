@@ -34,35 +34,35 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ServiceNowMultiSourceTest {
+public class ServiceNowSourceTest {
 
   private static final String CLIENT_ID = System.getProperty("servicenow.test.clientId");
   private static final String CLIENT_SECRET = System.getProperty("servicenow.test.clientSecret");
   private static final String REST_API_ENDPOINT = System.getProperty("servicenow.test.restApiEndpoint");
   private static final String USER = System.getProperty("servicenow.test.user");
   private static final String PASSWORD = System.getProperty("servicenow.test.password");
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiSourceTest.class);
-  private ServiceNowMultiSource serviceNowMultiSource;
-  private ServiceNowMultiSourceConfig serviceNowMultiSourceConfig;
+  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowSourceTest.class);
+  private ServiceNowSource serviceNowSource;
+  private ServiceNowSourceConfig serviceNowSourceConfig;
 
   @Before
   public void initialize() {
     try {
       Assume.assumeNotNull(CLIENT_ID, CLIENT_SECRET, REST_API_ENDPOINT, USER, PASSWORD);
-      serviceNowMultiSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
+      serviceNowSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
         .setReferenceName("referenceName")
         .setRestApiEndpoint(REST_API_ENDPOINT)
         .setUser(USER)
         .setPassword(PASSWORD)
         .setClientId(CLIENT_ID)
         .setClientSecret(CLIENT_SECRET)
-        .setTableNames("sys_user")
+        .setTableName("sys_user")
         .setValueType("Actual")
         .setStartDate("2021-01-01")
         .setEndDate("2022-02-18")
         .setTableNameField("tablename")
-        .buildMultiSource();
-      serviceNowMultiSource = new ServiceNowMultiSource(serviceNowMultiSourceConfig);
+        .build();
+      serviceNowSource = new ServiceNowSource(serviceNowSourceConfig);
     } catch (AssumptionViolatedException e) {
       LOG.warn("Service Now batch Source tests are skipped. ");
       throw e;
@@ -75,39 +75,38 @@ public class ServiceNowMultiSourceTest {
     Map<String, Object> plugins = new HashMap<>();
     MockFailureCollector mockFailureCollector = new MockFailureCollector();
     MockPipelineConfigurer mockPipelineConfigurer = new MockPipelineConfigurer(inputSchema, plugins);
-    serviceNowMultiSource.configurePipeline(mockPipelineConfigurer);
+    serviceNowSource.configurePipeline(mockPipelineConfigurer);
     Assert.assertEquals(0, mockFailureCollector.getValidationFailures().size());
   }
 
   @Test
   public void testConfigurePipelineWithEmptyTable() {
-    serviceNowMultiSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
+    serviceNowSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
       .setReferenceName("referenceName")
       .setRestApiEndpoint(REST_API_ENDPOINT)
       .setUser(USER)
       .setPassword(PASSWORD)
       .setClientId(CLIENT_ID)
       .setClientSecret(CLIENT_SECRET)
-      .setTableNames("clm_contract_history")
+      .setTableName("clm_contract_history")
       .setValueType("Actual")
       .setStartDate("2019-01-01")
       .setEndDate("2022-02-18")
       .setTableNameField("tablename")
-      .buildMultiSource();
-    serviceNowMultiSource = new ServiceNowMultiSource(serviceNowMultiSourceConfig);
+      .build();
+    serviceNowSource = new ServiceNowSource(serviceNowSourceConfig);
     Schema inputSchema = null;
     Map<String, Object> plugins = new HashMap<>();
     MockFailureCollector mockFailureCollector = new MockFailureCollector();
     MockPipelineConfigurer mockPipelineConfigurer = new MockPipelineConfigurer(inputSchema, plugins);
     try {
-      serviceNowMultiSource.configurePipeline(mockPipelineConfigurer);
+      serviceNowSource.configurePipeline(mockPipelineConfigurer);
       Assert.fail("Exception is not thrown for Non-Empty Tables");
     } catch (ValidationException e) {
       Assert.assertEquals(0, mockFailureCollector.getValidationFailures().size());
       Assert.assertEquals("Errors were encountered during validation.",
                           e.getMessage());
     }
-
   }
 
   @Test
@@ -117,7 +116,8 @@ public class ServiceNowMultiSourceTest {
     BatchSourceContext context = Mockito.mock(BatchSourceContext.class);
     Mockito.when(context.getFailureCollector()).thenReturn(mockFailureCollector);
     Mockito.when(context.getArguments()).thenReturn(mockArguments);
-    serviceNowMultiSource.prepareRun(context);
+    serviceNowSource.prepareRun(context);
     Assert.assertEquals(0, mockFailureCollector.getValidationFailures().size());
   }
+
 }

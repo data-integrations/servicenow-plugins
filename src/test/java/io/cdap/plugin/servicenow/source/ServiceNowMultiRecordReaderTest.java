@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
-import org.mockito.internal.util.reflection.FieldSetter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ServiceNowRecordReaderTest {
+public class ServiceNowMultiRecordReaderTest {
 
   private static final String CLIENT_ID = System.getProperty("servicenow.test.clientId");
   private static final String CLIENT_SECRET = System.getProperty("servicenow.test.clientSecret");
@@ -50,110 +49,99 @@ public class ServiceNowRecordReaderTest {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
-  private ServiceNowSourceConfig serviceNowSourceConfig;
-  private ServiceNowRecordReader serviceNowRecordReader;
+  private ServiceNowMultiSourceConfig serviceNowMultiSourceConfig;
+  private ServiceNowMultiRecordReader serviceNowMultiRecordReader;
 
   @Before
   public void initializeTests() {
     try {
       Assume.assumeNotNull(CLIENT_ID, CLIENT_SECRET, REST_API_ENDPOINT, USER, PASSWORD);
-      serviceNowSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
+      serviceNowMultiSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
         .setReferenceName("referenceName")
         .setRestApiEndpoint(REST_API_ENDPOINT)
         .setUser(USER)
         .setPassword(PASSWORD)
         .setClientId(CLIENT_ID)
         .setClientSecret(CLIENT_SECRET)
-        .setTableName("sys_user")
+        .setTableNames("sys_user")
         .setValueType("Actual")
         .setStartDate("2021-01-01")
         .setEndDate("2022-02-18")
         .setTableNameField("tablename")
-        .build();
+        .buildMultiSource();
 
-      serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
+      serviceNowMultiRecordReader = new ServiceNowMultiRecordReader(serviceNowMultiSourceConfig);
 
     } catch (AssumptionViolatedException e) {
-      LOG.warn("Service Now batch multi source tests are skipped. ");
+      LOG.warn("Service Now Batch Multi Source tests are skipped. ");
       throw e;
     }
   }
 
   @Test
   public void testConstructor() throws IOException {
-    serviceNowRecordReader.close();
-    Assert.assertEquals(0, serviceNowRecordReader.pos);
-  }
-
-  @Test
-  public void testConstructor2() throws IOException {
-
-    serviceNowRecordReader.close();
-    Assert.assertEquals(0, serviceNowRecordReader.pos);
-    Assert.assertEquals("pipeline.user.1", serviceNowSourceConfig.getUser());
-    Assert.assertEquals("tablename", serviceNowSourceConfig.getTableNameField());
-    Assert.assertEquals("sys_user", serviceNowSourceConfig.getTableName());
-    Assert.assertEquals("2021-01-01", serviceNowSourceConfig.getStartDate());
-    Assert.assertEquals("https://ven05127.service-now.com", serviceNowSourceConfig.getRestApiEndpoint());
-    Assert.assertEquals("referenceName", serviceNowSourceConfig.getReferenceName());
-    Assert.assertEquals("2022-02-18", serviceNowSourceConfig.getEndDate());
-    PluginProperties properties = serviceNowSourceConfig.getProperties();
+    Assert.assertEquals("tablename", serviceNowMultiSourceConfig.tableNameField);
+    Assert.assertEquals("pipeline.user.1", serviceNowMultiSourceConfig.getUser());
+    Assert.assertEquals("sys_user", serviceNowMultiSourceConfig.getTableNames());
+    Assert.assertEquals("tablename", serviceNowMultiSourceConfig.getTableNameField());
+    Assert.assertEquals("2021-01-01", serviceNowMultiSourceConfig.getStartDate());
+    Assert.assertEquals("https://ven05127.service-now.com", serviceNowMultiSourceConfig.getRestApiEndpoint());
+    Assert.assertEquals("referenceName", serviceNowMultiSourceConfig.getReferenceName());
+    Assert.assertEquals("2022-02-18", serviceNowMultiSourceConfig.getEndDate());
+    PluginProperties properties = serviceNowMultiSourceConfig.getProperties();
     Assert.assertTrue(properties.getProperties().isEmpty());
+    serviceNowMultiRecordReader.close();
+    Assert.assertEquals(0, serviceNowMultiRecordReader.pos);
   }
 
   @Test
   public void testConvertToValue() {
     Schema fieldSchema = Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS);
     thrown.expect(IllegalStateException.class);
-    serviceNowRecordReader.convertToValue("Field Name", fieldSchema, new HashMap<>(1));
+    serviceNowMultiRecordReader.convertToValue("Field Name", fieldSchema, new HashMap<>(1));
   }
 
   @Test
-  public void testConvertToValueBopoleanFieldType() {
+  public void testConvertToValue2() {
+    // TODO: This test is incomplete.
+
     Schema fieldSchema = Schema.of(Schema.Type.BOOLEAN);
-    serviceNowRecordReader.convertToValue("Field Name", fieldSchema, new HashMap<>(1));
+    serviceNowMultiRecordReader.convertToValue("Field Name", fieldSchema, new HashMap<>(1));
   }
-
-
-  @Test
-  public void testConvertToValueStringFieldType() {
-    Schema fieldSchema = Schema.of(Schema.Type.STRING);
-    serviceNowRecordReader.convertToValue("Field Name", fieldSchema, new HashMap<>(1));
-  }
-
 
   @Test
   public void testConvertToStringValue() {
-    Assert.assertEquals("Field Value", serviceNowRecordReader.convertToStringValue("Field Value"));
+    Assert.assertEquals("Field Value", serviceNowMultiRecordReader.convertToStringValue("Field Value"));
   }
 
   @Test
   public void testConvertToDoubleValue() {
-    Assert.assertEquals(42.0, serviceNowRecordReader.convertToDoubleValue("42").doubleValue(), 0.0);
-    Assert.assertEquals(42.0, serviceNowRecordReader.convertToDoubleValue(42).doubleValue(), 0.0);
-    Assert.assertNull(serviceNowRecordReader.convertToDoubleValue(""));
+    Assert.assertEquals(42.0, serviceNowMultiRecordReader.convertToDoubleValue("42").doubleValue(), 0.0);
+    Assert.assertEquals(42.0, serviceNowMultiRecordReader.convertToDoubleValue(42).doubleValue(), 0.0);
+    Assert.assertNull(serviceNowMultiRecordReader.convertToDoubleValue(""));
   }
 
   @Test
   public void testConvertToIntegerValue() {
-    Assert.assertEquals(42, serviceNowRecordReader.convertToIntegerValue("42").intValue());
-    Assert.assertEquals(42, serviceNowRecordReader.convertToIntegerValue(42).intValue());
-    Assert.assertNull(serviceNowRecordReader.convertToIntegerValue(""));
+    Assert.assertEquals(42, serviceNowMultiRecordReader.convertToIntegerValue("42").intValue());
+    Assert.assertEquals(42, serviceNowMultiRecordReader.convertToIntegerValue(42).intValue());
+    Assert.assertNull(serviceNowMultiRecordReader.convertToIntegerValue(""));
   }
 
   @Test
   public void testConvertToBooleanValue() {
-    Assert.assertFalse(serviceNowRecordReader.convertToBooleanValue("Field Value"));
-    Assert.assertFalse(serviceNowRecordReader.convertToBooleanValue(42));
-    Assert.assertNull(serviceNowRecordReader.convertToBooleanValue(""));
+    Assert.assertFalse(serviceNowMultiRecordReader.convertToBooleanValue("Field Value"));
+    Assert.assertFalse(serviceNowMultiRecordReader.convertToBooleanValue(42));
+    Assert.assertNull(serviceNowMultiRecordReader.convertToBooleanValue(""));
   }
 
   @Test
-  public void testFetchData() throws NoSuchFieldException, IOException {
-    String tableName = serviceNowSourceConfig.getTableName();
+  public void testFetchData() throws IOException {
+    String tableName = serviceNowMultiSourceConfig.getTableNames();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
-    ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
+    ServiceNowMultiRecordReader serviceNowMultiRecordReader =
+      new ServiceNowMultiRecordReader(serviceNowMultiSourceConfig);
     List<Map<String, Object>> results = new ArrayList<>();
     Map<String, Object> map = new HashMap<>();
     map.put("calendar_integration", "1");
@@ -165,37 +153,37 @@ public class ServiceNowRecordReaderTest {
     map.put("sys_updated_by", "system");
     map.put("sys_created_on", "2019-04-05 21:09:12");
     results.add(map);
-    FieldSetter.setField(serviceNowRecordReader, ServiceNowRecordReader.class.getDeclaredField("split"), split);
-    Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getStartDate(),
-                                           serviceNowSourceConfig.getEndDate(),
+    Mockito.when(restApi.fetchTableRecords(tableName, serviceNowMultiSourceConfig.getStartDate(),
+                                           serviceNowMultiSourceConfig.getEndDate(),
                                            split.getOffset(), ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
 
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
-    serviceNowRecordReader.initialize(split, null);
-    Assert.assertTrue(serviceNowRecordReader.nextKeyValue());
+    serviceNowMultiRecordReader.initialize(split, null);
+    Assert.assertTrue(serviceNowMultiRecordReader.nextKeyValue());
   }
 
   @Test
-  public void testFetchDataOnInvalidTable() throws NoSuchFieldException, IOException {
-    serviceNowSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
+  public void testFetchDataOnInvalidTable() throws IOException {
+    serviceNowMultiSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
       .setReferenceName("referenceName")
       .setRestApiEndpoint(REST_API_ENDPOINT)
       .setUser(USER)
       .setPassword(PASSWORD)
       .setClientId(CLIENT_ID)
       .setClientSecret(CLIENT_SECRET)
-      .setTableName("")
+      .setTableNames("")
       .setValueType("Actual")
       .setStartDate("2021-01-01")
       .setEndDate("2022-02-18")
       .setTableNameField("tablename")
-      .build();
+      .buildMultiSource();
 
-    String tableName = serviceNowSourceConfig.getTableName();
+    String tableName = serviceNowMultiSourceConfig.getTableNames();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
-    ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
+    ServiceNowMultiRecordReader serviceNowMultiRecordReader =
+      new ServiceNowMultiRecordReader(serviceNowMultiSourceConfig);
     List<Map<String, Object>> results = new ArrayList<>();
     Map<String, Object> map = new HashMap<>();
     map.put("calendar_integration", "1");
@@ -207,15 +195,14 @@ public class ServiceNowRecordReaderTest {
     map.put("sys_updated_by", "system");
     map.put("sys_created_on", "2019-04-05 21:09:12");
     results.add(map);
-    FieldSetter.setField(serviceNowRecordReader, ServiceNowRecordReader.class.getDeclaredField("split"), split);
-    Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getStartDate(),
-                                           serviceNowSourceConfig.getEndDate(),
+    Mockito.when(restApi.fetchTableRecords(tableName, serviceNowMultiSourceConfig.getStartDate(),
+                                           serviceNowMultiSourceConfig.getEndDate(),
                                            split.getOffset(), ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
 
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
-    serviceNowRecordReader.initialize(split, null);
-    Assert.assertFalse(serviceNowRecordReader.nextKeyValue());
+    serviceNowMultiRecordReader.initialize(split, null);
+    Assert.assertFalse(serviceNowMultiRecordReader.nextKeyValue());
   }
 
 }
