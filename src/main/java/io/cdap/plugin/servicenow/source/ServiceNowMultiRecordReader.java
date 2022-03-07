@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
@@ -78,18 +79,17 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
     return recordBuilder.build();
   }
 
-  public void fetchData() {
+  @VisibleForTesting
+  void fetchData() {
     tableName = split.getTableName();
     tableNameField = multiSourcePluginConf.getTableNameField();
 
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(multiSourcePluginConf);
 
     // Get the table data
-    results =
-      restApi.fetchTableRecords(tableName, multiSourcePluginConf.getStartDate(), multiSourcePluginConf.getEndDate(),
-                                split.getOffset(), ServiceNowConstants.PAGE_SIZE);
-
-    LOG.debug("size={}", results.size());
+    results = restApi.fetchTableRecordsRetryableMode(tableName, multiSourcePluginConf.getStartDate(),
+      multiSourcePluginConf.getEndDate(), split.getOffset(), ServiceNowConstants.PAGE_SIZE);
+    LOG.debug("Results size={}", results.size());
     if (!results.isEmpty()) {
       fetchSchema(restApi);
     }
