@@ -88,7 +88,7 @@ public class ServiceNowMultiInputFormatTest {
       .fetchTablesInfo(config)
       .size());
   }
-
+  
   @Test
   public void testFetchTablesInfoWithEmptyTableNames() {
     ServiceNowMultiSourceConfig config = new ServiceNowMultiSourceConfig("Reference Name",

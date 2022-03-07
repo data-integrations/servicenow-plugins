@@ -120,4 +120,40 @@ public interface ServiceNowConstants {
    * The total count.
    */
   String HEADER_NAME_TOTAL_COUNT = "X-Total-Count";
+
+  /**
+   * The status.
+   */
+  String STATUS = "status";
+
+  /**
+   * The message.
+   */
+  String MESSAGE = "message";
+
+  /**
+   * The failure.
+   */
+  String FAILURE = "failure";
+
+  /**
+   * The error.
+   */
+  String ERROR = "error";
+
+  /**
+   * The maximum execution time exceeded error.
+   */
+  String MAXIMUM_EXECUTION_TIME_EXCEEDED = "maximum execution time exceeded";
+
+  /**
+   * The wait time for API retry in milliseconds.
+   */
+  int WAIT_TIME = 120000;
+  
+  /**
+   * The maximum number of retry attempts.
+   */
+  int MAX_NUMBER_OF_RETRY_ATTEMPTS = 5;
+  
 }

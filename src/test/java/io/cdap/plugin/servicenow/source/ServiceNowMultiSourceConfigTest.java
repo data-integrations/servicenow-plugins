@@ -111,7 +111,8 @@ public class ServiceNowMultiSourceConfigTest {
     map.put("key", "value");
     result.add(map);
     String responseBody = "{\n" +
-      "    \"result\": [{\n" +
+      "    \"result\": [\n" +
+      "        {\n" +
       "            \"calendar_integration\": \"1\",\n" +
       "            \"country\": \"\",\n" +
       "            \"last_login_time\": \"2019-04-05 22:16:30\",\n" +
@@ -167,7 +168,9 @@ public class ServiceNowMultiSourceConfigTest {
       "            \"time_zone\": \"\",\n" +
       "            \"schedule\": \"\",\n" +
       "            \"date_format\": \"\",\n" +
-      "            \"location\": \"\"]\n" +
+      "            \"location\": \"\"\n" +
+      "        }\n" +
+      "    ]\n" +
       "}";
     RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
     Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
@@ -239,7 +242,8 @@ public class ServiceNowMultiSourceConfigTest {
     map.put("key", "value");
     result.add(map);
     String responseBody = "{\n" +
-      "    \"result\": [{\n" +
+      "    \"result\": [\n" +
+      "        {\n" +
       "            \"calendar_integration\": \"1\",\n" +
       "            \"country\": \"\",\n" +
       "            \"last_login_time\": \"2019-04-05 22:16:30\",\n" +
@@ -295,7 +299,9 @@ public class ServiceNowMultiSourceConfigTest {
       "            \"time_zone\": \"\",\n" +
       "            \"schedule\": \"\",\n" +
       "            \"date_format\": \"\",\n" +
-      "            \"location\": \"\"]\n" +
+      "            \"location\": \"\"\n" +
+      "        }\n" +
+      "    ]\n" +
       "}";
     RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
     Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
@@ -335,7 +341,8 @@ public class ServiceNowMultiSourceConfigTest {
     map.put("key", "value");
     result.add(map);
     String responseBody = "{\n" +
-      "    \"result\": [{\n" +
+      "    \"result\": [\n" +
+      "        {\n" +
       "            \"calendar_integration\": \"1\",\n" +
       "            \"country\": \"\",\n" +
       "            \"last_login_time\": \"2019-04-05 22:16:30\",\n" +
@@ -391,7 +398,9 @@ public class ServiceNowMultiSourceConfigTest {
       "            \"time_zone\": \"\",\n" +
       "            \"schedule\": \"\",\n" +
       "            \"date_format\": \"\",\n" +
-      "            \"location\": \"\"]\n" +
+      "            \"location\": \"\"\n" +
+      "        }\n" +
+      "    ]\n" +
       "}";
     RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
     Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
