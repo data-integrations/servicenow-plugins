@@ -25,7 +25,6 @@ import io.cdap.plugin.servicenow.source.util.SchemaBuilder;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -35,7 +34,6 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,7 +47,8 @@ import java.util.stream.Stream;
  * ServiceNow input format.
  */
 public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, StructuredRecord> {
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowInputFormat.class);
+
+  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiInputFormat.class);
 
   /**
    * Updates the jobConfig with the ServiceNow table information, which will then be read in getSplit() function.
@@ -152,4 +151,3 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
       .collect(Collectors.toSet());
   }
 }
-

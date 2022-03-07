@@ -112,7 +112,7 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
   }
 
   @Override
-  public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
+  public List<InputSplit> getSplits(JobContext jobContext) {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(jobContext.getConfiguration());
 
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();

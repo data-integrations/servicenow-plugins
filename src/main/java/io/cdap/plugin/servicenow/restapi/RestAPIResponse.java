@@ -16,6 +16,9 @@
 
 package io.cdap.plugin.servicenow.restapi;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -48,11 +51,13 @@ public class RestAPIResponse {
   private int httpStatus;
   private Map<String, String> headers;
   private String responseBody;
+  private boolean isRetryable;
 
   public RestAPIResponse(int httpStatus, Map<String, String> headers, String responseBody) {
     this.httpStatus = httpStatus;
     this.headers = headers;
     this.responseBody = responseBody;
+    this.checkRetryable();
   }
 
   public static RestAPIResponse defaultErrorResponse(String message) {
@@ -98,7 +103,26 @@ public class RestAPIResponse {
   }
 
   public boolean isSuccess() {
-    return successCodes.contains(getHttpStatus());
+    boolean isSuccess = false;
+    // ServiceNow Rest API may return 200 OK response with an error message in the response body.
+    // Normally we would expect non-200 response code if there's an error.
+    if (this.isRetryable) {
+      isSuccess = false;
+    } else if (successCodes.contains(getHttpStatus())) {
+      isSuccess = true;
+    }
+    return isSuccess;
+  }
+
+  private void checkRetryable() {
+    Gson gson = new Gson();
+    JsonObject jo = gson.fromJson(this.responseBody, JsonObject.class);
+    if (jo.get(ServiceNowConstants.STATUS) != null &&
+      jo.get(ServiceNowConstants.STATUS).getAsString().equals(ServiceNowConstants.FAILURE) &&
+      jo.getAsJsonObject(ServiceNowConstants.ERROR).get(ServiceNowConstants.MESSAGE).getAsString()
+        .contains(ServiceNowConstants.MAXIMUM_EXECUTION_TIME_EXCEEDED)) {
+      isRetryable = true;
+    }
   }
 
   public Map<String, String> getHeaders() {
@@ -107,5 +131,9 @@ public class RestAPIResponse {
 
   public String getResponseBody() {
     return responseBody;
+  }
+
+  public boolean isRetryable() {
+    return isRetryable;
   }
 }

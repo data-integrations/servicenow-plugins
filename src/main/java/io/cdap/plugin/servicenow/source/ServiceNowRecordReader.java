@@ -37,7 +37,6 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowRecordReader.class);
   private final ServiceNowSourceConfig pluginConf;
 
-
   ServiceNowRecordReader(ServiceNowSourceConfig pluginConf) {
     super();
     this.pluginConf = pluginConf;
@@ -92,9 +91,9 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(pluginConf);
 
     // Get the table data
-    results = restApi.fetchTableRecords(tableName, pluginConf.getStartDate(), pluginConf.getEndDate(),
-                                        split.getOffset(), ServiceNowConstants.PAGE_SIZE);
-    LOG.debug("size={}", results.size());
+    results = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getStartDate(), pluginConf.getEndDate(),
+                                                     split.getOffset(), ServiceNowConstants.PAGE_SIZE);
+    LOG.debug("Results size={}", results.size());
     if (!results.isEmpty()) {
       fetchSchema(restApi);
     }
