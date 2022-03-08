@@ -34,7 +34,7 @@ public class SchemaBuilder {
    * @param columns The list of ServiceNowColumn objects that will be added as Schema.Field
    * @return The instance of Schema object
    */
-  public Schema constructSchema(String tableName, List<ServiceNowColumn> columns) {
+  public static Schema constructSchema(String tableName, List<ServiceNowColumn> columns) {
     SchemaBuilder schemaBuilder = new SchemaBuilder();
     List<Schema.Field> fields = schemaBuilder.constructSchemaFields(columns);
 

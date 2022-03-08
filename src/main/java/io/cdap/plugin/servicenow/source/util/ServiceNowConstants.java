@@ -27,6 +27,11 @@ public interface ServiceNowConstants {
   String PLUGIN_NAME = "ServiceNow";
 
   /**
+   * ServiceNow Multi Source plugin name.
+   */
+  String PLUGIN_NAME_MULTI_SOURCE = "ServiceNowMultiSource";
+
+  /**
    * Configuration property name used to specify the query mode.
    */
   String PROPERTY_QUERY_MODE = "queryMode";
@@ -45,6 +50,11 @@ public interface ServiceNowConstants {
    * Configuration property name used to specify table name.
    */
   String PROPERTY_TABLE_NAME = "tableName";
+
+  /**
+   * Configuration property name used to specify table names.
+   */
+  String PROPERTY_TABLE_NAMES = "tableNames";
 
   /**
    * Configuration property name used to specify client id.
@@ -87,6 +97,11 @@ public interface ServiceNowConstants {
   String PROPERTY_END_DATE = "endDate";
 
   /**
+   * Configuration property name used to specify table name field.
+   */
+  String TABLE_NAME_FIELD_DEFAULT = "tablename";
+
+  /**
    * Table prefix to be used in case of Reporting mode.
    */
   String TABLE_PREFIX = "multisink.";
@@ -100,4 +115,9 @@ public interface ServiceNowConstants {
    * The max limit for the page size.
    */
   int PAGE_SIZE = 5000;
+
+  /**
+   * The total count.
+   */
+  String HEADER_NAME_TOTAL_COUNT = "X-Total-Count";
 }

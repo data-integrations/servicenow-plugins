@@ -23,8 +23,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
-import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
+import io.cdap.plugin.servicenow.source.ServiceNowBaseSourceConfig;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
+import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.Util;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
@@ -46,12 +47,11 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     "@javascript:gs.dateGenerate('%s','end')";
   private static final String FIELD_CREATED_ON = "sys_created_on";
   private static final String FIELD_UPDATED_ON = "sys_updated_on";
-  private static final String HEADER_NAME_TOTAL_COUNT = "X-Total-Count";
   private static final String OAUTH_URL_TEMPLATE = "%s/oauth_token.do";
 
-  private ServiceNowSourceConfig conf;
+  private ServiceNowBaseSourceConfig conf;
 
-  public ServiceNowTableAPIClientImpl(ServiceNowSourceConfig conf) {
+  public ServiceNowTableAPIClientImpl(ServiceNowBaseSourceConfig conf) {
     this.conf = conf;
   }
 
@@ -133,7 +133,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
 
       // Get the response JSON and fetch the header X-Total-Count. Set the value to recordCount
       if (fetchRecordCount) {
-        requestBuilder.setResponseHeaders(HEADER_NAME_TOTAL_COUNT);
+        requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
       }
 
       apiResponse = executeGet(requestBuilder.build());
@@ -192,11 +192,11 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   }
 
   private int getRecordCountFromHeader(RestAPIResponse apiResponse) {
-    String headerValue = apiResponse.getHeaders().get(HEADER_NAME_TOTAL_COUNT);
+    String headerValue = apiResponse.getHeaders().get(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
     return Strings.isNullOrEmpty(headerValue) ? 0 : Integer.parseInt(headerValue);
   }
 
-  private List<Map<String, Object>> parseResponseToResultListOfMap(String responseBody) {
+  public List<Map<String, Object>> parseResponseToResultListOfMap(String responseBody) {
     Gson gson = new Gson();
     JsonObject jo = gson.fromJson(responseBody, JsonObject.class);
     JsonArray ja = jo.getAsJsonArray("result");
