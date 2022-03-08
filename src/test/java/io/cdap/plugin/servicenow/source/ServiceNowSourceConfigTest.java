@@ -21,64 +21,36 @@ import io.cdap.cdap.etl.api.validation.CauseAttributes;
 import io.cdap.cdap.etl.api.validation.ValidationException;
 import io.cdap.cdap.etl.api.validation.ValidationFailure;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
+import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
+import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.SourceApplication;
 import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
 import io.cdap.plugin.servicenow.source.util.SourceValueType;
-
+import org.apache.commons.httpclient.HttpStatus;
 import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.internal.AssumptionViolatedException;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Tests for {@link ServiceNowSourceConfig}.
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ServiceNowTableAPIClientImpl.class, ServiceNowBaseSourceConfig.class, ServiceNowSourceConfig.class})
 public class ServiceNowSourceConfigTest {
-
-
-  private static final String CLIENT_ID = System.getProperty("servicenow.test.clientId");
-  private static final String CLIENT_SECRET = System.getProperty("servicenow.test.clientSecret");
-  private static final String REST_API_ENDPOINT = System.getProperty("servicenow.test.restApiEndpoint");
-  private static final String USER = System.getProperty("servicenow.test.user");
-  private static final String PASSWORD = System.getProperty("servicenow.test.password");
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiSourceConfigTest.class);
-  private ServiceNowSourceConfig serviceNowSourceConfig;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
-
-  @Before
-  public void initializeTests() {
-    try {
-      serviceNowSourceConfig =
-        ServiceNowSourceConfigHelper.newConfigBuilder()
-          .setReferenceName("Reference Name")
-          .setRestApiEndpoint(REST_API_ENDPOINT)
-          .setUser(USER)
-          .setPassword(PASSWORD)
-          .setClientId(CLIENT_ID)
-          .setClientSecret(CLIENT_SECRET)
-          .setTableNames("sys_user")
-          .setValueType("Actual")
-          .setStartDate("2021-12-30")
-          .setEndDate("2021-12-31")
-          .setTableNameField("tablename")
-          .build();
-      Assume.assumeNotNull(CLIENT_ID, CLIENT_SECRET, REST_API_ENDPOINT, USER, PASSWORD);
-    } catch (AssumptionViolatedException e) {
-      LOG.warn("Service Now Source tests are skipped. ");
-      throw e;
-    }
-  }
 
   @Test
   public void testQueryModeTable() {
@@ -200,12 +172,12 @@ public class ServiceNowSourceConfigTest {
   public void testValidateClientIdNull() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(null)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .build(), collector);
+    .setClientId(null)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -222,12 +194,12 @@ public class ServiceNowSourceConfigTest {
   public void testValidateClientSecretNull() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(null)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(null)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -244,12 +216,12 @@ public class ServiceNowSourceConfigTest {
   public void testValidateApiEndpointNull() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(null)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(null)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -266,12 +238,12 @@ public class ServiceNowSourceConfigTest {
   public void testValidateUserNull() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(null)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(null)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -288,12 +260,12 @@ public class ServiceNowSourceConfigTest {
   public void testValidatePasswordNull() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(null)
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(null)
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -310,12 +282,12 @@ public class ServiceNowSourceConfigTest {
   public void testValidCredentials() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint((ServiceNowSourceConfigHelper.TEST_API_ENDPOINT))
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint((ServiceNowSourceConfigHelper.TEST_API_ENDPOINT))
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .build(), collector);
 
     config.validate(collector);
 
@@ -326,14 +298,14 @@ public class ServiceNowSourceConfigTest {
   public void testTableModeMissingTableName() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .setQueryMode("Table")
-      .setTableName(null)
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Table")
+    .setTableName(null)
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -350,14 +322,14 @@ public class ServiceNowSourceConfigTest {
   public void testReportingModeMissingApplication() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .setQueryMode("Reporting")
-      .setApplicationName(null)
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Reporting")
+    .setApplicationName(null)
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -374,15 +346,15 @@ public class ServiceNowSourceConfigTest {
   public void testReportingModeMissingTableNameField() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .setQueryMode("Reporting")
-      .setApplicationName("Contract Management")
-      .setTableNameField(null)
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Reporting")
+    .setApplicationName("Contract Management")
+    .setTableNameField(null)
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -399,16 +371,16 @@ public class ServiceNowSourceConfigTest {
   public void testStartDateInvalid() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .setQueryMode("Table")
-      .setTableName("ast-contract")
-      .setStartDate("2020")
-      .setEndDate("2020-03-01")
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Table")
+    .setTableName("ast-contract")
+    .setStartDate("2020")
+    .setEndDate("2020-03-01")
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -425,16 +397,16 @@ public class ServiceNowSourceConfigTest {
   public void testEndDateInvalid() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .setQueryMode("Table")
-      .setTableName("ast-contract")
-      .setStartDate("2020-03-01")
-      .setEndDate("2020")
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Table")
+    .setTableName("ast-contract")
+    .setStartDate("2020-03-01")
+    .setEndDate("2020")
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -451,16 +423,16 @@ public class ServiceNowSourceConfigTest {
   public void testEndDateLessThanStartDate() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .setQueryMode("Table")
-      .setTableName("ast-contract")
-      .setStartDate("2020-03-01")
-      .setEndDate("2020-02-29")
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Table")
+    .setTableName("ast-contract")
+    .setStartDate("2020-03-01")
+    .setEndDate("2020-02-29")
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -477,16 +449,16 @@ public class ServiceNowSourceConfigTest {
   public void testStartDateInvalidEndDateInvalid() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .setQueryMode("Table")
-      .setTableName("ast-contract")
-      .setStartDate("2019")
-      .setEndDate("2020")
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Table")
+    .setTableName("ast-contract")
+    .setStartDate("2019")
+    .setEndDate("2020")
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -503,16 +475,16 @@ public class ServiceNowSourceConfigTest {
   public void testStartDateAndEndDate() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
-      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
-      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
-      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
-      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .setQueryMode("Table")
-      .setTableName("ast-contract")
-      .setStartDate("2020-01-01")
-      .setEndDate("2021-12-31")
-      .build(), collector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Table")
+    .setTableName("ast-contract")
+    .setStartDate("2020-01-01")
+    .setEndDate("2021-12-31")
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -533,109 +505,90 @@ public class ServiceNowSourceConfigTest {
   }
 
   @Test
-  public void testValidateTableNames() {
-    MockFailureCollector collector = new MockFailureCollector();
-    String tableNames = "tablenames";
-    ServiceNowMultiSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setTableNames(tableNames)
-      .buildMultiSource();
-    config.validateTableNames(collector);
-
-    Assert.assertEquals(1, collector.getValidationFailures().size());
-  }
-
-  @Test
-  public void testValidateTableNamesWhenEmpty() {
-    MockFailureCollector collector = new MockFailureCollector();
-    String tableNames = "";
-    ServiceNowMultiSourceConfig config = ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setTableNames(tableNames)
-      .buildMultiSource();
-
-    try {
-      config.validateTableNames(collector);
-      collector.getOrThrowException();
-    } catch (ValidationException e) {
-      Assert.assertEquals(ServiceNowConstants.PROPERTY_TABLE_NAMES, e.getFailures().get(0).getCauses().get(0)
-        .getAttribute(CauseAttributes.STAGE_CONFIG));
-    }
-    Assert.assertEquals(1, collector.getValidationFailures().size());
-  }
-
-
-  @Test
   public void testValidateWhenTableNameIsEmpty() {
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-                                                                   .setClientId(CLIENT_ID)
-                                                                   .setClientSecret(CLIENT_SECRET)
-                                                                   .setRestApiEndpoint(REST_API_ENDPOINT)
-                                                                   .setUser(USER)
-                                                                   .setPassword(PASSWORD)
-                                                                   .setQueryMode("Table")
-                                                                   .setTableName("")
-                                                                   .setStartDate("2020-03-01")
-                                                                   .setEndDate("2020-02-29")
-                                                                   .build(), mockFailureCollector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Table")
+    .setTableName("")
+    .setStartDate("2012-01-01")
+    .setEndDate("2022-03-08")
+    .build(), mockFailureCollector);
     config.validate(mockFailureCollector);
     List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();
-    Assert.assertEquals(2, validationFailures.size());
+    Assert.assertEquals(1, validationFailures.size());
     ValidationFailure getResult = validationFailures.get(0);
-    List<ValidationFailure.Cause> causes = getResult.getCauses();
-    Assert.assertEquals(1, causes.size());
     Assert.assertEquals("Table name must be specified.", getResult.getMessage());
-    Assert.assertEquals("Stage Name", getResult.getCorrectiveAction());
-    Assert.assertEquals("Table name must be specified. Stage Name", getResult.getFullMessage());
-    Assert.assertEquals("tableName", causes.get(0).getAttributes().get("stageConfig"));
   }
 
   @Test
-  public void testValidateWhenTableHasNoData() {
+  public void testValidateWhenTableIsEmpty() throws Exception {
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-                                                                   .setClientId(CLIENT_ID)
-                                                                   .setClientSecret(CLIENT_SECRET)
-                                                                   .setRestApiEndpoint(REST_API_ENDPOINT)
-                                                                   .setUser(USER)
-                                                                   .setPassword(PASSWORD)
-                                                                   .setQueryMode("Table")
-                                                                   .setTableName("clm_contract_history")
-                                                                   .setStartDate("2020-03-01")
-                                                                   .setEndDate("2020-02-29")
-                                                                   .build(), mockFailureCollector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Table")
+    .setTableName("sys_user")
+    .setStartDate("2012-01-01")
+    .setEndDate("2022-03-08")
+    .build(), mockFailureCollector);
+    ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
+    Mockito.when(restApi.getAccessToken()).thenReturn("token");
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).
+      withArguments(Mockito.any(ServiceNowBaseSourceConfig.class)).thenReturn(restApi);
+
+    int httpStatus = HttpStatus.SC_OK;
+    Map<String, String> headers = new HashMap<>();
+    String responseBody = "{\n" +
+      "    \"result\": []\n" +
+      "}";
+    RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
+    Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
     config.validate(mockFailureCollector);
-    List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();
-    Assert.assertEquals(2, validationFailures.size());
-    ValidationFailure getResult = validationFailures.get(0);
-    List<ValidationFailure.Cause> causes = getResult.getCauses();
-    Assert.assertEquals(1, causes.size());
-    Assert.assertEquals("Table: clm_contract_history is empty.", getResult.getMessage());
-    Assert.assertEquals("Stage Name", getResult.getCorrectiveAction());
-    Assert.assertEquals("tableNames", causes.get(0).getAttributes().get("stageConfig"));
+    Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());
+    Assert.assertEquals("Table: sys_user is empty.", mockFailureCollector.getValidationFailures().get(0).getMessage());
   }
 
   @Test
-  public void testValidateWhenTableNameIsInvalid() {
+  public void testValidateWhenTableNameIsInvalid() throws Exception {
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
-                                                                   .setClientId(CLIENT_ID)
-                                                                   .setClientSecret(CLIENT_SECRET)
-                                                                   .setRestApiEndpoint(REST_API_ENDPOINT)
-                                                                   .setUser(USER)
-                                                                   .setPassword(PASSWORD)
-                                                                   .setQueryMode("Table")
-                                                                   .setTableName("sys_user1")
-                                                                   .setStartDate("2020-03-01")
-                                                                   .setEndDate("2020-02-29")
-                                                                   .build(), mockFailureCollector);
+    .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+    .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+    .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+    .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+    .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+    .setQueryMode("Table")
+    .setTableName("sys_user1")
+    .setStartDate("2012-01-01")
+    .setEndDate("2022-03-08")
+    .build(), mockFailureCollector);
+    ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
+    Mockito.when(restApi.getAccessToken()).thenReturn("token");
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).
+      withArguments(Mockito.any(ServiceNowBaseSourceConfig.class)).thenReturn(restApi);
+    int httpStatus = HttpStatus.SC_BAD_REQUEST;
+    Map<String, String> headers = new HashMap<>();
+    String responseBody = "{\n" +
+      "    \"error\": {\n" +
+      "        \"message\": \"Invalid table sys_user1\",\n" +
+      "        \"detail\": null\n" +
+      "    },\n" +
+      "    \"status\": \"failure\"\n" +
+      "}";
+    RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
+    Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
     config.validate(mockFailureCollector);
-    List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();
-    Assert.assertEquals(2, validationFailures.size());
-    ValidationFailure getResult = validationFailures.get(0);
-    List<ValidationFailure.Cause> causes = getResult.getCauses();
-    Assert.assertEquals(1, causes.size());
-    Assert.assertEquals("Bad Request. Table: sys_user1 is invalid.", getResult.getMessage());
-    Assert.assertEquals("Stage Name", getResult.getCorrectiveAction());
-    Assert.assertEquals("tableNames", causes.get(0).getAttributes().get("stageConfig"));
+    Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());
+    Assert.assertEquals("Bad Request. Table: sys_user1 is invalid.",
+                        mockFailureCollector.getValidationFailures().get(0).getMessage());
+
   }
 }

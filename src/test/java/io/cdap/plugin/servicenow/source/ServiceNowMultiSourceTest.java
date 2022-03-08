@@ -111,7 +111,7 @@ public class ServiceNowMultiSourceTest {
   }
 
   @Test
-  public void testPrepareRun() {
+  public void testPrepareRun() throws Exception {
     MockFailureCollector mockFailureCollector = new MockFailureCollector();
     MockArguments mockArguments = new MockArguments();
     BatchSourceContext context = Mockito.mock(BatchSourceContext.class);

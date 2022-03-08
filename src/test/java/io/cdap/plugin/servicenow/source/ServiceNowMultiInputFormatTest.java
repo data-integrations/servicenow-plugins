@@ -16,55 +16,33 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
+import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
 import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.internal.AssumptionViolatedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ServiceNowMultiInputFormat.class})
 public class ServiceNowMultiInputFormatTest {
-
-  protected static final String CLIENT_ID = System.getProperty("servicenow.test.clientId");
-  protected static final String CLIENT_SECRET = System.getProperty("servicenow.test.clientSecret");
-  protected static final String REST_API_ENDPOINT = System.getProperty("servicenow.test.restApiEndpoint");
-  protected static final String USER = System.getProperty("servicenow.test.user");
-  protected static final String PASSWORD = System.getProperty("servicenow.test.password");
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiInputFormatTest.class);
-  private ServiceNowMultiSourceConfig serviceNowMultiSourceConfig;
-
-  @Before
-  public void initializeTests() {
-    try {
-      serviceNowMultiSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
-        .setReferenceName("referenceName")
-        .setRestApiEndpoint(REST_API_ENDPOINT)
-        .setUser(USER)
-        .setPassword(PASSWORD)
-        .setClientId(CLIENT_ID)
-        .setClientSecret(CLIENT_SECRET)
-        .setTableNames("sys_user")
-        .setValueType("Actual")
-        .setStartDate("2021-01-01")
-        .setEndDate("2022-02-18")
-        .setTableNameField("tablename")
-        .buildMultiSource();
-      Assume.assumeNotNull(CLIENT_ID, CLIENT_SECRET, REST_API_ENDPOINT, USER, PASSWORD);
-    } catch (AssumptionViolatedException e) {
-      LOG.warn("Service Now Batch Source tests are skipped. ");
-      throw e;
-    }
-  }
-
 
   @Test
   public void testFetchTablesInfo() {
+    ServiceNowMultiSourceConfig config =
+      new ServiceNowMultiSourceConfig("referenceName", "tableNameTable", "client_id",
+                                      "client_secret", "http://example.com", "user",
+                                      "password", "Actual", "2021-12-30",
+                                      "2021-12-31", "sys_user");
     ServiceNowColumn column1 = new ServiceNowColumn("sys_created_by", "string");
     ServiceNowColumn column2 = new ServiceNowColumn("sys_updated_by", "string");
     List<ServiceNowColumn> columns = new ArrayList<>();
@@ -72,13 +50,26 @@ public class ServiceNowMultiInputFormatTest {
     columns.add(column2);
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setColumns(columns);
+    int recordCount = response.getTotalRecordCount();
+    String tableName = "sys_user";
+    Schema schema = Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS);
+    Set<ServiceNowTableInfo> serviceNowTableInfos = new HashSet<>();
+    ServiceNowTableInfo serviceNowTableInfo = new ServiceNowTableInfo(tableName, schema, recordCount);
+    serviceNowTableInfos.add(serviceNowTableInfo);
+    PowerMockito.mockStatic(ServiceNowMultiInputFormat.class);
+    PowerMockito.when(ServiceNowMultiInputFormat.fetchTablesInfo(config)).thenReturn(serviceNowTableInfos);
     Assert.assertEquals(1, ServiceNowMultiInputFormat
-      .fetchTablesInfo(serviceNowMultiSourceConfig)
+      .fetchTablesInfo(config)
       .size());
   }
 
   @Test
-  public void testFetchTablesInfoEmptyWithTableNames() {
-    Assert.assertFalse(ServiceNowMultiInputFormat.fetchTablesInfo(serviceNowMultiSourceConfig).isEmpty());
+  public void testFetchTablesInfoWithEmptyTableNames() {
+    ServiceNowMultiSourceConfig config = new ServiceNowMultiSourceConfig("Reference Name",
+    "tableName", "client_id", "Client Secret", "http://example.com",
+    "user", "password", "Actual", "2021-12-30", "2021-12-31", "");
+    Assert.assertTrue(ServiceNowMultiInputFormat
+                        .fetchTablesInfo(config)
+                        .isEmpty());
   }
 }
