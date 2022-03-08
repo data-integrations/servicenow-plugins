@@ -89,35 +89,25 @@ public class ServiceNowInputSplitTest {
 
   }
 
-  @Test
-  public void testWriteWithNullData() {
-    try {
-
+  @Test(expected = NullPointerException.class)
+  public void testWriteWithNullData() throws IOException {
       DataOutput dataOutput = null;
       String tableName = "";
       int offset = 0;
 
       ServiceNowInputSplit serviceNowInputSplit = new ServiceNowInputSplit(tableName, offset);
       serviceNowInputSplit.write(dataOutput);
-
-    } catch (Exception exception) {
-      exception.printStackTrace();
-    }
   }
 
-  @Test
-  public void testRead() {
-    try {
+  @Test(expected = NullPointerException.class)
+  public void testRead() throws IOException {
       DataInput dataInput = null;
       String tableName = "";
       int offset = 0;
 
       ServiceNowInputSplit servicenowinputsplit = new ServiceNowInputSplit(tableName, offset);
       servicenowinputsplit.readFields(dataInput);
-
-    } catch (Exception exception) {
-      exception.printStackTrace();
-    }
   }
 
 }
+
