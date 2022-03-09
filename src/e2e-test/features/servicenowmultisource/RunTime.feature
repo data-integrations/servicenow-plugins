@@ -16,10 +16,10 @@
 @SNMultiSource
 @Smoke
 @Regression
-Feature: ServiceNow Multi Source - Design time scenarios
+Feature: ServiceNow Multi Source - Run time scenarios
 
-  @TS-SN-MULTI-DSGN-01
-  Scenario: Verify user should be able to get Output Schema table for tables of the same application
+  @TS-SN-MULTI-RNTM-01 @SN_PRODUCT_CATALOG_ITEM @BQ_SINK
+  Scenario: Verify user should be able to preview the pipeline
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
@@ -28,20 +28,19 @@ Feature: ServiceNow Multi Source - Design time scenarios
       | HARDWARE_CATALOG | SOFTWARE_CATALOG | PRODUCT_CATALOG_ITEM | VENDOR_CATALOG_ITEM |
     And fill Credentials section for pipeline user
     Then Validate "ServiceNow Multi Source" plugin properties
+    And Close the Plugin Properties page
+    And Select Sink plugin: "BigQueryMultiTable" from the plugins list
+    And Connect source as "ServiceNow" and sink as "BigQueryMultiTable" to establish connection
+    And Navigate to the properties page of plugin: "BigQuery Multi Table"
+    And Configure BigQuery sink plugin for Dataset and Table
+    Then Validate "BigQuery Multi Table" plugin properties
+    And Close the Plugin Properties page
+    And Preview and run the pipeline
+    And Wait till pipeline preview is in running state with a timeout of 500 seconds
+    Then Verify the preview of pipeline is "success"
 
-  @TS-SN-MULTI-DSGN-02
-  Scenario: Verify user should be able to get Output Schema table for tables of different application
-    When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
-    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
-    And Navigate to the properties page of plugin: "ServiceNow Multi Source"
-    And configure ServiceNow Multi source plugin for below listed tables:
-      | ASSET_COVERED | CONDITION | PRODUCT_CATALOG_ITEM | PURCHASE_ORDER | PURCHASE_ORDER_LINE_ITEMS |
-    And fill Credentials section for pipeline user
-    Then Validate "ServiceNow Multi Source" plugin properties
-
-  @TS-SN-MULTI-DSGN-03
-  Scenario: Verify user should be able to get Output Schema table with Date filters
+  @TS-SN-MULTI-RNTM-02 @SN_PRODUCT_CATALOG_ITEM @BQ_SINK
+  Scenario: Verify user should be able to run the pipeline
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
@@ -49,6 +48,15 @@ Feature: ServiceNow Multi Source - Design time scenarios
     And configure ServiceNow Multi source plugin for below listed tables:
       | HARDWARE_CATALOG | SOFTWARE_CATALOG | PRODUCT_CATALOG_ITEM | VENDOR_CATALOG_ITEM |
     And fill Credentials section for pipeline user
-    And Enter input plugin property: "startDate" with value: "start.date"
-    And Enter input plugin property: "endDate" with value: "end.date"
     Then Validate "ServiceNow Multi Source" plugin properties
+    And Close the Plugin Properties page
+    And Select Sink plugin: "BigQueryMultiTable" from the plugins list
+    And Connect source as "ServiceNow" and sink as "BigQueryMultiTable" to establish connection
+    And Navigate to the properties page of plugin: "BigQuery Multi Table"
+    And Configure BigQuery sink plugin for Dataset and Table
+    Then Validate "BigQuery Multi Table" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running status with a timeout of 500 seconds
+    And Verify the pipeline status is "Succeeded"

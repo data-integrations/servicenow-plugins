@@ -16,9 +16,6 @@
 
 package io.cdap.plugin.servicenow.locators;
 
-import io.cdap.e2e.utils.SeleniumDriver;
-import io.cdap.plugin.utils.enums.ServiceNowProperty;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.How;
@@ -68,34 +65,4 @@ public class ServiceNowPropertiesPage {
   // Advanced section
   @FindBy(how = How.XPATH, using = "//div[@data-cy='select-valueType']")
   public static WebElement typeOfValuesDropdown;
-
-  @FindBy(how = How.XPATH, using = "//input[@data-cy='startDate']")
-  public static WebElement startDateInput;
-
-  @FindBy(how = How.XPATH, using = "//input[@data-cy='endDate']")
-  public static WebElement endDateInput;
-
-  @FindBy(how = How.XPATH, using = "//button[contains(@class, 'validate-btn')]")
-  public static WebElement validateButton;
-
-  @FindBy(how = How.XPATH, using = "//button[contains(@class, 'validate-btn')]//span[contains(@class, 'fa-spin')]")
-  public static WebElement loadingSpinnerOnValidateButton;
-
-  @FindBy(how = How.XPATH, using = "//span[contains(@class, 'text-success')]" +
-    "[normalize-space(text())= 'No errors found.']")
-  public static WebElement noErrorsFoundSuccessMessage;
-  @FindBy(how = How.XPATH, using = "//h2[contains(text(), 'Errors')]" +
-    "/following-sibling::div[contains(@class, 'text-danger')]//li")
-  public static WebElement errorMessageOnHeader;
-
-  public static WebElement getDropdownOptionElement(String option) {
-    String xpath = "//li[@role='option'][normalize-space(text()) = '" + option + "']";
-    return SeleniumDriver.getDriver().findElement(By.xpath(xpath));
-  }
-
-  public static WebElement getPropertyInlineErrorMessage(ServiceNowProperty propertyName) {
-    String xpath = "//div[@data-cy='" + propertyName.dataCyAttributeValue + "']" +
-      "/following-sibling::div[contains(@class, 'propertyError')]";
-    return SeleniumDriver.getDriver().findElement(By.xpath(xpath));
-  }
 }

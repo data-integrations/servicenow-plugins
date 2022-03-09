@@ -17,6 +17,7 @@
 package io.cdap.plugin.servicenow.restapi;
 
 import com.google.common.base.Joiner;
+import org.apache.http.HttpEntity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import java.util.Map;
 public class RestAPIRequest {
   private String url;
   private Map<String, String> headers;
+  private HttpEntity entity;
   private String[] responseHeaders;
 
   public String getUrl() {
@@ -47,6 +49,14 @@ public class RestAPIRequest {
     this.headers = headers;
   }
 
+  public HttpEntity getEntity() {
+    return entity;
+  }
+
+  public void setEntity(HttpEntity entity) {
+    this.entity = entity;
+  }
+
   public String[] getResponseHeaders() {
     return responseHeaders;
   }
@@ -62,6 +72,7 @@ public class RestAPIRequest {
     protected String url;
     protected Map<String, String> headers = new HashMap<>();
     protected Map<String, String> parameters = new HashMap<>();
+    protected HttpEntity entity;
     protected String[] responseHeaders;
 
     protected Builder(String url) {
@@ -70,6 +81,21 @@ public class RestAPIRequest {
 
     public Builder setAuthHeader(String token) {
       this.headers.put("Authorization", String.format("Bearer %s", token));
+      return this;
+    }
+
+    public Builder setAcceptHeader(String acceptHeaderValue) {
+      this.headers.put("Accept", acceptHeaderValue);
+      return this;
+    }
+
+    public Builder setContentTypeHeader(String contentTypeHeaderValue) {
+      this.headers.put("Content-type", contentTypeHeaderValue);
+      return this;
+    }
+
+    public Builder setEntity(HttpEntity entity) {
+      this.entity = entity;
       return this;
     }
 
@@ -88,6 +114,10 @@ public class RestAPIRequest {
 
       request.setUrl(attachQueryParamsToUrl(this.url, this.parameters));
       request.setHeaders(this.headers);
+
+      if (this.entity != null) {
+        request.setEntity(this.entity);
+      }
       request.setResponseHeaders(this.responseHeaders);
 
       return request;

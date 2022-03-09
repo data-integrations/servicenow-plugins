@@ -16,9 +16,6 @@
 
 package io.cdap.plugin.servicenowmultisource.locators;
 
-import io.cdap.e2e.utils.SeleniumDriver;
-import io.cdap.plugin.utils.enums.ServiceNowProperty;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.How;
@@ -50,10 +47,4 @@ public class ServiceNowMultiSourcePropertiesPage {
   // Advanced section
   @FindBy(how = How.XPATH, using = "//input[@data-cy='tableNameField']")
   public static WebElement tableNameFieldInput;
-
-  public static WebElement getPropertyInlineErrorMessage(ServiceNowProperty propertyName) {
-    String xpath = "//div[@data-cy='" + propertyName.dataCyAttributeValue + "']" +
-      "/following-sibling::div[contains(@class, 'propertyError')]";
-    return SeleniumDriver.getDriver().findElement(By.xpath(xpath));
-  }
 }
