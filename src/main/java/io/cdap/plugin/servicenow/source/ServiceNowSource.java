@@ -47,11 +47,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * A {@link BatchSource} that reads data from multiple tables in Service Now.
+ * A {@link BatchSource} that reads data from multiple tables in ServiceNow.
  */
 @Plugin(type = BatchSource.PLUGIN_TYPE)
 @Name(ServiceNowConstants.PLUGIN_NAME)
-@Description("Reads from multiple tables in Service Now. " +
+@Description("Reads from multiple tables in ServiceNow. " +
   "Outputs one record for each row in each table, with the table name as a record field. " +
   "Also sets a pipeline argument for each table read, which contains the table schema. ")
 public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord, StructuredRecord> {
