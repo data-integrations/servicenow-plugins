@@ -75,9 +75,10 @@ public class ServiceNowBaseSourceConfig extends PluginConfig {
 
   @Name(ServiceNowConstants.PROPERTY_VALUE_TYPE)
   @Macro
-  @Description("The type of values to be returned. The type can be one of two values: "
-    + "`Actual` -  will fetch the actual values from the ServiceNow tables, "
-    + "`Display` - will fetch the display values from the ServiceNow tables.")
+  @Description("The type of values to be returned."
+          + "`Actual` -  will fetch the actual values from the ServiceNow tables"
+          + "`Display` - will fetch the display values from the ServiceNow tables."
+          + "Default is Actual.")
   private String valueType;
 
   @Name(ServiceNowConstants.PROPERTY_START_DATE)

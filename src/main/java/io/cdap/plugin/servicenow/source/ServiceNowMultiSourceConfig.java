@@ -34,7 +34,7 @@ public class ServiceNowMultiSourceConfig extends ServiceNowBaseSourceConfig {
 
   @Name(ServiceNowConstants.PROPERTY_TABLE_NAMES)
   @Macro
-  @Description("The names of the ServiceNow tables from which data to be fetched.")
+  @Description("The names of the ServiceNow tables from which data is fetched")
   private String tableNames;
 
   /**
