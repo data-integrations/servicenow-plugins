@@ -177,7 +177,7 @@ public class ServiceNowSourceConfigTest {
       .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
       .setUser(ServiceNowSourceConfigHelper.TEST_USER)
       .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .build(), collector);
+                                                                   .build(), collector);
 
     try {
       config.validate(collector);
@@ -199,7 +199,7 @@ public class ServiceNowSourceConfigTest {
       .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
       .setUser(ServiceNowSourceConfigHelper.TEST_USER)
       .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
-      .build(), collector);
+                                                                   .build(), collector);
 
     try {
       config.validate(collector);
@@ -216,6 +216,11 @@ public class ServiceNowSourceConfigTest {
   public void testValidateApiEndpointNull() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(null)
+      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
       .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
       .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
       .setRestApiEndpoint(null)
@@ -243,6 +248,11 @@ public class ServiceNowSourceConfigTest {
       .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
       .setUser(null)
       .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+      .setUser(null)
+      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
       .build(), collector);
 
     try {
@@ -265,7 +275,12 @@ public class ServiceNowSourceConfigTest {
       .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
       .setUser(ServiceNowSourceConfigHelper.TEST_USER)
       .setPassword(null)
-      .build(), collector);
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+      .setPassword(null)
+                                                                   .build(), collector);
 
     try {
       config.validate(collector);
@@ -287,6 +302,11 @@ public class ServiceNowSourceConfigTest {
       .setRestApiEndpoint((ServiceNowSourceConfigHelper.TEST_API_ENDPOINT))
       .setUser(ServiceNowSourceConfigHelper.TEST_USER)
       .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint((ServiceNowSourceConfigHelper.TEST_API_ENDPOINT))
+      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
       .build(), collector);
 
     config.validate(collector);
@@ -298,6 +318,13 @@ public class ServiceNowSourceConfigTest {
   public void testTableModeMissingTableName() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+      .setQueryMode("Table")
+      .setTableName(null)
       .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
       .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
       .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
@@ -322,6 +349,13 @@ public class ServiceNowSourceConfigTest {
   public void testReportingModeMissingApplication() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+      .setQueryMode("Reporting")
+      .setApplicationName(null)
       .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
       .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
       .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
@@ -354,6 +388,14 @@ public class ServiceNowSourceConfigTest {
       .setQueryMode("Reporting")
       .setApplicationName("Contract Management")
       .setTableNameField(null)
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+      .setQueryMode("Reporting")
+      .setApplicationName("Contract Management")
+      .setTableNameField(null)
       .build(), collector);
 
     try {
@@ -371,6 +413,15 @@ public class ServiceNowSourceConfigTest {
   public void testStartDateInvalid() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+      .setQueryMode("Table")
+      .setTableName("ast-contract")
+      .setStartDate("2020")
+      .setEndDate("2020-03-01")
       .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
       .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
       .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
@@ -406,6 +457,15 @@ public class ServiceNowSourceConfigTest {
       .setTableName("ast-contract")
       .setStartDate("2020-03-01")
       .setEndDate("2020")
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+      .setQueryMode("Table")
+      .setTableName("ast-contract")
+      .setStartDate("2020-03-01")
+      .setEndDate("2020")
       .build(), collector);
 
     try {
@@ -423,6 +483,15 @@ public class ServiceNowSourceConfigTest {
   public void testEndDateLessThanStartDate() {
     MockFailureCollector collector = new MockFailureCollector();
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+      .setQueryMode("Table")
+      .setTableName("ast-contract")
+      .setStartDate("2020-03-01")
+      .setEndDate("2020-02-29")
       .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
       .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
       .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
@@ -458,7 +527,7 @@ public class ServiceNowSourceConfigTest {
       .setTableName("ast-contract")
       .setStartDate("2019")
       .setEndDate("2020")
-      .build(), collector);
+    .build(), collector);
 
     try {
       config.validate(collector);
@@ -501,6 +570,15 @@ public class ServiceNowSourceConfigTest {
   public void testValidateWhenTableNameIsEmpty() {
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     ServiceNowSourceConfig config = withServiceNowValidationMock(ServiceNowSourceConfigHelper.newConfigBuilder()
+      .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
+      .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
+      .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)
+      .setUser(ServiceNowSourceConfigHelper.TEST_USER)
+      .setPassword(ServiceNowSourceConfigHelper.TEST_PASSWORD)
+      .setQueryMode("Table")
+      .setTableName("")
+      .setStartDate("2012-01-01")
+      .setEndDate("2022-03-08")
       .setClientId(ServiceNowSourceConfigHelper.TEST_CLIENT_ID)
       .setClientSecret(ServiceNowSourceConfigHelper.TEST_CLIENT_SECRET)
       .setRestApiEndpoint(ServiceNowSourceConfigHelper.TEST_API_ENDPOINT)

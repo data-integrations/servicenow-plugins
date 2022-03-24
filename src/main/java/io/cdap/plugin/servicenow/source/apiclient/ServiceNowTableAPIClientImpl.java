@@ -16,6 +16,11 @@
 
 package io.cdap.plugin.servicenow.source.apiclient;
 
+import com.github.rholder.retry.RetryException;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -37,6 +42,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation class for ServiceNow Table API.
@@ -48,9 +56,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   private static final String FIELD_CREATED_ON = "sys_created_on";
   private static final String FIELD_UPDATED_ON = "sys_updated_on";
   private static final String OAUTH_URL_TEMPLATE = "%s/oauth_token.do";
-
   private ServiceNowBaseSourceConfig conf;
-
+  
   public ServiceNowTableAPIClientImpl(ServiceNowBaseSourceConfig conf) {
     this.conf = conf;
   }
@@ -91,12 +98,16 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       requestBuilder.setAuthHeader(accessToken);
       apiResponse = executeGet(requestBuilder.build());
       if (!apiResponse.isSuccess()) {
-        LOG.error("Error - {}", getErrorMessage(apiResponse.getResponseBody()));
+        if (apiResponse.isRetryable()) {
+          throw new RetryableException();
+        }
         return Collections.emptyList();
       }
 
       return parseResponseToResultListOfMap(apiResponse.getResponseBody());
-    } catch (OAuthSystemException | OAuthProblemException e) {
+    } catch (OAuthSystemException e) {
+      throw new RetryableException();
+    } catch (OAuthProblemException e) {
       LOG.error("Error in fetchTableRecords", e);
       return Collections.emptyList();
     }
@@ -198,12 +209,12 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
 
   public List<Map<String, Object>> parseResponseToResultListOfMap(String responseBody) {
     Gson gson = new Gson();
+
     JsonObject jo = gson.fromJson(responseBody, JsonObject.class);
     JsonArray ja = jo.getAsJsonArray("result");
 
     Type type = new TypeToken<List<Map<String, Object>>>() {
     }.getType();
-
     return gson.fromJson(ja, type);
   }
 
@@ -215,5 +226,40 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     } catch (Exception e) {
       return e.getMessage();
     }
+  }
+
+  /**
+   * Attempt four times with an exponential delay of 120 seconds to fetch the list of records from ServiceNow table when
+   * RetryableException is thrown          .
+   *
+   * @param tableName The ServiceNow table name
+   * @param startDate The start date
+   * @param endDate The end date
+   * @param offset The number of records to skip
+   * @param limit The number of records to be fetched
+   * @return The list of Map; each Map representing a table row
+   */
+  public List<Map<String, Object>> fetchTableRecordsRetryableMode(String tableName, String startDate, String endDate,
+                                                                  int offset, int limit) {
+    final List<Map<String, Object>> results = new ArrayList<>();
+    Callable<Boolean> fetchRecords = () -> {
+      results.addAll(fetchTableRecords(tableName, startDate, endDate, offset, limit));
+      return true;
+    };
+
+    Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+      .retryIfExceptionOfType(RetryableException.class)
+      .withWaitStrategy(WaitStrategies.exponentialWait(ServiceNowConstants.WAIT_TIME, TimeUnit.MILLISECONDS))
+      .withStopStrategy(StopStrategies.stopAfterAttempt(ServiceNowConstants.MAX_NUMBER_OF_RETRY_ATTEMPTS))
+      .build();
+
+    try {
+      retryer.call(fetchRecords);
+    } catch (RetryException | ExecutionException e) {
+      LOG.error("Data Recovery failed for batch {} to {}.", offset,
+               (offset + limit));
+    }
+
+    return results;
   }
 }

@@ -50,7 +50,7 @@ public class ServiceNowRecordReaderTest {
   private static final String REST_API_ENDPOINT = "https://ven05127.service-now.com";
   private static final String USER = "user";
   private static final String PASSWORD = "password";
-
+  
   @Rule
   public ExpectedException thrown = ExpectedException.none();
   private ServiceNowSourceConfig serviceNowSourceConfig;
@@ -168,7 +168,7 @@ public class ServiceNowRecordReaderTest {
     response.setTotalRecordCount(1);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).
       withArguments(Mockito.any(ServiceNowSourceConfig.class)).thenReturn(restApi);
-    Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getStartDate(),
+    Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getStartDate(),
                                            serviceNowSourceConfig.getEndDate(),
                                            split.getOffset(), ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
     Mockito.when(restApi.fetchTableSchema(tableName, null, null, false)).
@@ -222,7 +222,7 @@ public class ServiceNowRecordReaderTest {
     response.setTotalRecordCount(1);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).
       withArguments(Mockito.any(ServiceNowSourceConfig.class)).thenReturn(restApi);
-    Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getStartDate(),
+    Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getStartDate(),
                                            serviceNowSourceConfig.getEndDate(),
                                            split.getOffset(), ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
     Mockito.when(restApi.fetchTableSchema(tableName, null, null, false)).
