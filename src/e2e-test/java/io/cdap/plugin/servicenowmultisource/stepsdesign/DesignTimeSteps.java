@@ -17,9 +17,7 @@
 package io.cdap.plugin.servicenowmultisource.stepsdesign;
 
 import io.cdap.plugin.servicenowmultisource.actions.ServiceNowMultiSourcePropertiesPageActions;
-import io.cdap.plugin.utils.enums.TablesInTableMode;
 import io.cucumber.datatable.DataTable;
-import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import java.util.List;
@@ -32,11 +30,5 @@ public class DesignTimeSteps {
   public void configureServiceNowSourceForApplication(DataTable table) {
     List<String> tablesList = table.asList();
     ServiceNowMultiSourcePropertiesPageActions.configureServiceNowMultiSourcePlugin(tablesList);
-  }
-
-  @Then("verify validation message for invalid table names: {string}")
-  public void verifyValidationMessageForInvalidTableNames(String tableName) {
-    ServiceNowMultiSourcePropertiesPageActions
-      .verifyValidationMessageForInvalidTableNames(TablesInTableMode.valueOf(tableName));
   }
 }

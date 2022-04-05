@@ -18,6 +18,8 @@ package io.cdap.plugin.servicenow.restapi;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.oltu.oauth2.client.OAuthClient;
@@ -28,6 +30,8 @@ import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+
+import java.io.UnsupportedEncodingException;
 
 /**
  * An abstract class to call Rest API.
@@ -46,6 +50,29 @@ public abstract class RestAPIClient {
 
     try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
       try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
+        apiResponse = RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
+      }
+    } catch (Exception e) {
+      apiResponse = RestAPIResponse.defaultErrorResponse(e.getMessage());
+    }
+
+    return apiResponse;
+  }
+
+  /**
+   * Executes the Rest API request and returns the response.
+   *
+   * @param request the Rest API request
+   * @return an instance of RestAPIResponse object.
+   */
+  protected RestAPIResponse executePost(RestAPIRequest request) throws UnsupportedEncodingException {
+    HttpPost httpPost = new HttpPost(request.getUrl());
+    request.getHeaders().entrySet().forEach(e -> httpPost.addHeader(e.getKey(), e.getValue()));
+    httpPost.setEntity(request.getEntity());
+    RestAPIResponse apiResponse = null;
+
+    try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+      try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
         apiResponse = RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
       }
     } catch (Exception e) {

@@ -18,47 +18,46 @@
 @Regression
 Feature: ServiceNow Multi Source - Design time validation scenarios
 
-  @TS-SN-MULTI-DSGN-02
+  @TS-SN-MULTI-DSGN-ERROR-01
   Scenario: Verify required fields missing validation messages
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as 'Data Pipeline - Batch'
-    And Select plugin: "ServiceNow Multi Source" from the plugins list
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
-    And click on the Validate button
-    Then verify required fields missing validation message for below listed properties:
-      | REFERENCE_NAME    |
-      | TABLE_NAMES       |
-      | CLIENT_ID         |
-      | CLIENT_SECRET     |
-      | REST_API_ENDPOINT |
-      | USERNAME          |
-      | PASSWORD          |
+    And Click on the Validate button
+    Then Verify mandatory property error for below listed properties:
+      | referenceName   |
+      | clientId        |
+      | clientSecret    |
+      | restApiEndpoint |
+      | user            |
+      | password        |
 
-  @TS-SN-MULTI-DSGN-03
+  @TS-SN-MULTI-DSGN-ERROR-02
   Scenario: Verify validation message for invalid table name
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as 'Data Pipeline - Batch'
-    And Select plugin: "ServiceNow Multi Source" from the plugins list
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
       | INVALID_TABLE |
     And fill Credentials section for pipeline user
-    And click on the Validate button
-    Then verify validation message for invalid table names: "INVALID_TABLE"
+    And Click on the Validate button
+    Then Verify that the Plugin Property: "tableNames" is displaying an in-line error message: "invalid.property.tablename"
 
-  @TS-SN-MULTI-DSGN-13
+  @TS-SN-MULTI-DSGN-ERROR-03
   Scenario: Verify validation message for Start date and End date in invalid format
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as 'Data Pipeline - Batch'
-    And Select plugin: "ServiceNow Multi Source" from the plugins list
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
       | HARDWARE_CATALOG | SOFTWARE_CATALOG | PRODUCT_CATALOG_ITEM | VENDOR_CATALOG_ITEM |
     And fill Credentials section for pipeline user
-    And fill Start Date in format: yyyy-MM-dd: "2013-JAN-01"
-    And click on the Validate button
-    Then verify validation message for invalid format of Start Date
-    And fill Start Date in format: yyyy-MM-dd: "2013-01-01"
-    And fill End Date in format: yyyy-MM-dd: "2021-DEC-31"
-    And click on the Validate button
-    Then verify validation message for invalid format of End Date
+    And Enter input plugin property: "startDate" with value: "2020-JAN-01"
+    And Click on the Validate button
+    Then Verify that the Plugin Property: "startDate" is displaying an in-line error message: "invalid.property.startdate"
+    And Enter input plugin property: "startDate" with value: "start.date"
+    And Enter input plugin property: "endDate" with value: "2022-JAN-01"
+    And Click on the Validate button
+    Then Verify that the Plugin Property: "endDate" is displaying an in-line error message: "invalid.property.enddate"

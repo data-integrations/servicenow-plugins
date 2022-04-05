@@ -18,40 +18,37 @@
 @Regression
 Feature: ServiceNow Multi Source - Design time scenarios
 
-  @TS-SN-MULTI-DSGN-06
-  Scenario: Verify user should be able to get Output Schema table for tables of the same application
+  @TS-SN-MULTI-DSGN-01
+  Scenario: Verify user should be able to validate the plugin for tables of the same application
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as 'Data Pipeline - Batch'
-    And Select plugin: "ServiceNow Multi Source" from the plugins list
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
       | HARDWARE_CATALOG | SOFTWARE_CATALOG | PRODUCT_CATALOG_ITEM | VENDOR_CATALOG_ITEM |
     And fill Credentials section for pipeline user
-    And click on the Validate button
-    Then verify No errors found success message
+    Then Validate "ServiceNow Multi Source" plugin properties
 
-  @TS-SN-MULTI-DSGN-12
-  Scenario: Verify user should be able to get Output Schema table for tables of different application
+  @TS-SN-MULTI-DSGN-02
+  Scenario: Verify user should be able to validate the plugin for tables of different applications
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as 'Data Pipeline - Batch'
-    And Select plugin: "ServiceNow Multi Source" from the plugins list
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
       | ASSET_COVERED | CONDITION | PRODUCT_CATALOG_ITEM | PURCHASE_ORDER | PURCHASE_ORDER_LINE_ITEMS |
     And fill Credentials section for pipeline user
-    And click on the Validate button
-    Then verify No errors found success message
+    Then Validate "ServiceNow Multi Source" plugin properties
 
-  @TS-SN-MULTI-DSGN-10
+  @TS-SN-MULTI-DSGN-03
   Scenario: Verify user should be able to get Output Schema table with Date filters
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as 'Data Pipeline - Batch'
-    And Select plugin: "ServiceNow Multi Source" from the plugins list
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
       | HARDWARE_CATALOG | SOFTWARE_CATALOG | PRODUCT_CATALOG_ITEM | VENDOR_CATALOG_ITEM |
     And fill Credentials section for pipeline user
-    And fill Start Date in format: yyyy-MM-dd: "2013-01-01"
-    And fill End Date in format: yyyy-MM-dd: "2021-12-31"
-    And click on the Validate button
-    Then verify No errors found success message
+    And Enter input plugin property: "startDate" with value: "start.date"
+    And Enter input plugin property: "endDate" with value: "end.date"
+    Then Validate "ServiceNow Multi Source" plugin properties
