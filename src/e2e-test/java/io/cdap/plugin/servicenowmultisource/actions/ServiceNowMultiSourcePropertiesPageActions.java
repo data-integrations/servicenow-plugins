@@ -16,16 +16,11 @@
 
 package io.cdap.plugin.servicenowmultisource.actions;
 
-import io.cdap.e2e.utils.AssertionHelper;
-import io.cdap.e2e.utils.PluginPropertyUtils;
+import io.cdap.e2e.utils.ElementHelper;
 import io.cdap.e2e.utils.SeleniumHelper;
 import io.cdap.plugin.servicenowmultisource.locators.ServiceNowMultiSourcePropertiesPage;
-import io.cdap.plugin.utils.enums.ServiceNowProperty;
 import io.cdap.plugin.utils.enums.TablesInTableMode;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.openqa.selenium.WebElement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,32 +29,27 @@ import java.util.List;
  * ServiceNow Multi Source - Properties page - Actions.
  */
 public class ServiceNowMultiSourcePropertiesPageActions {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceNowMultiSourcePropertiesPageActions.class);
 
   static {
     SeleniumHelper.getPropertiesLocators(ServiceNowMultiSourcePropertiesPage.class);
   }
 
   public static void fillReferenceName(String referenceName) {
-    logger.info("Fill Reference name: " + referenceName);
-    ServiceNowMultiSourcePropertiesPage.referenceNameInput.sendKeys(referenceName);
+    ElementHelper.sendKeys(ServiceNowMultiSourcePropertiesPage.referenceNameInput, referenceName);
   }
 
   public static void fillTableNamesInTableSpecificationSection(List<TablesInTableMode> tablesList) {
-    int totalTables = tablesList.size();
-
-    for (int i = 0; i < totalTables - 1; i++) {
-      ServiceNowMultiSourcePropertiesPage.addRowButtonInTableNamesField.get(i).click();
+    for (int i = 0; i < tablesList.size() - 1; i++) {
+      ElementHelper.clickOnElement(ServiceNowMultiSourcePropertiesPage.addRowButtonInTableNamesField.get(i));
     }
 
-    for (int i = 0; i < totalTables; i++) {
-      ServiceNowMultiSourcePropertiesPage.tableNamesInputs.get(i).sendKeys(tablesList.get(i).value);
+    for (int i = 0; i < tablesList.size(); i++) {
+      ElementHelper.sendKeys(ServiceNowMultiSourcePropertiesPage.tableNamesInputs.get(i), tablesList.get(i).value);
     }
   }
 
   public static void configureServiceNowMultiSourcePlugin(List<String> tablesList) {
     String referenceName = "TestSN" + RandomStringUtils.randomAlphanumeric(7);
-
     List<TablesInTableMode> tables = new ArrayList<>();
 
     for (String table : tablesList) {
@@ -68,19 +58,5 @@ public class ServiceNowMultiSourcePropertiesPageActions {
 
     fillReferenceName(referenceName);
     fillTableNamesInTableSpecificationSection(tables);
-  }
-
-  public static void verifyPropertyInlineErrorMessage(ServiceNowProperty property,
-                                                      String expectedErrorMessage) {
-    WebElement element = ServiceNowMultiSourcePropertiesPage.getPropertyInlineErrorMessage(property);
-
-    AssertionHelper.verifyElementDisplayed(element);
-    AssertionHelper.verifyElementContainsText(element, expectedErrorMessage);
-  }
-
-  public static void verifyValidationMessageForInvalidTableNames(TablesInTableMode tableName) {
-    String expectedMessage = PluginPropertyUtils.errorProp("invalid.property.tablename") +
-      " " + tableName.value + " is invalid.";
-    verifyPropertyInlineErrorMessage(ServiceNowProperty.TABLE_NAMES, expectedMessage);
   }
 }

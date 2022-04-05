@@ -32,11 +32,13 @@ import io.cdap.plugin.servicenow.source.ServiceNowBaseSourceConfig;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.Util;
+import org.apache.http.HttpEntity;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -110,6 +112,36 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     } catch (OAuthProblemException e) {
       LOG.error("Error in fetchTableRecords", e);
       return Collections.emptyList();
+    }
+  }
+
+  /**
+   * Create a new record in the ServiceNow Table
+   *
+   * @param tableName ServiceNow Table name
+   * @param entity Details of the Record to be created
+   */
+  public void createRecord(String tableName, HttpEntity entity) {
+    ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
+      this.conf.getRestApiEndpoint(), tableName);
+
+    RestAPIResponse apiResponse = null;
+
+    try {
+      String accessToken = getAccessToken();
+      requestBuilder.setAuthHeader(accessToken);
+      requestBuilder.setAcceptHeader("application/json");
+      requestBuilder.setContentTypeHeader("application/json");
+      requestBuilder.setEntity(entity);
+      apiResponse = executePost(requestBuilder.build());
+      if (!apiResponse.isSuccess()) {
+        LOG.error("Error - {}", getErrorMessage(apiResponse.getResponseBody()));
+      } else {
+        LOG.info(apiResponse.getResponseBody().toString());
+      }
+    } catch (OAuthSystemException | OAuthProblemException | UnsupportedEncodingException e) {
+      LOG.error("Error in creating a new record", e);
+      throw new RuntimeException("Error in creating a new record");
     }
   }
 

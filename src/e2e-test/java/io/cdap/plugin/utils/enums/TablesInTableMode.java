@@ -32,6 +32,7 @@ public enum TablesInTableMode {
   VENDOR_CATALOG_ITEM("pc_vendor_cat_item"),
   PURCHASE_ORDER("proc_po"),
   PURCHASE_ORDER_LINE_ITEMS("proc_po_item"),
+  RECEIVING_SLIP_LINE("proc_rec_slip_item"),
   INVALID_TABLE("blahblah");
 
   public final String value;
