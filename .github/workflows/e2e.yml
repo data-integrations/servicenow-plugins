@@ -58,6 +58,12 @@ jobs:
             ${{ runner.os }}-maven-${{ github.workflow }}
       - name: Run tests
         run: python3 e2e/src/main/scripts/run_e2e_test.py
+        env:
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          REST_API_ENDPOINT: ${{ secrets.REST_API_ENDPOINT }}
+          SERVICENOW_USERNAME: ${{ secrets.SERVICENOW_USERNAME }}
+          SERVICENOW_PASSWORD: ${{ secrets.SERVICENOW_PASSWORD }}
       - name: Upload report
         uses: actions/upload-artifact@v2.2.4
         if: always()
@@ -74,7 +80,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         if: always()
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.AUTH_TOKEN }}
           publish_dir: ./plugin/target/cucumber-reports
           destination_dir: cucumber-reports/${{ github.ref }}
 
@@ -82,7 +88,7 @@ jobs:
         uses: Sibz/github-status-action@67af1f4042a5a790681aad83c44008ca6cfab83d
         if: always()
         with:
-          authToken: ${{ secrets.GITHUB_TOKEN }}
+          authToken: ${{ secrets.AUTH_TOKEN }}
           state: success
           context: Cucumber report
           target_url: https://data-integrations.github.io/servicenow-plugins/cucumber-reports/${{ github.ref }}/advanced-reports/cucumber-html-reports/overview-features.html
