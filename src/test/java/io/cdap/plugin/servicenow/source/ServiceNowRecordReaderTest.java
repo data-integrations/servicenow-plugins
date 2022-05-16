@@ -19,10 +19,11 @@ package io.cdap.plugin.servicenow.source;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.macro.Macros;
 import io.cdap.cdap.api.plugin.PluginProperties;
+import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
+import io.cdap.plugin.servicenow.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
-import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
 import org.junit.Assert;
 import org.junit.Before;
@@ -166,13 +167,13 @@ public class ServiceNowRecordReaderTest {
     response.setColumns(columns);
     response.setResult(results);
     response.setTotalRecordCount(1);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).
-      withArguments(Mockito.any(ServiceNowSourceConfig.class)).thenReturn(restApi);
-    Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getStartDate(),
-                                           serviceNowSourceConfig.getEndDate(),
-                                           split.getOffset(), ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
-    Mockito.when(restApi.fetchTableSchema(tableName, null, null, false)).
-      thenReturn(response);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
+      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
+      serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(), split.getOffset(),
+      ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
+    Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType(), null, null,
+      false)).thenReturn(response);
 
     serviceNowRecordReader.initialize(split, null);
     Assert.assertTrue(serviceNowRecordReader.nextKeyValue());
@@ -220,13 +221,13 @@ public class ServiceNowRecordReaderTest {
     response.setColumns(columns);
     response.setResult(results);
     response.setTotalRecordCount(1);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).
-      withArguments(Mockito.any(ServiceNowSourceConfig.class)).thenReturn(restApi);
-    Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getStartDate(),
-                                           serviceNowSourceConfig.getEndDate(),
-                                           split.getOffset(), ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
-    Mockito.when(restApi.fetchTableSchema(tableName, null, null, false)).
-      thenReturn(response);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
+      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
+      serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(), split.getOffset(),
+      ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
+    Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType(), null, null,
+      false)).thenReturn(response);
 
     serviceNowRecordReader.initialize(split, null);
     Assert.assertTrue(serviceNowRecordReader.nextKeyValue());
@@ -253,11 +254,11 @@ public class ServiceNowRecordReaderTest {
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     List<Map<String, Object>> results = new ArrayList<>();
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).
-      withArguments(Mockito.any(ServiceNowSourceConfig.class)).thenReturn(restApi);
-    Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getStartDate(),
-                                           serviceNowSourceConfig.getEndDate(),
-                                           split.getOffset(), ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
+      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getValueType(),
+      serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(), split.getOffset(),
+      ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
     serviceNowRecordReader.initialize(split, null);
