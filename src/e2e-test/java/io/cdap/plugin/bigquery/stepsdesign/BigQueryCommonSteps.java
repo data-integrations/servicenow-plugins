@@ -57,4 +57,12 @@ public class BigQueryCommonSteps {
         "records in count displayed on the Sink plugin: ",
       countRecords, CdfPipelineRunAction.getCountDisplayedOnSinkPluginAsRecordsIn());
   }
+
+  @When("Configure BigQuery source plugin for Dataset and Table")
+  public void configureBqSourcePlugin() {
+    String referenceName = "Test" + RandomStringUtils.randomAlphanumeric(10);
+    CdfBigQueryPropertiesActions.enterBigQueryReferenceName(referenceName);
+    CdfBigQueryPropertiesActions.enterBigQueryDataset(TestSetupHooks.bqSourceDataset);
+    CdfBigQueryPropertiesActions.enterBigQueryTable(TestSetupHooks.bqSourceTable);
+  }
 }

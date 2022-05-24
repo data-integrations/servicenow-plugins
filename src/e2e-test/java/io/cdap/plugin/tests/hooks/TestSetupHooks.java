@@ -19,11 +19,13 @@ package io.cdap.plugin.tests.hooks;
 import com.google.cloud.bigquery.BigQueryException;
 import io.cdap.e2e.utils.BigQueryClient;
 import io.cdap.e2e.utils.PluginPropertyUtils;
+import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.utils.enums.TablesInTableMode;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
+import net.minidev.json.JSONObject;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.StringEntity;
@@ -32,6 +34,7 @@ import stepsdesign.BeforeActions;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Random;
 
 /**
  * Represents Test Setup and Clean up hooks.
@@ -40,6 +43,9 @@ public class TestSetupHooks {
   public static ServiceNowSourceConfig config;
   public static String bqTargetDataset = StringUtils.EMPTY;
   public static String bqTargetTable = StringUtils.EMPTY;
+  public static String bqSourceDataset = "ServiceNowTestDS";
+  public static String bqSourceTable;
+
 
   @Before(order = 1, value = "@SN_SOURCE_CONFIG")
   public static void initializeServiceNowSourceConfig() {
@@ -85,7 +91,19 @@ public class TestSetupHooks {
     bqTargetTable = "TestSN_table" + RandomStringUtils.randomAlphanumeric(10);
     BeforeActions.scenario.write("BigQuery Target table name: " + bqTargetTable);
   }
+  @Before(order = 1, value = "@BQ_SOURCE_TEST_RECEIVING_SLIP_LINE")
+  public static void createTempSourceBQTableForReceivingSlipLineTable() throws IOException, InterruptedException {
+    Random uniqueId = new Random();
+    String stringUniqueId = "ServiceNow" + RandomStringUtils.randomAlphanumeric(5);
+    bqSourceTable = "testTable" + stringUniqueId;
+    float cost = uniqueId.nextFloat();
+    int quantity = uniqueId.nextInt(1000);
 
+    BigQueryClient.getSoleQueryResult("create table `" + bqSourceDataset + "." + bqSourceTable + "` as " +
+                                        "SELECT * FROM UNNEST([ STRUCT(" + cost + " AS cost, "
+                                        + quantity + " AS quantity)])");
+    BeforeActions.scenario.write("BQ source Table " + bqSourceTable + " created successfully");
+  }
   @After(order = 1, value = "@BQ_SINK_CLEANUP")
   public static void deleteTempTargetBQTable() throws IOException, InterruptedException {
     try {
