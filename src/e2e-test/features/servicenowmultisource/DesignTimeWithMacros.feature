@@ -22,7 +22,7 @@ Feature: ServiceNow Multi Source - Design time scenarios (macro)
   Scenario: Verify user should be able to validate the plugin with macros
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
-    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And Fill Reference Name
     And Click on the Macro button of Property: "tableNames" and set the value to: "tableNames"

@@ -20,6 +20,7 @@ import io.cdap.e2e.pages.actions.CdfBigQueryPropertiesActions;
 import io.cdap.e2e.pages.actions.CdfPipelineRunAction;
 import io.cdap.e2e.utils.BigQueryClient;
 import io.cdap.plugin.tests.hooks.TestSetupHooks;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -57,4 +58,12 @@ public class BigQueryCommonSteps {
         "records in count displayed on the Sink plugin: ",
       countRecords, CdfPipelineRunAction.getCountDisplayedOnSinkPluginAsRecordsIn());
   }
-}
+
+  @When("Configure BigQuery source plugin for Dataset and Table")
+  public void configureBqSourcePlugin() {
+    String referenceName = "Test" + RandomStringUtils.randomAlphanumeric(10);
+    CdfBigQueryPropertiesActions.enterBigQueryReferenceName(referenceName);
+    CdfBigQueryPropertiesActions.enterBigQueryDataset(TestSetupHooks.bqSourceDataset);
+    CdfBigQueryPropertiesActions.enterBigQueryTable(TestSetupHooks.bqSourceTable);
+  }
+        }
