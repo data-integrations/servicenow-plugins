@@ -24,6 +24,7 @@ Feature: ServiceNow Sink - Run time scenarios
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
     And Configure BigQuery source plugin for Dataset and Table
     And Validate "BigQuery" plugin properties
     And Capture the generated Output Schema
@@ -38,7 +39,6 @@ Feature: ServiceNow Sink - Run time scenarios
     And Validate "ServiceNow" plugin properties
     And Close the Plugin Properties page
     And Preview and run the pipeline
-    And Wait till pipeline is in running state
     Then Verify the preview of pipeline is "success"
     And Click on the Preview Data link on the Sink plugin node: "ServiceNow"
     And Verify sink plugin's Preview Data for Input Records table and the Input Schema matches the Output Schema of Source plugin
@@ -49,6 +49,7 @@ Feature: ServiceNow Sink - Run time scenarios
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
     And Configure BigQuery source plugin for Dataset and Table
     And Validate "BigQuery" plugin properties
     And Capture the generated Output Schema
@@ -66,14 +67,15 @@ Feature: ServiceNow Sink - Run time scenarios
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running state
     And Verify the pipeline status is "Succeeded"
-    And Validate OUT record count is equal to IN record count
+    Then Validate OUT record count is equal to IN record count
 
   @TS-SN-RNTM-SINK-03 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
-  Scenario: Verify user should be able to preview the pipeline ServiceNow sink is configured for Update operation
+  Scenario: Verify user should be able to preview the pipeline when ServiceNow sink is configured for Update operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
     And Configure BigQuery source plugin for Dataset and Table
     And Validate "BigQuery" plugin properties
     And Capture the generated Output Schema
@@ -89,17 +91,18 @@ Feature: ServiceNow Sink - Run time scenarios
     And Close the Plugin Properties page
     And Preview and run the pipeline
     And Wait till pipeline is in running state
-    Then Verify the preview of pipeline is "success"
+    And Verify the preview of pipeline is "success"
     And Click on the Preview Data link on the Sink plugin node: "ServiceNow"
-    And Verify sink plugin's Preview Data for Input Records table and the Input Schema matches the Output Schema of Source plugin
+    Then Verify sink plugin's Preview Data for Input Records table and the Input Schema matches the Output Schema of Source plugin
 
   @TS-SN-RNTM-SINK-04 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
-  Scenario: Verify user should be able to deploy and run the pipeline ServiceNow sink is configured for Update operation
+  Scenario: Verify user should be able to deploy and run the pipeline when ServiceNow sink is configured for Update operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "BigQuery"
     And Configure BigQuery source plugin for Dataset and Table
+    And Fill Reference Name
     And Validate "BigQuery" plugin properties
     And Capture the generated Output Schema
     And Close the Plugin Properties page
@@ -116,4 +119,214 @@ Feature: ServiceNow Sink - Run time scenarios
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running state
     And Verify the pipeline status is "Succeeded"
-    And Validate OUT record count is equal to IN record count
+    Then Validate OUT record count is equal to IN record count
+
+  @TS-SN-RNTM-SINK-05 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
+  Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Receiving Slip with Input operation
+    When Open Datafusion Project to configure pipeline
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
+    And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Capture the generated Output Schema
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And fill Credentials section for pipeline user
+    And Enter input plugin property: "tableName" with value: "receiving_slip_line"
+    And Select radio button plugin property: "operation" with value: "INSERT"
+    And Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    Then Verify the pipeline status is "Succeeded"
+    And Verify If new record is created in ServiceNow application
+
+  @TS-SN-RNTM-SINK-06 @BQ_SOURCE_AGENT_ASSIST_RECOMMENDATION
+  Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Agent Assist recommendation with Input operation
+    When Open Datafusion Project to configure pipeline
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
+   And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Capture the generated Output Schema
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And fill Credentials section for pipeline user
+    And Enter input plugin property: "tableName" with value: "agent_assist_recommendation"
+    And Select radio button plugin property: "operation" with value: "INSERT"
+    And Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    Then Verify the pipeline status is "Succeeded"
+
+  @TS-SN-RNTM-SINK-07 @BQ_SOURCE_VENDOR_CATALOG_ITEM
+  Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Vendor Catalog Item with Input operation
+    When Open Datafusion Project to configure pipeline
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
+    And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Capture the generated Output Schema
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And fill Credentials section for pipeline user
+    And Enter input plugin property: "tableName" with value: "vendor_catalog_item"
+    And Select radio button plugin property: "operation" with value: "INSERT"
+    And Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    Then Verify the pipeline status is "Succeeded"
+
+  @TS-SN-RNTM-SINK-08 @BQ_SOURCE_SERVICE_OFFERING
+  Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Service Offering with Input operation
+    When Open Datafusion Project to configure pipeline
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
+    And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Capture the generated Output Schema
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And fill Credentials section for pipeline user
+    And Enter input plugin property: "tableName" with value: "service_offering"
+    And Select radio button plugin property: "operation" with value: "INSERT"
+    And Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    Then Verify the pipeline status is "Succeeded"
+
+
+  @TS-SN-RNTM-SINK-09 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SOURCE_UPDATE_RECEIVING_SLIP_LINE
+  Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Receiving Slip with Update operation
+    When Open Datafusion Project to configure pipeline
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
+    And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Capture the generated Output Schema
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And fill Credentials section for pipeline user
+    And Enter input plugin property: "tableName" with value: "receiving_slip_line"
+    And Select radio button plugin property: "operation" with value: "UPDATE"
+    And Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    Then Verify the pipeline status is "Succeeded"
+
+  @TS-SN-RNTM-SINK-10 @SN_UPDATE_AGENT_ASSIST_RECOMMENDATION @SN_SOURCE_CONFIG @BQ_SOURCE_UPDATE_AGENT_ASSIST_RECOMMENDATION
+  Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Agent Assist Recommendation with Update operation
+    When Open Datafusion Project to configure pipeline
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
+    And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Capture the generated Output Schema
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And fill Credentials section for pipeline user
+    And Enter input plugin property: "tableName" with value: "agent_assist_recommendation"
+    And Select radio button plugin property: "operation" with value: "UPDATE"
+    And Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    Then Verify the pipeline status is "Succeeded"
+
+  @TS-SN-RNTM-SINK-11  @SN_UPDATE_VENDOR_CATALOG_ITEM @SN_SOURCE_CONFIG @BQ_SOURCE_UPDATE_VENDOR_CATALOG_ITEM
+  Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Vendor Catalog Item  with Update operation
+    When Open Datafusion Project to configure pipeline
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
+    And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Capture the generated Output Schema
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And fill Credentials section for pipeline user
+    And Enter input plugin property: "tableName" with value: "vendor_catalog_item"
+    And Select radio button plugin property: "operation" with value: "UPDATE"
+    And Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    Then Verify the pipeline status is "Succeeded"
+
+  @TS-SN-RNTM-SINK-12 @SN_SOURCE_CONFIG @SN_UPDATE_SERVICE_OFFERING @BQ_SOURCE_UPDATE_SERVICE_OFFERING
+  Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Service Offering with Update operation
+    When Open Datafusion Project to configure pipeline
+    And Select data pipeline type as: "Data Pipeline - Batch"
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
+    And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Capture the generated Output Schema
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And fill Credentials section for pipeline user
+    And Enter input plugin property: "tableName" with value: "service_offering"
+    And Select radio button plugin property: "operation" with value: "UPDATE"
+    And Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    Then Verify the pipeline status is "Succeeded"

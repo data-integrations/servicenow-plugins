@@ -27,7 +27,8 @@ import org.junit.runner.RunWith;
 @CucumberOptions(
   features = {"src/e2e-test/features"},
   glue = {"io.cdap.plugin.servicenow.stepsdesign", "io.cdap.plugin.servicenowmultisource.stepsdesign",
-    "io.cdap.plugin.bigquery.stepsdesign", "stepsdesign", "io.cdap.plugin.tests.hooks"},
+    "io.cdap.plugin.servicenowsink.stepsdesign", "io.cdap.plugin.bigquery.stepsdesign", "stepsdesign",
+    "io.cdap.plugin.tests.hooks"},
   tags = {"@Regression"},
   monochrome = true,
   plugin = {"pretty", "html:target/cucumber-html-report", "json:target/cucumber-reports/cucumber.json",
