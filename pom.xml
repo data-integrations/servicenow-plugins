@@ -462,6 +462,23 @@
               <includes>
                 <include>TestRunner.java</include>
               </includes>
+              <environmentVariables>
+                <SERVICENOW_CLIENT_ID>
+                  ${SERVICENOW_CLIENT_ID}
+                </SERVICENOW_CLIENT_ID>
+                <SERVICENOW_CLIENT_SECRET>
+                  ${SERVICENOW_CLIENT_SECRET}
+                </SERVICENOW_CLIENT_SECRET>
+                <SERVICENOW_REST_API_ENDPOINT>
+                  ${SERVICENOW_REST_API_ENDPOINT}
+                </SERVICENOW_REST_API_ENDPOINT>
+                <SERVICENOW_USERNAME>
+                  ${SERVICENOW_USERNAME}
+                </SERVICENOW_USERNAME>
+                <SERVICENOW_PASSWORD>
+                  ${SERVICENOW_PASSWORD}
+                </SERVICENOW_PASSWORD>
+              </environmentVariables>
             </configuration>
             <executions>
               <execution>

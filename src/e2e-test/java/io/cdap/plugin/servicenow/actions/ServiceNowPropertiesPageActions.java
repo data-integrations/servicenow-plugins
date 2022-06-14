@@ -69,9 +69,9 @@ public class ServiceNowPropertiesPageActions {
 
   public static void fillCredentialsSectionForPipelineUser() {
     ServiceNowPropertiesPageActions.fillCredentialsSectionProperties(
-      System.getenv("CLIENT_ID"),
-      System.getenv("CLIENT_SECRET"),
-      System.getenv("REST_API_ENDPOINT"),
+      System.getenv("SERVICENOW_CLIENT_ID"),
+      System.getenv("SERVICENOW_CLIENT_SECRET"),
+      System.getenv("SERVICENOW_REST_API_ENDPOINT"),
       System.getenv("SERVICENOW_USERNAME"),
       System.getenv("SERVICENOW_PASSWORD")
     );

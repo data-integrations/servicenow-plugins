@@ -20,6 +20,7 @@ import io.cdap.e2e.pages.actions.CdfBigQueryPropertiesActions;
 import io.cdap.e2e.pages.actions.CdfPipelineRunAction;
 import io.cdap.e2e.utils.BigQueryClient;
 import io.cdap.plugin.tests.hooks.TestSetupHooks;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -65,4 +66,4 @@ public class BigQueryCommonSteps {
     CdfBigQueryPropertiesActions.enterBigQueryDataset(TestSetupHooks.bqSourceDataset);
     CdfBigQueryPropertiesActions.enterBigQueryTable(TestSetupHooks.bqSourceTable);
   }
-}
+        }

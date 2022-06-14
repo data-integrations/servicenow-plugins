@@ -88,7 +88,6 @@ Feature: ServiceNow Source - Run time scenarios (macro)
   @TS-SN-RNTM-MACRO-03 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
   Scenario: Verify pipeline failure message in logs when user provides an invalid Table Name with Macros
     When Open Datafusion Project to configure pipeline
-    When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow"
@@ -116,7 +115,6 @@ Feature: ServiceNow Source - Run time scenarios (macro)
 
   @TS-SN-RNTM-MACRO-04 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
   Scenario: Verify pipeline failure message in logs when user provides invalid Credentials with Macros
-    When Open Datafusion Project to configure pipeline
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "ServiceNow" from the plugins list as: "Source"

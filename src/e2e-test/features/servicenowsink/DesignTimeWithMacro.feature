@@ -76,6 +76,6 @@ Feature: ServiceNow Sink - Design time validation scenarios (macro)
     And fill Credentials section for pipeline user
     And Enter input plugin property: "tableName" with value: "receiving_slip_line"
     And Click on the Macro button of Property: "operation" and set the value to: "operation"
-    And Click on the Macro button of Property: "batchSize" and set the value to: "batchSize"
+    And Click on the Macro button of Property: "maxRecordsPerBatch" and set the value to: "maxRecordsPerBatch"
     Then Validate "ServiceNow" plugin properties
 

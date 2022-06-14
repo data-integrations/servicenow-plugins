@@ -18,6 +18,7 @@ package io.cdap.plugin.servicenow.restapi;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -81,7 +82,6 @@ public abstract class RestAPIClient {
 
     return apiResponse;
   }
-
   /**
    * Generates access token and returns the same.
    *

@@ -22,7 +22,7 @@ Feature: ServiceNow Multi Source - Design time scenarios
   Scenario: Verify user should be able to validate the plugin for tables of the same application
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
-    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
       | HARDWARE_CATALOG | SOFTWARE_CATALOG | PRODUCT_CATALOG_ITEM | VENDOR_CATALOG_ITEM |
@@ -33,7 +33,7 @@ Feature: ServiceNow Multi Source - Design time scenarios
   Scenario: Verify user should be able to validate the plugin for tables of different applications
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
-    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
       | ASSET_COVERED | CONDITION | PRODUCT_CATALOG_ITEM | PURCHASE_ORDER | PURCHASE_ORDER_LINE_ITEMS |
@@ -44,7 +44,7 @@ Feature: ServiceNow Multi Source - Design time scenarios
   Scenario: Verify user should be able to get Output Schema table with Date filters
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
-    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
       | HARDWARE_CATALOG | SOFTWARE_CATALOG | PRODUCT_CATALOG_ITEM | VENDOR_CATALOG_ITEM |
