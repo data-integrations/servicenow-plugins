@@ -18,8 +18,10 @@ package io.cdap.plugin.servicenow.source;
 
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
+import io.cdap.plugin.servicenow.util.SourceValueType;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,32 +45,16 @@ public class ServiceNowMultiInputFormatTest {
   private static final String REST_API_ENDPOINT = "https://ven05127.service-now.com";
   private static final String USER = "user";
   private static final String PASSWORD = "password";
-  private ServiceNowMultiSourceConfig serviceNowMultiSourceConfig;
+  private ServiceNowConnectorConfig connectorConfig;
 
   @Before
   public void initialize() {
-      serviceNowMultiSourceConfig = Mockito.spy(ServiceNowSourceConfigHelper.newConfigBuilder()
-        .setReferenceName("referenceName")
-        .setRestApiEndpoint(REST_API_ENDPOINT)
-        .setUser(USER)
-        .setPassword(PASSWORD)
-        .setClientId(CLIENT_ID)
-        .setClientSecret(CLIENT_SECRET)
-        .setTableNames("sys_user")
-        .setValueType("Actual")
-        .setStartDate("2021-01-01")
-        .setEndDate("2022-02-18")
-        .setTableNameField("tablename")
-        .buildMultiSource());
+    connectorConfig = Mockito.spy(new ServiceNowConnectorConfig(CLIENT_ID, CLIENT_SECRET, REST_API_ENDPOINT, USER,
+                                                                PASSWORD));
   }
 
   @Test
   public void testFetchTablesInfo() {
-    ServiceNowMultiSourceConfig config =
-      new ServiceNowMultiSourceConfig("referenceName", "tableNameTable", "client_id",
-                                      "client_secret", "http://example.com", "user",
-                                      "password", "Actual", "2021-12-30",
-                                      "2021-12-31", "sys_user");
     ServiceNowColumn column1 = new ServiceNowColumn("sys_created_by", "string");
     ServiceNowColumn column2 = new ServiceNowColumn("sys_updated_by", "string");
     List<ServiceNowColumn> columns = new ArrayList<>();
@@ -83,19 +69,20 @@ public class ServiceNowMultiInputFormatTest {
     ServiceNowTableInfo serviceNowTableInfo = new ServiceNowTableInfo(tableName, schema, recordCount);
     serviceNowTableInfos.add(serviceNowTableInfo);
     PowerMockito.mockStatic(ServiceNowMultiInputFormat.class);
-    PowerMockito.when(ServiceNowMultiInputFormat.fetchTablesInfo(config)).thenReturn(serviceNowTableInfos);
+    SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
+    PowerMockito.when(ServiceNowMultiInputFormat.fetchTablesInfo(connectorConfig, "table",
+                                                                 valueType, "start", "end")).
+      thenReturn(serviceNowTableInfos);
     Assert.assertEquals(1, ServiceNowMultiInputFormat
-      .fetchTablesInfo(config)
+      .fetchTablesInfo(connectorConfig, "table",
+                       valueType, "start", "end")
       .size());
   }
-  
+
   @Test
   public void testFetchTablesInfoWithEmptyTableNames() {
-    ServiceNowMultiSourceConfig config = new ServiceNowMultiSourceConfig("Reference Name",
-    "tableName", "client_id", "Client Secret", "http://example.com",
-     "user", "password", "Actual", "2021-12-30", "2021-12-31", "");
-    Assert.assertTrue(ServiceNowMultiInputFormat
-                        .fetchTablesInfo(config)
-                        .isEmpty());
+    SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
+    Assert.assertTrue(ServiceNowMultiInputFormat.fetchTablesInfo(connectorConfig, "",
+                                         valueType, "start", "end").isEmpty());
   }
 }

@@ -17,6 +17,8 @@
 package io.cdap.plugin.servicenow.source;
 
 import io.cdap.cdap.api.annotation.Description;
+import io.cdap.cdap.api.annotation.Metadata;
+import io.cdap.cdap.api.annotation.MetadataProperty;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.annotation.Plugin;
 import io.cdap.cdap.api.data.batch.Input;
@@ -30,8 +32,10 @@ import io.cdap.cdap.etl.api.StageConfigurer;
 import io.cdap.cdap.etl.api.action.SettableArguments;
 import io.cdap.cdap.etl.api.batch.BatchSource;
 import io.cdap.cdap.etl.api.batch.BatchSourceContext;
+import io.cdap.cdap.etl.api.connector.Connector;
 import io.cdap.plugin.common.LineageRecorder;
 import io.cdap.plugin.common.SourceInputFormatProvider;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
@@ -54,6 +58,7 @@ import java.util.stream.Collectors;
 @Description("Reads from multiple tables in ServiceNow. " +
   "Outputs one record for each row in each table, with the table name as a record field. " +
   "Also sets a pipeline argument for each table read, which contains the table schema. ")
+@Metadata(properties = {@MetadataProperty(key = Connector.PLUGIN_TYPE, value = ServiceNowConstants.PLUGIN_NAME)})
 public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord, StructuredRecord> {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowSource.class);
 
@@ -76,7 +81,13 @@ public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord
     // This is to avoid adding same validation errors again in getSchema method call
     collector.getOrThrowException();
     if (conf.shouldGetSchema() && conf.getQueryMode() == SourceQueryMode.TABLE) {
-      List<ServiceNowTableInfo> tableInfo = ServiceNowInputFormat.fetchTableInfo(conf.getQueryMode(collector), conf);
+      List<ServiceNowTableInfo> tableInfo = ServiceNowInputFormat.fetchTableInfo(conf.getQueryMode(collector),
+                                                                                 conf.getConnection(),
+                                                                                 conf.getTableName(),
+                                                                                 conf.getApplicationName(),
+                                                                                 conf.getValueType(),
+                                                                                 conf.getStartDate(),
+                                                                                 conf.getEndDate());
       stageConfigurer.setOutputSchema(tableInfo.stream().findFirst().get().getSchema());
     } else if (conf.getQueryMode() == SourceQueryMode.REPORTING) {
       stageConfigurer.setOutputSchema(null);

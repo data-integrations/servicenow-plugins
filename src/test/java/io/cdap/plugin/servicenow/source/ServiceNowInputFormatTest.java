@@ -17,10 +17,12 @@
 
 package io.cdap.plugin.servicenow.source;
 
-import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
+import io.cdap.plugin.servicenow.util.SourceApplication;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
+import io.cdap.plugin.servicenow.util.SourceValueType;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -47,7 +49,7 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServiceNowTableAPIClientImpl.class, ServiceNowBaseSourceConfig.class, ServiceNowMultiSource.class,
-        HttpClientBuilder.class, RestAPIResponse.class})
+  HttpClientBuilder.class, RestAPIResponse.class})
 public class ServiceNowInputFormatTest {
 
   private static final String CLIENT_ID = "clientId";
@@ -56,22 +58,20 @@ public class ServiceNowInputFormatTest {
   private static final String USER = "user";
   private static final String PASSWORD = "password";
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowInputFormat.class);
-  private ServiceNowSourceConfig config;
+  private ServiceNowConnectorConfig connectorConfig;
 
   @Before
   public void initializeTests() {
-    config = Mockito.spy(new ServiceNowSourceConfig("Reference Name", "Query Mode",
-      "Product Catalog", "tablename", "pc_hardware_cat_item", CLIENT_ID,
-      CLIENT_SECRET, REST_API_ENDPOINT, USER, PASSWORD, "Actual", "2012-12-31",
-                                                    "2021-12-31"));
+    connectorConfig = Mockito.spy(new ServiceNowConnectorConfig(CLIENT_ID, CLIENT_SECRET, REST_API_ENDPOINT, USER,
+                                                                PASSWORD));
   }
 
   @Test
   public void testFetchTableInfo() throws Exception {
     SourceQueryMode mode = SourceQueryMode.TABLE;
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     List<Map<String, Object>> result = new ArrayList<>();
     Map<String, Object> map = new HashMap<>();
     map.put("key", "value");
@@ -145,10 +145,10 @@ public class ServiceNowInputFormatTest {
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
-            withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
+      withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
     OAuthJSONAccessTokenResponse accessTokenResponse = Mockito.mock(OAuthJSONAccessTokenResponse.class);
     Mockito.when(oAuthClient.accessToken(Mockito.any(), Mockito.anyString(), Mockito.any(Class.class))).
-            thenReturn(accessTokenResponse);
+      thenReturn(accessTokenResponse);
     Mockito.when(accessTokenResponse.getAccessToken()).thenReturn("token");
     RestAPIResponse response = Mockito.spy(restAPIResponse);
     CloseableHttpClient httpClient = Mockito.mock(CloseableHttpClient.class);
@@ -160,17 +160,20 @@ public class ServiceNowInputFormatTest {
     CloseableHttpResponse httpResponse = Mockito.mock(CloseableHttpResponse.class);
     Mockito.when(httpClient.execute(Mockito.any())).thenReturn(httpResponse);
     PowerMockito.when(RestAPIResponse.parse(ArgumentMatchers.any(), ArgumentMatchers.anyString())).
-            thenReturn(response);
-
-    Assert.assertEquals(1, ServiceNowInputFormat.fetchTableInfo(mode, config).size());
+      thenReturn(response);
+    SourceApplication application = SourceApplication.PROCUREMENT;
+    SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
+    Assert.assertEquals(1, ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
+                                                                application, valueType, "start", "end")
+                                                                .size());
   }
 
   @Test
   public void testFetchTableInfoReportingMode() throws Exception {
     SourceQueryMode mode = SourceQueryMode.REPORTING;
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     List<Map<String, Object>> result = new ArrayList<>();
     Map<String, Object> map = new HashMap<>();
     map.put("key", "value");
@@ -244,10 +247,10 @@ public class ServiceNowInputFormatTest {
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
-            withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
+      withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
     OAuthJSONAccessTokenResponse accessTokenResponse = Mockito.mock(OAuthJSONAccessTokenResponse.class);
     Mockito.when(oAuthClient.accessToken(Mockito.any(), Mockito.anyString(), Mockito.any(Class.class))).
-            thenReturn(accessTokenResponse);
+      thenReturn(accessTokenResponse);
     Mockito.when(accessTokenResponse.getAccessToken()).thenReturn("token");
     RestAPIResponse response = Mockito.spy(restAPIResponse);
     CloseableHttpClient httpClient = Mockito.mock(CloseableHttpClient.class);
@@ -259,17 +262,20 @@ public class ServiceNowInputFormatTest {
     CloseableHttpResponse httpResponse = Mockito.mock(CloseableHttpResponse.class);
     Mockito.when(httpClient.execute(Mockito.any())).thenReturn(httpResponse);
     PowerMockito.when(RestAPIResponse.parse(ArgumentMatchers.any(), ArgumentMatchers.anyString())).
-            thenReturn(response);
-
-    Assert.assertEquals(4, ServiceNowInputFormat.fetchTableInfo(mode, config).size());
+      thenReturn(response);
+    SourceApplication application = SourceApplication.PROCUREMENT;
+    SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
+    Assert.assertEquals(4, ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
+                                                                application, valueType, "start",
+                                                                "end").size());
   }
 
   @Test
   public void testFetchTableInfoWithEmptyTableName() throws Exception {
     SourceQueryMode mode = SourceQueryMode.TABLE;
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     List<Map<String, Object>> result = new ArrayList<>();
     Map<String, Object> map = new HashMap<>();
     map.put("key", "value");
@@ -277,17 +283,17 @@ public class ServiceNowInputFormatTest {
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
-            "    \"result\": []\n" +
-            "}";
+      "    \"result\": []\n" +
+      "}";
     RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
     Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
-            withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
+      withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
     OAuthJSONAccessTokenResponse accessTokenResponse = Mockito.mock(OAuthJSONAccessTokenResponse.class);
     Mockito.when(oAuthClient.accessToken(Mockito.any(), Mockito.anyString(), Mockito.any(Class.class))).
-            thenReturn(accessTokenResponse);
+      thenReturn(accessTokenResponse);
     Mockito.when(accessTokenResponse.getAccessToken()).thenReturn("token");
     RestAPIResponse response = Mockito.spy(restAPIResponse);
     CloseableHttpClient httpClient = Mockito.mock(CloseableHttpClient.class);
@@ -299,8 +305,11 @@ public class ServiceNowInputFormatTest {
     CloseableHttpResponse httpResponse = Mockito.mock(CloseableHttpResponse.class);
     Mockito.when(httpClient.execute(Mockito.any())).thenReturn(httpResponse);
     PowerMockito.when(RestAPIResponse.parse(ArgumentMatchers.any(), ArgumentMatchers.anyString())).
-            thenReturn(response);
-
-    Assert.assertTrue(ServiceNowInputFormat.fetchTableInfo(mode, config).isEmpty());
+      thenReturn(response);
+    SourceApplication application = SourceApplication.PROCUREMENT;
+    SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
+    Assert.assertTrue(ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
+                                                           application, valueType, "start",
+                                                           "end").isEmpty());
   }
 }

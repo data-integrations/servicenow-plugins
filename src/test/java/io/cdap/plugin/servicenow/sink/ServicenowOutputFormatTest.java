@@ -34,7 +34,7 @@ public class ServicenowOutputFormatTest {
     Assert.assertFalse(outputFormat.getOutputCommitter(taskAttemptContext).needsTaskCommit(taskAttemptContext));
   }
 
-  @Test
+  @Test (expected = RuntimeException.class)
   public void testGetRecordWriter() throws Exception {
     JobContext context1 = Mockito.mock(JobContext.class);
     Configuration configuration = new Configuration();

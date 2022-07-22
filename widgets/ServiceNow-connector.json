@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "spec-version": "1.0"
+  },
+  "display-name": "ServiceNow",
+  "configuration-groups": [
+    {
+      "label": "Credentials",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Client ID",
+          "name": "clientId",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow Client ID"
+          }
+        },
+        {
+          "widget-type": "password",
+          "label": "Client Secret",
+          "name": "clientSecret",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow Client Secret Key"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "REST API Endpoint",
+          "name": "restApiEndpoint",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow API Endpoint e.g. https://instance.service-now.com"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "User Name",
+          "name": "user",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow User Name"
+          }
+        },
+        {
+          "widget-type": "password",
+          "label": "Password",
+          "name": "password",
+          "widget-attributes" : {
+            "placeholder": "ServiceNow User Password"
+          }
+        }
+      ]
+    }
+    ],
+  "outputs": []
+}

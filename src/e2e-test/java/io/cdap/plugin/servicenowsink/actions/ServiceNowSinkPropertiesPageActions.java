@@ -60,7 +60,7 @@ public class ServiceNowSinkPropertiesPageActions {
       System.getenv("SERVICE_NOW_PASSWORD"),
       "", "", "");
 
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config);
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     responseFromServiceNowTable = tableAPIClient.getRecordFromServiceNowTable(tableName, query);
   }
 

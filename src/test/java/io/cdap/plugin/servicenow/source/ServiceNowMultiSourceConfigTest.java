@@ -18,8 +18,8 @@ package io.cdap.plugin.servicenow.source;
 
 import io.cdap.cdap.etl.api.validation.ValidationFailure;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
-import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
@@ -103,8 +103,8 @@ public class ServiceNowMultiSourceConfigTest {
         .buildMultiSource();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
     Map<String, Object> map = new HashMap<>();
@@ -200,8 +200,8 @@ public class ServiceNowMultiSourceConfigTest {
         .buildMultiSource();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
 
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
@@ -234,8 +234,8 @@ public class ServiceNowMultiSourceConfigTest {
         .buildMultiSource();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
     Map<String, Object> map = new HashMap<>();
@@ -333,8 +333,8 @@ public class ServiceNowMultiSourceConfigTest {
         .buildMultiSource();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
     Map<String, Object> map = new HashMap<>();
@@ -419,15 +419,16 @@ public class ServiceNowMultiSourceConfigTest {
       "https://config.us-east-2.amazonaws.com", "User", "password",
       "tablename", "Actual", "2020-03-01", "2020-03-01", ",");
     serviceNowMultiSourceConfig.validateTableNames(new MockFailureCollector("Stage Name"));
-    Assert.assertEquals("42", serviceNowMultiSourceConfig.getClientId());
+    Assert.assertEquals("42", serviceNowMultiSourceConfig.getConnection().getClientId());
     Assert.assertEquals("tablename", serviceNowMultiSourceConfig.tableNameField);
-    Assert.assertEquals("User", serviceNowMultiSourceConfig.getUser());
+    Assert.assertEquals("User", serviceNowMultiSourceConfig.getConnection().getUser());
     Assert.assertEquals(",", serviceNowMultiSourceConfig.getTableNames());
     Assert.assertEquals("2020-03-01", serviceNowMultiSourceConfig.getStartDate());
-    Assert.assertEquals("https://config.us-east-2.amazonaws.com", serviceNowMultiSourceConfig.getRestApiEndpoint());
+    Assert.assertEquals("https://config.us-east-2.amazonaws.com", serviceNowMultiSourceConfig.getConnection()
+      .getRestApiEndpoint());
     Assert.assertEquals("Reference Name", serviceNowMultiSourceConfig.getReferenceName());
-    Assert.assertEquals("password", serviceNowMultiSourceConfig.getPassword());
-    Assert.assertEquals("client_secret", serviceNowMultiSourceConfig.getClientSecret());
+    Assert.assertEquals("password", serviceNowMultiSourceConfig.getConnection().getPassword());
+    Assert.assertEquals("client_secret", serviceNowMultiSourceConfig.getConnection().getClientSecret());
     Assert.assertEquals("2020-03-01", serviceNowMultiSourceConfig.getEndDate());
   }
 

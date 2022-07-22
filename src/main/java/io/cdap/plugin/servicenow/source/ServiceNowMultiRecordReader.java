@@ -70,7 +70,7 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
     try {
       for (Schema.Field field : tableFields) {
         String fieldName = field.getName();
-        Object fieldValue = convertToValue(fieldName, field.getSchema(), row);
+        Object fieldValue = multiSourcePluginConf.getConnection().convertToValue(fieldName, field.getSchema(), row);
         recordBuilder.set(fieldName, fieldValue);
       }
     } catch (Exception e) {
@@ -84,12 +84,13 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
     tableName = split.getTableName();
     tableNameField = multiSourcePluginConf.getTableNameField();
 
-    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(multiSourcePluginConf);
+    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(multiSourcePluginConf.getConnection());
 
     // Get the table data
     results = restApi.fetchTableRecordsRetryableMode(tableName, multiSourcePluginConf.getValueType(),
-      multiSourcePluginConf.getStartDate(), multiSourcePluginConf.getEndDate(), split.getOffset(),
-      ServiceNowConstants.PAGE_SIZE);
+                                                     multiSourcePluginConf.getStartDate(),
+                                                     multiSourcePluginConf.getEndDate(), split.getOffset(),
+                                                     ServiceNowConstants.PAGE_SIZE);
     LOG.debug("Results size={}", results.size());
     if (!results.isEmpty()) {
       fetchSchema(restApi);
@@ -101,7 +102,7 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
   private void fetchSchema(ServiceNowTableAPIClientImpl restApi) {
     // Fetch the column definition
     ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, multiSourcePluginConf.getValueType(),
-      null, null, false);
+                                                                    null, null, false);
     if (response == null) {
       return;
     }

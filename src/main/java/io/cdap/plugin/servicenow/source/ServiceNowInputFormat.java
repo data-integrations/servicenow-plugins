@@ -21,11 +21,14 @@ import io.cdap.cdap.api.data.schema.Schema;
 
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.util.SchemaBuilder;
 import io.cdap.plugin.servicenow.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
+import io.cdap.plugin.servicenow.util.SourceApplication;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
+import io.cdap.plugin.servicenow.util.SourceValueType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -40,6 +43,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * ServiceNow input format.
@@ -51,8 +55,8 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
    * Updates the jobConfig with the ServiceNow table information, which will then be read in getSplit() function.
    *
    * @param jobConfig the job configuration
-   * @param mode the query mode
-   * @param conf the database conf
+   * @param mode      the query mode
+   * @param conf      the database conf
    * @return Collection of ServiceNowTableInfo containing table and schema.
    */
   public static List<ServiceNowTableInfo> setInput(Configuration jobConfig, SourceQueryMode mode,
@@ -62,17 +66,23 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
 
     // Depending on conf value fetch the list of fields for each table and create schema object
     // return the schema object for each table as ServiceNowTableInfo
-    List<ServiceNowTableInfo> tableInfos = fetchTableInfo(mode, conf);
+    List<ServiceNowTableInfo> tableInfos = fetchTableInfo(mode, conf.getConnection(), conf.getTableName(),
+                                                          conf.getApplicationName(), conf.getValueType(),
+                                                          conf.getStartDate(), conf.getEndDate());
 
     jobConf.setTableInfos(tableInfos);
 
     return tableInfos;
   }
 
-  static List<ServiceNowTableInfo> fetchTableInfo(SourceQueryMode mode, ServiceNowSourceConfig conf) {
+  public static List<ServiceNowTableInfo> fetchTableInfo(SourceQueryMode mode, ServiceNowConnectorConfig conf,
+                                                         @Nullable String tableName,
+                                                         @Nullable SourceApplication application,
+                                                         SourceValueType valueType, @Nullable String startDate,
+                                                         @Nullable String endDate) {
     // When mode = Table, fetch details from the table name provided in plugin config
     if (mode == SourceQueryMode.TABLE) {
-      ServiceNowTableInfo tableInfo = getTableMetaData(conf.getTableName(), conf);
+      ServiceNowTableInfo tableInfo = getTableMetaData(tableName, conf, valueType, startDate, endDate);
       return (tableInfo == null) ? Collections.emptyList() : Collections.singletonList(tableInfo);
     }
 
@@ -80,9 +90,9 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
     // and then fetch details from each of the tables.
     List<ServiceNowTableInfo> tableInfos = new ArrayList<>();
 
-    List<String> tableNames = conf.getApplicationName().getTableNames();
-    for (String tableName : tableNames) {
-      ServiceNowTableInfo tableInfo = getTableMetaData(tableName, conf);
+    List<String> tableNames = application.getTableNames();
+    for (String table : tableNames) {
+      ServiceNowTableInfo tableInfo = getTableMetaData(table, conf, valueType, startDate, endDate);
       if (tableInfo == null) {
         continue;
       }
@@ -92,13 +102,13 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
     return tableInfos;
   }
 
-  private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowSourceConfig conf) {
+  private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowConnectorConfig conf,
+                                                      SourceValueType valueType, String startDate, String endDate) {
     // Call API to fetch first record from the table
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(conf);
 
-    ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, conf.getValueType(), conf.getStartDate(),
-                                                                    conf.getEndDate(),
-      true);
+    ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, valueType, startDate, endDate,
+                                                                    true);
     if (response == null) {
       return null;
     }
@@ -150,7 +160,6 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
     throws IOException, InterruptedException {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(taskAttemptContext.getConfiguration());
     ServiceNowSourceConfig pluginConf = jobConfig.getPluginConf();
-
     return new ServiceNowRecordReader(pluginConf);
   }
 }

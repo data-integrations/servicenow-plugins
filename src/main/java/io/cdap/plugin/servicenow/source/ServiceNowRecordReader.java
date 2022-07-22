@@ -74,7 +74,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     try {
       for (Schema.Field field : tableFields) {
         String fieldName = field.getName();
-        Object fieldValue = convertToValue(fieldName, field.getSchema(), row);
+        Object fieldValue = pluginConf.getConnection().convertToValue(fieldName, field.getSchema(), row);
         recordBuilder.set(fieldName, fieldValue);
       }
     } catch (Exception e) {
@@ -88,7 +88,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     tableName = split.getTableName();
     tableNameField = pluginConf.getTableNameField();
 
-    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(pluginConf);
+    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(pluginConf.getConnection());
 
     // Get the table data
     results = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(), pluginConf.getStartDate(),

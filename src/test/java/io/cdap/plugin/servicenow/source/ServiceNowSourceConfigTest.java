@@ -21,8 +21,8 @@ import io.cdap.cdap.etl.api.validation.CauseAttributes;
 import io.cdap.cdap.etl.api.validation.ValidationException;
 import io.cdap.cdap.etl.api.validation.ValidationFailure;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
-import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceApplication;
@@ -613,8 +613,8 @@ public class ServiceNowSourceConfigTest {
       .build();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
 
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
@@ -644,8 +644,8 @@ public class ServiceNowSourceConfigTest {
       .build();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     int httpStatus = HttpStatus.SC_BAD_REQUEST;
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +

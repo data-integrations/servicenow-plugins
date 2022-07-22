@@ -63,7 +63,7 @@ public class TestSetupHooks {
   @Before(order = 2, value = "@SN_PRODUCT_CATALOG_ITEM")
   public static void createRecordInProductCatalogItemTable() throws IOException {
     BeforeActions.scenario.write("Create new record in Product Catalog Item table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config);
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     String uniqueId = "TestProductCatalogItem" + RandomStringUtils.randomAlphanumeric(10);
     String recordDetails = "{'name':'" + uniqueId + "','price':'2500'}";
     StringEntity entity = new StringEntity(recordDetails);
@@ -73,7 +73,7 @@ public class TestSetupHooks {
   @Before(order = 2, value = "@SN_RECEIVING_SLIP_LINE")
   public static void createRecordInReceivingSlipLineTable() throws IOException {
     BeforeActions.scenario.write("Create new record in Receiving Slip Line table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config);
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     String uniqueId = "TestReceivingSlipLine" + RandomStringUtils.randomAlphanumeric(10);
     String recordDetails = "{'number':'" + uniqueId + "'}";
     StringEntity entity = new StringEntity(recordDetails);
@@ -83,7 +83,7 @@ public class TestSetupHooks {
   @Before(order = 2, value = "@SN_UPDATE_AGENT_ASSIST_RECOMMENDATION")
   public static void updateRecordInAgentAssistRecommendationTable() throws IOException {
     BeforeActions.scenario.write("Create new record in Agent Assist Recommendation table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config);
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     String uniqueId = "TestAgentAssist" + RandomStringUtils.randomAlphanumeric(10);
     String recordDetails = "{'active':'false','name':'" + uniqueId + "'}";
     StringEntity entity = new StringEntity(recordDetails);
@@ -93,7 +93,7 @@ public class TestSetupHooks {
   @Before(order = 2, value = "@SN_UPDATE_VENDOR_CATALOG_ITEM")
   public static void updateRecordInAgentVendorCatalogItem() throws IOException {
     BeforeActions.scenario.write("Create new record in Vendor Catalog Item table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config);
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     String uniqueId = "TestVendorCatalog" + RandomStringUtils.randomAlphanumeric(10);
     String recordDetails = "{'out_of_stock':'false','product_id':'" + uniqueId + "'}";
     StringEntity entity = new StringEntity(recordDetails);
@@ -103,7 +103,7 @@ public class TestSetupHooks {
   @Before(order = 2, value = "@SN_UPDATE_SERVICE_OFFERING")
   public static void updateRecordInServiceOffering() throws IOException {
     BeforeActions.scenario.write("Create new record in Service Offering table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config);
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     String uniqueId = "TestServiceOffering" + RandomStringUtils.randomAlphanumeric(10);
     String recordDetails = "{'purchase_date':'2022-05-28','end_date':'2022-06-05 15:00:00'," +
       " 'start_date':'2022-05-25 15:00:00','number':'" + uniqueId + "'}";
