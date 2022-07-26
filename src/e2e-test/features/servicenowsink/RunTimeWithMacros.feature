@@ -19,7 +19,7 @@
 Feature: ServiceNow Sink - Run time scenarios (macro)
 
   @TS-SN-RNTM-SINK-MACRO-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
-  Scenario: Verify user should be able to preview a pipeline when ServiceNow plugin is configured for Insert operation with macros
+  Scenario: Verify user should be able to preview a pipeline when plugin is configured for Insert operation with macros
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -55,7 +55,7 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     Then Verify the preview of pipeline is "success"
 
   @TS-SN-RNTM-SINK-MACRO-02  @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
-  Scenario: Verify user should be able to run a pipeline when ServiceNow plugin is configured for Insert operation with macros
+  Scenario: Verify user should be able to run a pipeline when plugin is configured for Insert operation with macros
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -94,7 +94,7 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     Then Open and capture logs
 
   @TS-SN-RNTM-SINK-MACRO-03 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
-  Scenario: Verify user should be able to preview a pipeline when ServiceNow plugin is configured for Update operation with macros
+  Scenario: Verify user should be able to preview a pipeline when plugin is configured for Update operation with macros
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -130,7 +130,7 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     Then Verify the preview of pipeline is "success"
 
   @TS-SN-RNTM-SINK-MACRO-04 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
-  Scenario: Verify user should be able to run a pipeline when ServiceNow plugin is configured for Update operation with macros
+  Scenario: Verify user should be able to run a pipeline when plugin is configured for Update operation with macros
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -169,7 +169,7 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     Then Open and capture logs
 
   @TS-SN-RNTM-SINK-MACRO-05 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
-  Scenario: Verify pipeline failure message in logs when user provides invalid Table Name in Sink plugin with Macros
+  Scenario: Verify pipeline failure message in logs when user provides invalid Table Name in plugin with Macros
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"

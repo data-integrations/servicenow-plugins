@@ -62,7 +62,7 @@ Feature: ServiceNow Sink - Design time scenarios
     Then Verify error message in Input Schema for non creatable fields
 
   @TS-SN-DSGN-SINK-03 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
-  Scenario: Verify user should be able to validate the ServiceNow Sink when plugin is configured for table Receiving Slip with Input operation
+  Scenario: Verify user should be able to validate when plugin is configured for table Receiving Slip with Input operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -81,7 +81,7 @@ Feature: ServiceNow Sink - Design time scenarios
     And Validate "ServiceNow" plugin properties
 
   @TS-SN-DSGN-SINK-04 @BQ_SOURCE_AGENT_ASSIST_RECOMMENDATION
-  Scenario: Verify user should be able to validate the ServiceNow Sink when plugin is configured for table Agent Assist recommendation with Input operation
+  Scenario: Verify user should be able to validate when plugin is configured for table Agent Assist recommendation with Input operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -100,7 +100,7 @@ Feature: ServiceNow Sink - Design time scenarios
     And Validate "ServiceNow" plugin properties
 
   @TS-SN-DSGN-SINK-05 @BQ_SOURCE_VENDOR_CATALOG_ITEM
-  Scenario: Verify user should be able to validate the ServiceNow Sink when plugin is configured for table Vendor Catalog Item with Input operation
+  Scenario: Verify user should be able to validate when plugin is configured for table Vendor Catalog Item with Input operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -119,7 +119,7 @@ Feature: ServiceNow Sink - Design time scenarios
     And Validate "ServiceNow" plugin properties
 
   @TS-SN-DSGN-SINK-06 @BQ_SOURCE_SERVICE_OFFERING
-  Scenario: Verify user should be able to validate the ServiceNow Sink when plugin is configured for table Service Offering with Input operation
+  Scenario: Verify user should be able to validate when plugin is configured for table Service Offering with Input operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -139,7 +139,7 @@ Feature: ServiceNow Sink - Design time scenarios
 
 
   @TS-SN-DSGN-SINK-07 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SOURCE_UPDATE_RECEIVING_SLIP_LINE
-  Scenario: Verify user should be able to validate the ServiceNow Sink when plugin is configured for table Receiving Slip with Update operation
+  Scenario: Verify user should be able to validate when plugin is configured for table Receiving Slip with Update operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -158,7 +158,7 @@ Feature: ServiceNow Sink - Design time scenarios
     And Validate "ServiceNow" plugin properties
 
   @TS-SN-DSGN-SINK-08 @SN_UPDATE_AGENT_ASSIST_RECOMMENDATION @SN_SOURCE_CONFIG @BQ_SOURCE_UPDATE_AGENT_ASSIST_RECOMMENDATION
-  Scenario: Verify user should be able to validate the ServiceNow Sink when plugin is configured for table Agent Assist recommendation with Update operation
+  Scenario: Verify user should be able to validate when plugin is configured for table Agent Assist recommendation with Update operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -177,7 +177,7 @@ Feature: ServiceNow Sink - Design time scenarios
     And Validate "ServiceNow" plugin properties
 
   @TS-SN-DSGN-SINK-09 @SN_UPDATE_VENDOR_CATALOG_ITEM @SN_SOURCE_CONFIG @BQ_SOURCE_UPDATE_VENDOR_CATALOG_ITEM
-  Scenario: Verify user should be able to validate the ServiceNow Sink when plugin is configured for table Vendor Catalog Item with Update operation
+  Scenario: Verify user should be able to validate when plugin is configured for table Vendor Catalog Item with Update operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -196,7 +196,7 @@ Feature: ServiceNow Sink - Design time scenarios
     And Validate "ServiceNow" plugin properties
 
   @TS-SN-DSGN-SINK-10 @SN_SOURCE_CONFIG @SN_UPDATE_SERVICE_OFFERING @BQ_SOURCE_UPDATE_SERVICE_OFFERING
-  Scenario: Verify user should be able to validate the ServiceNow Sink when plugin is configured for table Service Offering with Update operation
+  Scenario: Verify user should be able to validate when plugin is configured for table Service Offering with Update operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
