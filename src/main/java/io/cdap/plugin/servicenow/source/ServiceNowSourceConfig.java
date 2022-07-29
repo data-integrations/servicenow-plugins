@@ -20,12 +20,10 @@ import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.etl.api.FailureCollector;
-import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
+import io.cdap.plugin.servicenow.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.SourceApplication;
 import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
 import io.cdap.plugin.servicenow.source.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -82,7 +80,7 @@ public class ServiceNowSourceConfig extends ServiceNowBaseSourceConfig {
                                 @Nullable String tableNameField, @Nullable String tableName, String clientId,
                                 String clientSecret, String restApiEndpoint, String user, String password,
                                 String valueType, @Nullable String startDate, @Nullable String endDate) {
-    super(referenceName, tableNameField, clientId, clientSecret, restApiEndpoint, user, password, valueType, startDate,
+    super(referenceName, clientId, clientSecret, restApiEndpoint, user, password, tableNameField, valueType, startDate,
       endDate);
     this.referenceName = referenceName;
     this.queryMode = queryMode;
@@ -208,7 +206,7 @@ public class ServiceNowSourceConfig extends ServiceNowBaseSourceConfig {
       collector.addFailure("Table name must be specified.", null)
         .withConfigProperty(ServiceNowConstants.PROPERTY_TABLE_NAME);
     } else {
-        validateTable(tableName, collector);
+        validateTable(tableName, getValueType(), collector);
     }
   }
 

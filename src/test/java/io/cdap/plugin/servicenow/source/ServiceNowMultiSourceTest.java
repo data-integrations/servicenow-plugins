@@ -21,9 +21,10 @@ import io.cdap.cdap.etl.api.validation.ValidationException;
 import io.cdap.cdap.etl.mock.common.MockArguments;
 import io.cdap.cdap.etl.mock.common.MockPipelineConfigurer;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
+import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
-import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -83,8 +84,8 @@ public class ServiceNowMultiSourceTest {
     MockPipelineConfigurer mockPipelineConfigurer = new MockPipelineConfigurer(null, plugins);
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).
-      withArguments(Mockito.any(ServiceNowBaseSourceConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
+      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
     Map<String, Object> map = new HashMap<>();
     List<Map<String, Object>> result = new ArrayList<>();
     map.put("key", "value");
@@ -167,8 +168,8 @@ public class ServiceNowMultiSourceTest {
     MockPipelineConfigurer mockPipelineConfigurer = new MockPipelineConfigurer(null, plugins);
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).
-      withArguments(Mockito.any(ServiceNowBaseSourceConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
+      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
     List<Map<String, Object>> result = new ArrayList<>();
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
@@ -194,8 +195,8 @@ public class ServiceNowMultiSourceTest {
     Mockito.when(context.getFailureCollector()).thenReturn(mockFailureCollector);
     Mockito.when(context.getArguments()).thenReturn(mockArguments);
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).
-      withArguments(Mockito.any(ServiceNowBaseSourceConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
+      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
     List<Map<String, Object>> result = new ArrayList<>();
     Map<String, Object> map = new HashMap<>();
     map.put("key", "value");

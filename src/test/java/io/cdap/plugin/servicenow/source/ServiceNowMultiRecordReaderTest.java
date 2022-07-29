@@ -18,9 +18,9 @@ package io.cdap.plugin.servicenow.source;
 
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.PluginProperties;
+import io.cdap.plugin.servicenow.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
-import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -69,10 +69,9 @@ public class ServiceNowMultiRecordReaderTest {
 
   @Test
   public void testConstructor() throws IOException {
-    Assert.assertEquals("tablename", serviceNowMultiSourceConfig.tableNameField);
+    Assert.assertEquals("tablename", serviceNowMultiSourceConfig.getTableNameField());
     Assert.assertEquals("user", serviceNowMultiSourceConfig.getUser());
     Assert.assertEquals("sys_user", serviceNowMultiSourceConfig.getTableNames());
-    Assert.assertEquals("tablename", serviceNowMultiSourceConfig.getTableNameField());
     Assert.assertEquals("2021-01-01", serviceNowMultiSourceConfig.getStartDate());
     Assert.assertEquals("https://ven05127.service-now.com", serviceNowMultiSourceConfig.getRestApiEndpoint());
     Assert.assertEquals("referenceName", serviceNowMultiSourceConfig.getReferenceName());
@@ -182,9 +181,9 @@ public class ServiceNowMultiRecordReaderTest {
     map.put("sys_updated_by", "system");
     map.put("sys_created_on", "2019-04-05 21:09:12");
     results.add(map);
-    restApi.fetchTableRecords(tableName, serviceNowMultiSourceConfig.getStartDate(),
-                                           serviceNowMultiSourceConfig.getEndDate(),
-                                           split.getOffset(), ServiceNowConstants.PAGE_SIZE);
+    restApi.fetchTableRecords(tableName, serviceNowMultiSourceConfig.getValueType(),
+      serviceNowMultiSourceConfig.getStartDate(), serviceNowMultiSourceConfig.getEndDate(), split.getOffset(),
+      ServiceNowConstants.PAGE_SIZE);
 
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);

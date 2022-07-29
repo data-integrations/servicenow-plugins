@@ -19,11 +19,11 @@ package io.cdap.plugin.servicenow.source;
 import com.google.common.base.Strings;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.plugin.servicenow.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.source.util.SchemaBuilder;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
-import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
@@ -34,6 +34,7 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -91,8 +92,8 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     // Call API to fetch first record from the table
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(conf);
 
-    ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, conf.getStartDate(), conf.getEndDate(),
-      true);
+    ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, conf.getValueType(), conf.getStartDate(),
+      conf.getEndDate(), true);
     if (response == null) {
       return null;
     }

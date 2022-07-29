@@ -135,8 +135,8 @@ public class ServiceNowSourceConfigHelper {
     }
 
     public ServiceNowMultiSourceConfig buildMultiSource() {
-      return new ServiceNowMultiSourceConfig(referenceName, tableNameField,
-        clientId, clientSecret, restApiEndpoint, user, password, valueType, startDate, endDate, tableNames);
+      return new ServiceNowMultiSourceConfig(referenceName, clientId, clientSecret, restApiEndpoint, user, password,
+        tableNameField, valueType, startDate, endDate, tableNames);
     }
 
 

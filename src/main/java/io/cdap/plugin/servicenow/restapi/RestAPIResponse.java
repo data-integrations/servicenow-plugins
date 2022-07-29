@@ -18,7 +18,7 @@ package io.cdap.plugin.servicenow.restapi;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
+import io.cdap.plugin.servicenow.ServiceNowConstants;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;

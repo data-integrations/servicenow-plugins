@@ -18,11 +18,11 @@ package io.cdap.plugin.servicenow.source;
 
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.plugin.servicenow.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.source.util.SchemaBuilder;
 import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
-import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
 import org.apache.hadoop.conf.Configuration;
@@ -95,7 +95,8 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
     // Call API to fetch first record from the table
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(conf);
 
-    ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, conf.getStartDate(), conf.getEndDate(),
+    ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, conf.getValueType(), conf.getStartDate(),
+                                                                    conf.getEndDate(),
       true);
     if (response == null) {
       return null;

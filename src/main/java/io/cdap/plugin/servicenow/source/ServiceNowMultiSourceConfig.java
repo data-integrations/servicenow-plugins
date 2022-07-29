@@ -21,7 +21,7 @@ import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.etl.api.FailureCollector;
-import io.cdap.plugin.servicenow.source.util.ServiceNowConstants;
+import io.cdap.plugin.servicenow.ServiceNowConstants;
 import io.cdap.plugin.servicenow.source.util.Util;
 
 import java.util.Set;
@@ -51,11 +51,10 @@ public class ServiceNowMultiSourceConfig extends ServiceNowBaseSourceConfig {
    * @param startDate The start date
    * @param endDate The end date
    */
-  public ServiceNowMultiSourceConfig(String referenceName, String tableNameField, String clientId,
-                                     String clientSecret, String restApiEndpoint, String user, String password,
-                                     String valueType, @Nullable String startDate, @Nullable String endDate,
-                                     String tableNames) {
-    super(referenceName, tableNameField, clientId, clientSecret, restApiEndpoint, user, password, valueType, startDate,
+  public ServiceNowMultiSourceConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
+                                     String user, String password, String tableNameField, String valueType,
+                                     @Nullable String startDate, @Nullable String endDate, String tableNames) {
+    super(referenceName, clientId, clientSecret, restApiEndpoint, user, password, tableNameField, valueType, startDate,
       endDate);
     this.tableNames = tableNames;
   }
@@ -101,7 +100,7 @@ public class ServiceNowMultiSourceConfig extends ServiceNowBaseSourceConfig {
     } else {
       Set<String> tableNames = ServiceNowMultiInputFormat.getList(getTableNames());
       for (String tableName : tableNames) {
-        validateTable(tableName, collector);
+        validateTable(tableName, getValueType(),  collector);
       }
     }
   }

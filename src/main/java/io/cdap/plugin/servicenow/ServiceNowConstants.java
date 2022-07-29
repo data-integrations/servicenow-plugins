@@ -14,7 +14,7 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.source.util;
+package io.cdap.plugin.servicenow;
 
 /**
  * ServiceNow constants.
@@ -80,6 +80,21 @@ public interface ServiceNowConstants {
    * Configuration property name used to specify password.
    */
   String PROPERTY_PASSWORD = "password";
+
+  /**
+   * Configuration property name used to specify the type of operation.
+   */
+  String PROPERTY_OPERATION = "operation";
+
+  /**
+   * Configuration property name used to specify the number of records per batch.
+   */
+  String PROPERTY_MAX_RECORDS_PER_BATCH = "maxRecordsPerBatch";
+
+  /**
+   * Configuration property name used to get the schema.
+   */
+  String NAME_SCHEMA = "schema";
 
   /**
    * Configuration property name used to specify value type.
@@ -155,5 +170,15 @@ public interface ServiceNowConstants {
    * The maximum number of retry attempts.
    */
   int MAX_NUMBER_OF_RETRY_ATTEMPTS = 5;
+
+  /**
+   * The INSERT operation
+   */
+  String INSERT_OPERATION = "insert";
+
+  /**
+   * The UPDATE operation
+   */
+  String UPDATE_OPERATION = "update";
   
 }
