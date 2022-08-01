@@ -16,33 +16,42 @@
 
 package io.cdap.plugin.servicenowsink.actions;
 
-import io.cdap.e2e.utils.AssertionHelper;
+import com.google.cloud.bigquery.TableResult;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import io.cdap.e2e.utils.BigQueryClient;
 import io.cdap.e2e.utils.PluginPropertyUtils;
 import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
-import io.cdap.plugin.utils.enums.TablesInTableMode;
+import io.cdap.plugin.tests.hooks.TestSetupHooks;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * ServiceNow sink - Properties page - Actions.
  */
 
 public class ServiceNowSinkPropertiesPageActions {
-  public static ServiceNowSourceConfig config;
-
   private static final Logger logger = LoggerFactory.getLogger(ServiceNowSinkPropertiesPageActions.class);
+  private static final int DEFAULT_SCALE = 4;
+  public static ServiceNowSourceConfig config;
+  public static Map<String, String> responseFromServiceNowTable;
+  private static Gson gson = new Gson();
 
-
-
-  public static void verifyIfRecordExistsInServiecNowReceivingSlipLineTable(String uniqueNumber)
+  public static void getRecordFromServiceNowTable(String query, String tableName)
     throws OAuthProblemException, OAuthSystemException {
-    String query = "number=" + uniqueNumber;
-    boolean responseStatusCodeIsSuccess;
-
     config = new ServiceNowSourceConfig(
       "", "", "", "", "",
       System.getenv("SERVICENOW_CLIENT_ID"),
@@ -53,11 +62,94 @@ public class ServiceNowSinkPropertiesPageActions {
       "", "", "");
 
     ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config);
-    responseStatusCodeIsSuccess = tableAPIClient.verifyIfRecordInServiceNowTableExists(
-      TablesInTableMode.RECEIVING_SLIP_LINE.value, query);
+    responseFromServiceNowTable = tableAPIClient.getRecordFromServiceNowTable(tableName, query);
+  }
 
-    logger.info("Verifying that the Response Status Code is true: " + responseStatusCodeIsSuccess);
-    Assert.assertTrue(responseStatusCodeIsSuccess);
+  public static void verifyIfRecordCreatedInServiceNowIsCorrect(String query, String tableName)
+    throws IOException, InterruptedException, OAuthProblemException, OAuthSystemException {
 
+    getRecordFromServiceNowTable(query, tableName);
+    TableResult bigQueryTableData = getBigQueryTableData(TestSetupHooks.bqSourceDataset, TestSetupHooks.bqSourceTable);
+    if (bigQueryTableData == null) {
+      return;
+    }
+      String bigQueryJsonResponse = bigQueryTableData.getValues().iterator().next().get(0).getValue().toString();
+      JsonObject jsonObject = gson.fromJson(bigQueryJsonResponse, JsonObject.class);
+      Map<String, Object> bigQueryResponseInMap = gson.fromJson(jsonObject.toString(), Map.class);
+      Assert.assertTrue(compareValueOfBothResponses(responseFromServiceNowTable, bigQueryResponseInMap));
+  }
+
+  public static void verifyIfRecordUpdatedInServiceNowIsCorrect(String query, String tableName)
+    throws IOException, InterruptedException, OAuthProblemException, OAuthSystemException {
+
+    getRecordFromServiceNowTable(query, tableName);
+    TableResult bigQueryTableData = getBigQueryTableData(TestSetupHooks.bqSourceDataset, TestSetupHooks.bqSourceTable);
+    if (bigQueryTableData == null) {
+      return;
+    }
+    String bigQueryJsonResponse = bigQueryTableData.getValues().iterator().next().get(0).getValue().toString();
+    JsonObject jsonObject = gson.fromJson(bigQueryJsonResponse, JsonObject.class);
+    Map<String, Object> bigQueryResponseInMap = gson.fromJson(jsonObject.toString(), Map.class);
+    Assert.assertTrue(compareValueOfBothResponses(responseFromServiceNowTable, bigQueryResponseInMap));
+  }
+
+  public static TableResult getBigQueryTableData(String dataset, String table)
+    throws IOException, InterruptedException {
+    String projectId = PluginPropertyUtils.pluginProp("projectId");
+    String selectQuery = "SELECT TO_JSON(t) result FROM `" + projectId + "." + dataset + "." + table + "` AS t";
+    return BigQueryClient.getQueryResult(selectQuery);
+  }
+
+  public static boolean compareValueOfBothResponses(Map<String, String> serviceNowResponseMap,
+                                                    Map<String, Object> bigQueryResponseMap) {
+    if (serviceNowResponseMap.isEmpty() || bigQueryResponseMap.isEmpty()) {
+      return false;
+    }
+    boolean result = false;
+    Set<String> bigQueryKeySet = bigQueryResponseMap.keySet();
+
+    for (String key : bigQueryKeySet) {
+      Object serviceNowValue = serviceNowResponseMap.get(key);
+      Object bigQueryValue = bigQueryResponseMap.get(key);
+
+      if (bigQueryValue instanceof Double) {
+        String bigDecimalValue = new BigDecimal(String.valueOf(bigQueryValue)).setScale(DEFAULT_SCALE,
+                                                                               RoundingMode.HALF_UP).toString();
+        result = serviceNowValue.equals(bigDecimalValue);
+      } else if (checkBigQueryDateFormat(bigQueryValue.toString()) != null) {
+        SimpleDateFormat serviceNowDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String bigQueryFormattedValue = serviceNowDateFormat.format(checkBigQueryDateFormat(bigQueryValue.toString()));
+        result = String.valueOf(serviceNowValue).equals(bigQueryFormattedValue);
+      } else {
+        result = String.valueOf(serviceNowValue).equals(String.valueOf(bigQueryValue));
+      }
+    }
+    return result;
+  }
+  /**
+   * Return BigQuery supported date formats.
+   *
+   */
+  private static Date checkBigQueryDateFormat(String value) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");
+    SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+    Date date;
+    try {
+      date = dateFormat.parse(value);
+      return date;
+    } catch (ParseException ignored) {
+    }
+    try {
+      date = dateTimeFormat.parse(value);
+      return date;
+    } catch (ParseException ignored) {
+    }
+    try {
+      date = timeStampFormat.parse(value);
+      return date;
+    } catch (ParseException ignored) {
+    }
+    return null;
   }
 }

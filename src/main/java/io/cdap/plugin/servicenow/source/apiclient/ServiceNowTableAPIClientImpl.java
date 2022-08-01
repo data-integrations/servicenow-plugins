@@ -24,7 +24,6 @@ import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import io.cdap.plugin.servicenow.restapi.RestAPIClient;
@@ -36,6 +35,7 @@ import io.cdap.plugin.servicenow.source.util.Util;
 import org.apache.http.HttpEntity;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,14 +60,16 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   private static final String FIELD_UPDATED_ON = "sys_updated_on";
   private static final String OAUTH_URL_TEMPLATE = "%s/oauth_token.do";
   private ServiceNowBaseSourceConfig conf;
-  
+  private static Gson gson = new Gson();
+
+
   public ServiceNowTableAPIClientImpl(ServiceNowBaseSourceConfig conf) {
     this.conf = conf;
   }
 
   public String getAccessToken() throws OAuthSystemException, OAuthProblemException {
     return generateAccessToken(String.format(OAUTH_URL_TEMPLATE, conf.getRestApiEndpoint()), conf.getClientId(),
-      conf.getClientSecret(), conf.getUser(), conf.getPassword());
+                               conf.getClientSecret(), conf.getUser(), conf.getPassword());
   }
 
   /**
@@ -75,9 +77,9 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    *
    * @param tableName The ServiceNow table name
    * @param startDate The start date
-   * @param endDate The end date
-   * @param offset The number of records to skip
-   * @param limit The number of records to be fetched
+   * @param endDate   The end date
+   * @param offset    The number of records to skip
+   * @param limit     The number of records to be fetched
    * @return The list of Map; each Map representing a table row
    */
   public List<Map<String, Object>> fetchTableRecords(String tableName, String startDate, String endDate, int offset,
@@ -120,7 +122,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * Create a new record in the ServiceNow Table
    *
    * @param tableName ServiceNow Table name
-   * @param entity Details of the Record to be created
+   * @param entity    Details of the Record to be created
    */
   public String createRecord(String tableName, HttpEntity entity) {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
@@ -134,9 +136,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       requestBuilder.setContentTypeHeader("application/json");
       requestBuilder.setEntity(entity);
       apiResponse = executePost(requestBuilder.build());
-
       systemID = String.valueOf(getSystemId(apiResponse));
-      System.out.println("I am the inside create and update fun and i got sys id :" + systemID);
 
       if (!apiResponse.isSuccess()) {
         LOG.error("Error - {}", getErrorMessage(apiResponse.getResponseBody()));
@@ -151,46 +151,49 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     return systemID;
   }
 
-/**
-  * Fetches the System Id of a new Record.
-  *
-  * @param apiResponse API response after Creating a record
-  */
-    public JsonElement getSystemId(RestAPIResponse apiResponse) {
-
-      Gson gson = new Gson();
-      JsonObject jo = gson.fromJson(apiResponse.getResponseBody(), JsonObject.class);
-       JsonObject ja = (JsonObject) jo.get("result");
-
-         return ja.get("sys_id");
-      }
   /**
-   * Verify if a record is present in ServiceNow application.
+   * Fetches the System Id of a new Record.
+   *
+   * @param apiResponse API response after Creating a record
+   */
+  public String getSystemId(RestAPIResponse apiResponse) {
+
+    JsonObject jsonObject = gson.fromJson(apiResponse.getResponseBody(), JsonObject.class);
+    JsonObject result = (JsonObject) jsonObject.get("result");
+
+    return result.get("sys_id").getAsString();
+  }
+
+  /**
+   * Return a record from ServiceNow application.
    *
    * @param tableName The ServiceNow table name
-   * @param query the query
+   * @param query     The query
    */
-  public Boolean verifyIfRecordInServiceNowTableExists(String tableName, String query)
+  public Map<String, String> getRecordFromServiceNowTable(String tableName, String query)
     throws OAuthProblemException, OAuthSystemException {
-  ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-    this.conf.getRestApiEndpoint() , tableName)
-    .setQuery(query);
+
+    ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
+      this.conf.getRestApiEndpoint(), tableName)
+      .setQuery(query);
 
     RestAPIResponse apiResponse = null;
     String accessToken = getAccessToken();
     requestBuilder.setAuthHeader(accessToken);
     apiResponse = executeGet(requestBuilder.build());
+    JsonObject jsonObject = gson.fromJson(apiResponse.getResponseBody(), JsonObject.class);
+    JsonArray jsonResultArray = jsonObject.getAsJsonArray("result");
+    Map<String, String> responseMap = gson.fromJson(jsonResultArray.get(0), Map.class);
 
-  return apiResponse.isSuccess();
+    return responseMap;
   }
-
 
   /**
    * Fetches the table schema for ServiceNow table.
    *
-   * @param tableName The ServiceNow table name
-   * @param startDate The start date
-   * @param endDate The end date
+   * @param tableName        The ServiceNow table name
+   * @param startDate        The start date
+   * @param endDate          The end date
    * @param fetchRecordCount A flag that decides whether to fetch total record count or not
    * @return
    */
@@ -306,9 +309,9 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    *
    * @param tableName The ServiceNow table name
    * @param startDate The start date
-   * @param endDate The end date
-   * @param offset The number of records to skip
-   * @param limit The number of records to be fetched
+   * @param endDate   The end date
+   * @param offset    The number of records to skip
+   * @param limit     The number of records to be fetched
    * @return The list of Map; each Map representing a table row
    */
   public List<Map<String, Object>> fetchTableRecordsRetryableMode(String tableName, String startDate, String endDate,
@@ -329,7 +332,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       retryer.call(fetchRecords);
     } catch (RetryException | ExecutionException e) {
       LOG.error("Data Recovery failed for batch {} to {}.", offset,
-               (offset + limit));
+                (offset + limit));
     }
 
     return results;

@@ -15,6 +15,6 @@
  */
 
 /**
- * ServiceNow sink - Properties page - Actions.
+ * ServiceNow sink - Properties page - Steps.
  */
 package io.cdap.plugin.servicenowsink.stepsdesign;

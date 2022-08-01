@@ -127,6 +127,11 @@ public interface ServiceNowConstants {
   String STATUS = "status";
 
   /**
+   * The System Id.
+   */
+  String SYSTEM_ID_QUERY = "sys_id";
+
+  /**
    * The message.
    */
   String MESSAGE = "message";

@@ -55,7 +55,7 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     Then Verify the preview of pipeline is "success"
 
   @TS-SN-RNTM-SINK-MACRO-02  @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
-  Scenario: Verify user should be able to run a pipeline when plugin is configured for Insert operation with macros
+  Scenario: Verify user should be able to deploy and run a pipeline when plugin is configured for Insert operation with macros
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -91,9 +91,10 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     And Run the Pipeline in Runtime with runtime arguments
     And Wait till pipeline is in running state
     And Verify the pipeline status is "Succeeded"
+    And Verify If new record created in ServiceNow application for table "receiving_slip_line" is correct
     Then Open and capture logs
 
-  @TS-SN-RNTM-SINK-MACRO-03 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
+  @TS-SN-RNTM-SINK-MACRO-03 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SOURCE_UPDATE_RECEIVING_SLIP_LINE
   Scenario: Verify user should be able to preview a pipeline when plugin is configured for Update operation with macros
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
@@ -129,8 +130,8 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     And Run the preview of pipeline with runtime arguments
     Then Verify the preview of pipeline is "success"
 
-  @TS-SN-RNTM-SINK-MACRO-04 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
-  Scenario: Verify user should be able to run a pipeline when plugin is configured for Update operation with macros
+  @TS-SN-RNTM-SINK-MACRO-04 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SOURCE_UPDATE_RECEIVING_SLIP_LINE
+  Scenario: Verify user should be able to deploy and run a pipeline when plugin is configured for Update operation with macros
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "BigQuery" from the plugins list as: "Source"
@@ -166,6 +167,7 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     And Run the Pipeline in Runtime with runtime arguments
     And Wait till pipeline is in running state
     And Verify the pipeline status is "Succeeded"
+    And Verify If an updated record in ServiceNow application for table "receiving_slip_line" is correct
     Then Open and capture logs
 
   @TS-SN-RNTM-SINK-MACRO-05 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE

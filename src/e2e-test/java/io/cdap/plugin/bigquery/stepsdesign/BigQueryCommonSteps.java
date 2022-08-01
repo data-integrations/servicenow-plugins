@@ -19,6 +19,7 @@ package io.cdap.plugin.bigquery.stepsdesign;
 import io.cdap.e2e.pages.actions.CdfBigQueryPropertiesActions;
 import io.cdap.e2e.pages.actions.CdfPipelineRunAction;
 import io.cdap.e2e.utils.BigQueryClient;
+import io.cdap.e2e.utils.PluginPropertyUtils;
 import io.cdap.plugin.tests.hooks.TestSetupHooks;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
@@ -27,6 +28,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Represents common steps of BigQuery plugins.
@@ -52,11 +54,11 @@ public class BigQueryCommonSteps {
   public void getCountOfNoOfRecordsTransferredToTargetBigQueryTable() throws IOException, InterruptedException {
     int countRecords = BigQueryClient.countBqQuery(TestSetupHooks.bqTargetDataset, TestSetupHooks.bqTargetTable);
     Assert.assertEquals("Number of records transferred to BigQuery should be equal to " +
-        "records out count displayed on the Source plugin: ",
-      countRecords, CdfPipelineRunAction.getCountDisplayedOnSourcePluginAsRecordsOut());
+                          "records out count displayed on the Source plugin: ",
+                        countRecords, CdfPipelineRunAction.getCountDisplayedOnSourcePluginAsRecordsOut());
     Assert.assertEquals("Number of records transferred to BigQuery should be equal to " +
-        "records in count displayed on the Sink plugin: ",
-      countRecords, CdfPipelineRunAction.getCountDisplayedOnSinkPluginAsRecordsIn());
+                          "records in count displayed on the Sink plugin: ",
+                        countRecords, CdfPipelineRunAction.getCountDisplayedOnSinkPluginAsRecordsIn());
   }
 
   @When("Configure BigQuery source plugin for Dataset and Table")
@@ -66,4 +68,4 @@ public class BigQueryCommonSteps {
     CdfBigQueryPropertiesActions.enterBigQueryDataset(TestSetupHooks.bqSourceDataset);
     CdfBigQueryPropertiesActions.enterBigQueryTable(TestSetupHooks.bqSourceTable);
   }
-        }
+}

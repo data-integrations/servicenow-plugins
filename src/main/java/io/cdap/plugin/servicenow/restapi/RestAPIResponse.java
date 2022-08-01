@@ -39,6 +39,7 @@ public class RestAPIResponse {
   private static List<Integer> successCodes = new ArrayList<Integer>() {
     {
       add(HttpStatus.SC_OK);
+      add(HttpStatus.SC_CREATED);
     }
   };
   private static final String JSON_ERROR_RESPONSE_TEMPLATE = "{\n" +

@@ -67,7 +67,8 @@ Feature: ServiceNow Sink - Run time scenarios
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running state
     And Verify the pipeline status is "Succeeded"
-    Then Validate OUT record count is equal to IN record count
+    And Validate OUT record count is equal to IN record count
+    Then Verify If new record created in ServiceNow application for table "receiving_slip_line" is correct
 
   @TS-SN-RNTM-SINK-03 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
   Scenario: Verify user should be able to preview the pipeline when plugin is configured for Update operation
@@ -120,6 +121,7 @@ Feature: ServiceNow Sink - Run time scenarios
     And Wait till pipeline is in running state
     And Verify the pipeline status is "Succeeded"
     Then Validate OUT record count is equal to IN record count
+    Then Verify If an updated record in ServiceNow application for table "receiving_slip_line" is correct
 
   @TS-SN-RNTM-SINK-05 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
   Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Receiving Slip with Input operation
@@ -146,7 +148,7 @@ Feature: ServiceNow Sink - Run time scenarios
     And Wait till pipeline is in running state
     And Open and capture logs
     Then Verify the pipeline status is "Succeeded"
-    And Verify If new record is created in ServiceNow application
+    Then Verify If new record created in ServiceNow application for table "receiving_slip_line" is correct
 
   @TS-SN-RNTM-SINK-06 @BQ_SOURCE_AGENT_ASSIST_RECOMMENDATION
   Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Agent Assist recommendation with Input operation
@@ -155,7 +157,7 @@ Feature: ServiceNow Sink - Run time scenarios
     And Select plugin: "BigQuery" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "BigQuery"
     And Fill Reference Name
-   And Configure BigQuery source plugin for Dataset and Table
+    And Configure BigQuery source plugin for Dataset and Table
     And Validate "BigQuery" plugin properties
     And Capture the generated Output Schema
     And Close the Plugin Properties page
@@ -172,7 +174,8 @@ Feature: ServiceNow Sink - Run time scenarios
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running state
     And Open and capture logs
-    Then Verify the pipeline status is "Succeeded"
+    And Verify the pipeline status is "Succeeded"
+    Then Verify If new record created in ServiceNow application for table "agent_assist_recommendation" is correct
 
   @TS-SN-RNTM-SINK-07 @BQ_SOURCE_VENDOR_CATALOG_ITEM
   Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Vendor Catalog Item with Input operation
@@ -198,7 +201,8 @@ Feature: ServiceNow Sink - Run time scenarios
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running state
     And Open and capture logs
-    Then Verify the pipeline status is "Succeeded"
+    And Verify the pipeline status is "Succeeded"
+    Then Verify If new record created in ServiceNow application for table "vendor_catalog_item" is correct
 
   @TS-SN-RNTM-SINK-08 @BQ_SOURCE_SERVICE_OFFERING
   Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Service Offering with Input operation
@@ -224,8 +228,8 @@ Feature: ServiceNow Sink - Run time scenarios
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running state
     And Open and capture logs
-    Then Verify the pipeline status is "Succeeded"
-
+    And Verify the pipeline status is "Succeeded"
+    Then Verify If new record created in ServiceNow application for table "service_offering" is correct
 
   @TS-SN-RNTM-SINK-09 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SOURCE_UPDATE_RECEIVING_SLIP_LINE
   Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Receiving Slip with Update operation
@@ -251,7 +255,8 @@ Feature: ServiceNow Sink - Run time scenarios
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running state
     And Open and capture logs
-    Then Verify the pipeline status is "Succeeded"
+    And Verify the pipeline status is "Succeeded"
+    Then Verify If an updated record in ServiceNow application for table "receiving_slip_line" is correct
 
   @TS-SN-RNTM-SINK-10 @SN_UPDATE_AGENT_ASSIST_RECOMMENDATION @SN_SOURCE_CONFIG @BQ_SOURCE_UPDATE_AGENT_ASSIST_RECOMMENDATION
   Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Agent Assist Recommendation with Update operation
@@ -277,7 +282,8 @@ Feature: ServiceNow Sink - Run time scenarios
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running state
     And Open and capture logs
-    Then Verify the pipeline status is "Succeeded"
+    And Verify the pipeline status is "Succeeded"
+    Then Verify If an updated record in ServiceNow application for table "agent_assist_recommendation" is correct
 
   @TS-SN-RNTM-SINK-11  @SN_UPDATE_VENDOR_CATALOG_ITEM @SN_SOURCE_CONFIG @BQ_SOURCE_UPDATE_VENDOR_CATALOG_ITEM
   Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Vendor Catalog Item  with Update operation
@@ -303,9 +309,10 @@ Feature: ServiceNow Sink - Run time scenarios
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running state
     And Open and capture logs
-    Then Verify the pipeline status is "Succeeded"
+    And Verify the pipeline status is "Succeeded"
+    Then Verify If an updated record in ServiceNow application for table "vendor_catalog_item" is correct
 
-  @TS-SN-RNTM-SINK-12 @SN_SOURCE_CONFIG @SN_UPDATE_SERVICE_OFFERING @BQ_SOURCE_UPDATE_SERVICE_OFFERING
+  @TS-SN-RNTM-SINK-12  @SN_UPDATE_SERVICE_OFFERING @SN_SOURCE_CONFIG @BQ_SOURCE_UPDATE_SERVICE_OFFERING
   Scenario: Verify user should be able to deploy and run the pipeline when plugin is configured for table Service Offering with Update operation
     When Open Datafusion Project to configure pipeline
     And Select data pipeline type as: "Data Pipeline - Batch"
@@ -329,4 +336,5 @@ Feature: ServiceNow Sink - Run time scenarios
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running state
     And Open and capture logs
-    Then Verify the pipeline status is "Succeeded"
+    And Verify the pipeline status is "Succeeded"
+    Then Verify If an updated record in ServiceNow application for table "service_offering" is correct
