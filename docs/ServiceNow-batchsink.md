@@ -26,11 +26,6 @@ Properties
 **Operation** The type of operation to be performed. Insert operation will insert the data. Update operation will update
 existing data in the table. "sys_id" must be present in the records.
 
-**Max Records Per Batch** No. of requests that will be sent to ServiceNow Batch API as a payload. Rest API property in Transaction 
-quota section "REST Batch API request timeout" should be increased to use higher records in a batch. By default this 
-property has a value of 30 sec which can handle approximately 200 records in a batch. To use a bigger batch size, set it 
-to a higher value.
-
 Data Types Mapping
 ----------
 

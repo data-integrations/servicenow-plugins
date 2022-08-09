@@ -32,8 +32,8 @@ import io.cdap.cdap.etl.api.batch.BatchSource;
 import io.cdap.cdap.etl.api.batch.BatchSourceContext;
 import io.cdap.plugin.common.LineageRecorder;
 import io.cdap.plugin.common.SourceInputFormatProvider;
-import io.cdap.plugin.servicenow.ServiceNowConstants;
-import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
  */
 @Plugin(type = BatchSource.PLUGIN_TYPE)
 @Name(ServiceNowConstants.PLUGIN_NAME_MULTI_SOURCE)
-@Description("Reads from multiple tables in Service Now. " +
+@Description("Reads from multiple tables in ServiceNow. " +
   "Outputs one record for each row in each table, with the table name as a record field. " +
   "Also sets a pipeline argument for each table read, which contains the table schema. ")
 public class ServiceNowMultiSource extends BatchSource<NullWritable, StructuredRecord, StructuredRecord> {

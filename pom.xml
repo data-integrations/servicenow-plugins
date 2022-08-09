@@ -60,7 +60,7 @@
     <main.basedir>${project.basedir}</main.basedir>
     <jee.version>7</jee.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <cdap.version>6.1.1</cdap.version>
+    <cdap.version>6.4.0</cdap.version>
     <cdap.plugin.version>2.3.4</cdap.plugin.version>
     <hadoop.version>2.9.2</hadoop.version>
     <httpclient.version>4.3.4</httpclient.version>
@@ -71,6 +71,7 @@
     <testSourceLocation>${project.basedir}/src/test/java/</testSourceLocation>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <okhttp3.version>4.9.1</okhttp3.version>
   </properties>
 
   <repositories>
@@ -113,12 +114,6 @@
       <groupId>io.cdap.plugin</groupId>
       <artifactId>hydrator-common</artifactId>
       <version>${cdap.plugin.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.cdap.cdap</groupId>
-      <artifactId>cdap-data-pipeline</artifactId>
-      <version>${cdap.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.cdap.cdap</groupId>
@@ -275,6 +270,11 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>1.2.8</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <version>${okhttp3.version}</version>
     </dependency>
   </dependencies>
 

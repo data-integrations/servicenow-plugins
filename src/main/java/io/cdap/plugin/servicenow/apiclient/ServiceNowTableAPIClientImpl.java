@@ -14,7 +14,7 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.source.apiclient;
+package io.cdap.plugin.servicenow.apiclient;
 
 import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
@@ -26,19 +26,25 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
-import io.cdap.plugin.servicenow.ServiceNowConstants;
 import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
-import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
-import io.cdap.plugin.servicenow.source.util.SourceValueType;
-import io.cdap.plugin.servicenow.source.util.Util;
+import io.cdap.plugin.servicenow.sink.model.SchemaResponse;
+import io.cdap.plugin.servicenow.util.SchemaBuilder;
+import io.cdap.plugin.servicenow.util.ServiceNowColumn;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import io.cdap.plugin.servicenow.util.SourceValueType;
+import io.cdap.plugin.servicenow.util.Util;
+
 import org.apache.http.HttpEntity;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -48,6 +54,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * Implementation class for ServiceNow Table API.
@@ -59,8 +66,9 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   private static final String FIELD_CREATED_ON = "sys_created_on";
   private static final String FIELD_UPDATED_ON = "sys_updated_on";
   private static final String OAUTH_URL_TEMPLATE = "%s/oauth_token.do";
-  private ServiceNowBaseConfig conf;
-  
+  private static final Gson gson = new Gson();
+  private final ServiceNowBaseConfig conf;
+
   public ServiceNowTableAPIClientImpl(ServiceNowBaseConfig conf) {
     this.conf = conf;
   }
@@ -71,20 +79,36 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   }
 
   /**
+   * Retries to get the access token and returns the same when OAuthSystemException is thrown
+   */
+  public String getAccessTokenRetryableMode() throws ExecutionException, RetryException {
+
+    Callable fetchToken = this::getAccessToken;
+
+    Retryer<String> retryer = RetryerBuilder.<String>newBuilder()
+      .retryIfExceptionOfType(OAuthSystemException.class)
+      .withWaitStrategy(WaitStrategies.fixedWait(ServiceNowConstants.BASE_DELAY, TimeUnit.MILLISECONDS))
+      .withStopStrategy(StopStrategies.stopAfterAttempt(ServiceNowConstants.MAX_NUMBER_OF_RETRY_ATTEMPTS))
+      .build();
+
+    return retryer.call(fetchToken);
+  }
+
+  /**
    * Fetch the list of records from ServiceNow table.
    *
    * @param tableName The ServiceNow table name
    * @param valueType The value type
    * @param startDate The start date
-   * @param endDate The end date
-   * @param offset The number of records to skip
-   * @param limit The number of records to be fetched
+   * @param endDate   The end date
+   * @param offset    The number of records to skip
+   * @param limit     The number of records to be fetched
    * @return The list of Map; each Map representing a table row
    */
   public List<Map<String, Object>> fetchTableRecords(String tableName, SourceValueType valueType, String startDate,
                                                      String endDate, int offset, int limit) {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.conf.getRestApiEndpoint(), tableName)
+      this.conf.getRestApiEndpoint(), tableName, false)
       .setExcludeReferenceLink(true)
       .setDisplayValue(valueType)
       .setLimit(limit);
@@ -121,11 +145,11 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * Create a new record in the ServiceNow Table
    *
    * @param tableName ServiceNow Table name
-   * @param entity Details of the Record to be created
+   * @param entity    Details of the Record to be created
    */
-  public void createRecord(String tableName, HttpEntity entity) {
+  public void createRecord(String tableName, HttpEntity entity) throws IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.conf.getRestApiEndpoint(), tableName);
+      this.conf.getRestApiEndpoint(), tableName, false);
 
     RestAPIResponse apiResponse = null;
 
@@ -139,7 +163,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       if (!apiResponse.isSuccess()) {
         LOG.error("Error - {}", getErrorMessage(apiResponse.getResponseBody()));
       } else {
-        LOG.info(apiResponse.getResponseBody().toString());
+        LOG.info(apiResponse.getResponseBody());
       }
     } catch (OAuthSystemException | OAuthProblemException | UnsupportedEncodingException e) {
       LOG.error("Error in creating a new record", e);
@@ -150,10 +174,10 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   /**
    * Fetches the table schema for ServiceNow table.
    *
-   * @param tableName The ServiceNow table name
-   * @param valueType The value type
-   * @param startDate The start date
-   * @param endDate The end date
+   * @param tableName        The ServiceNow table name
+   * @param valueType        The value type
+   * @param startDate        The start date
+   * @param endDate          The end date
    * @param fetchRecordCount A flag that decides whether to fetch total record count or not
    * @return
    */
@@ -166,7 +190,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
                                                                        String startDate, String endDate,
                                                                        boolean fetchRecordCount) {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.conf.getRestApiEndpoint(), tableName)
+      this.conf.getRestApiEndpoint(), tableName, false)
       .setExcludeReferenceLink(true)
       .setDisplayValue(valueType)
       .setLimit(1);
@@ -244,10 +268,10 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   }
 
   public List<Map<String, Object>> parseResponseToResultListOfMap(String responseBody) {
-    Gson gson = new Gson();
+
 
     JsonObject jo = gson.fromJson(responseBody, JsonObject.class);
-    JsonArray ja = jo.getAsJsonArray("result");
+    JsonArray ja = jo.getAsJsonArray(ServiceNowConstants.RESULT);
 
     Type type = new TypeToken<List<Map<String, Object>>>() {
     }.getType();
@@ -256,9 +280,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
 
   private String getErrorMessage(String responseBody) {
     try {
-      Gson gson = new Gson();
       JsonObject jo = gson.fromJson(responseBody, JsonObject.class);
-      return jo.getAsJsonObject("error").get("message").getAsString();
+      return jo.getAsJsonObject(ServiceNowConstants.ERROR).get(ServiceNowConstants.MESSAGE).getAsString();
     } catch (Exception e) {
       return e.getMessage();
     }
@@ -271,9 +294,9 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param tableName The ServiceNow table name
    * @param valueType The value type
    * @param startDate The start date
-   * @param endDate The end date
-   * @param offset The number of records to skip
-   * @param limit The number of records to be fetched
+   * @param endDate   The end date
+   * @param offset    The number of records to skip
+   * @param limit     The number of records to be fetched
    * @return The list of Map; each Map representing a table row
    */
   public List<Map<String, Object>> fetchTableRecordsRetryableMode(String tableName, SourceValueType valueType,
@@ -295,9 +318,56 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       retryer.call(fetchRecords);
     } catch (RetryException | ExecutionException e) {
       LOG.error("Data Recovery failed for batch {} to {}.", offset,
-               (offset + limit));
+        (offset + limit));
     }
 
     return results;
   }
+
+  /**
+   * @param tableName ServiceNow table name for which schema is getting fetched
+   * @param collector FailureCollector
+   * @return schema for given ServiceNow table
+   */
+  @Nullable
+  public Schema fetchServiceNowTableSchema(String tableName, FailureCollector collector) {
+    ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
+      this.conf.getRestApiEndpoint(), tableName, true)
+      .setExcludeReferenceLink(true);
+
+    RestAPIResponse apiResponse;
+    try {
+      String accessToken = getAccessToken();
+      requestBuilder.setAuthHeader(accessToken);
+      apiResponse = executeGet(requestBuilder.build());
+      if (!apiResponse.isSuccess()) {
+        LOG.error("Error - {}", getErrorMessage(apiResponse.getResponseBody()));
+        collector.addFailure("Unable to fetch schema for table " + tableName, null).
+          withConfigProperty(ServiceNowConstants.PROPERTY_TABLE_NAME);
+        return null;
+      }
+      List<SchemaResponse> result = parseSchemaResponse(apiResponse.getResponseBody());
+      List<ServiceNowColumn> columns = new ArrayList<>();
+
+      if (result != null && !result.isEmpty()) {
+        for (SchemaResponse field : result) {
+          columns.add(new ServiceNowColumn(field.getName(), field.getInternalType()));
+        }
+      }
+      return SchemaBuilder.constructSchema(tableName, columns);
+    } catch (OAuthSystemException | OAuthProblemException e) {
+      LOG.error("Error in connection - {}", e);
+      collector.addFailure("Connection failed. Unable to fetch schema for table " + tableName, null);
+    }
+    return null;
+  }
+
+  private List<SchemaResponse> parseSchemaResponse(String responseBody) {
+    JsonObject jo = gson.fromJson(responseBody, JsonObject.class);
+    JsonArray ja = jo.getAsJsonArray(ServiceNowConstants.RESULT);
+    Type type = new TypeToken<List<SchemaResponse>>() {
+    }.getType();
+    return gson.fromJson(ja, type);
+  }
+
 }

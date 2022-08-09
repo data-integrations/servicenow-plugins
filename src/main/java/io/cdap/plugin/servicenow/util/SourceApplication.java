@@ -14,7 +14,7 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.source.util;
+package io.cdap.plugin.servicenow.util;
 
 import java.util.Arrays;
 import java.util.List;

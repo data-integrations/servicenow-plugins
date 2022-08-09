@@ -14,7 +14,7 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow;
+package io.cdap.plugin.servicenow.util;
 
 /**
  * ServiceNow constants.
@@ -87,11 +87,6 @@ public interface ServiceNowConstants {
   String PROPERTY_OPERATION = "operation";
 
   /**
-   * Configuration property name used to specify the number of records per batch.
-   */
-  String PROPERTY_MAX_RECORDS_PER_BATCH = "maxRecordsPerBatch";
-
-  /**
    * Configuration property name used to get the schema.
    */
   String NAME_SCHEMA = "schema";
@@ -157,9 +152,34 @@ public interface ServiceNowConstants {
   String ERROR = "error";
 
   /**
+   * The result.
+   */
+  String RESULT = "result";
+
+  /**
+   * The error detail.
+   */
+  String ERROR_DETAIL = "detail";
+
+  /**
    * The maximum execution time exceeded error.
    */
   String MAXIMUM_EXECUTION_TIME_EXCEEDED = "maximum execution time exceeded";
+
+  /**
+   * The ACL Exception Failed error.
+   */
+  String ACL_EXCEPTION = "ACL Exception Insert Failed due to security constraints";
+
+  /**
+   * The Error during insert operation.
+   */
+  String INSERT_ERROR = "Error during insert of";
+
+  /**
+   * The Error during update operation.
+   */
+  String UPDATE_ERROR = "Record doesn't exist or ACL restricts the record retrieval";
 
   /**
    * The wait time for API retry in milliseconds.
@@ -172,6 +192,16 @@ public interface ServiceNowConstants {
   int MAX_NUMBER_OF_RETRY_ATTEMPTS = 5;
 
   /**
+   * The API Url Template for INSERT operation .
+   */
+  String INSERT_TABLE_API_URL_TEMPLATE = "/api/now/table/%s";
+
+  /**
+   * The API Url Template for UPDATE operation
+   */
+  String UPDATE_TABLE_API_URL_TEMPLATE = "/api/now/table/%s/%s";
+
+  /**
    * The INSERT operation
    */
   String INSERT_OPERATION = "insert";
@@ -180,5 +210,65 @@ public interface ServiceNowConstants {
    * The UPDATE operation
    */
   String UPDATE_OPERATION = "update";
-  
+
+  /**
+   * The HTTP POST Request
+   */
+  String HTTP_POST = "POST";
+
+  /**
+   * The HTTP PUT Request
+   */
+  String HTTP_PUT = "PUT";
+
+  /**
+   * The ServiceNow System ID Field
+   */
+  String SYS_ID = "sys_id";
+
+  /**
+   * The response body
+   */
+  String BODY = "body";
+
+  /**
+   * The response id
+   */
+  String ID = "id";
+
+  /**
+   * The response status code
+   */
+  String STATUS_CODE = "status_code";
+
+  /**
+   * The serviced requests
+   */
+  String SERVICED_REQUESTS = "serviced_requests";
+
+  /**
+   * The unserviced requests
+   */
+  String UNSERVICED_REQUESTS = "unserviced_requests";
+
+  /**
+   * The initial wait time for HTTP POST API retry in milliseconds.
+   */
+  int BASE_DELAY = 5000;
+
+  /**
+   * No. of requests that will be sent to ServiceNow Batch API as a payload
+   */
+  int RECORDS_PER_BATCH = 50;
+
+  /**
+   * ServiceNow Table Rest API supports up to 2 digits only after the decimal for decimal types. Anything greater than
+   * that gets rounded off.
+   */
+  int DEFAULT_SCALE = 2;
+
+  /**
+   * Default Precision supported by ServiceNow Rest API
+   */
+  int DEFAULT_PRECISION = 20;
 }

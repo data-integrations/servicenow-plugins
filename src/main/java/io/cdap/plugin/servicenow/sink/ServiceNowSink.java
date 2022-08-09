@@ -20,6 +20,7 @@ import com.google.gson.JsonObject;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.annotation.Plugin;
+import io.cdap.cdap.api.data.batch.Output;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.dataset.lib.KeyValue;
@@ -27,10 +28,18 @@ import io.cdap.cdap.etl.api.Emitter;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.cdap.etl.api.PipelineConfigurer;
 import io.cdap.cdap.etl.api.StageConfigurer;
+import io.cdap.cdap.etl.api.batch.BatchRuntimeContext;
 import io.cdap.cdap.etl.api.batch.BatchSink;
 import io.cdap.cdap.etl.api.batch.BatchSinkContext;
-import io.cdap.plugin.servicenow.ServiceNowConstants;
+import io.cdap.plugin.common.LineageRecorder;
+import io.cdap.plugin.servicenow.sink.output.ServiceNowOutputFormat;
+import io.cdap.plugin.servicenow.sink.output.ServiceNowOutputFormatProvider;
+import io.cdap.plugin.servicenow.sink.transform.ServiceNowTransformer;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
+
+import java.util.stream.Collectors;
 
 /**
  * A {@link BatchSink} that writes data into the specified table in ServiceNow.
@@ -41,6 +50,7 @@ import org.apache.hadoop.io.NullWritable;
 public class ServiceNowSink extends BatchSink<StructuredRecord, NullWritable, JsonObject> {
 
   private final ServiceNowSinkConfig conf;
+  private ServiceNowTransformer transformer;
 
   public ServiceNowSink(ServiceNowSinkConfig conf) {
     this.conf = conf;
@@ -52,7 +62,7 @@ public class ServiceNowSink extends BatchSink<StructuredRecord, NullWritable, Js
     StageConfigurer stageConfigurer = pipelineConfigurer.getStageConfigurer();
     FailureCollector collector = stageConfigurer.getFailureCollector();
     conf.validate(collector);
-    if (collector.getValidationFailures().isEmpty()) {
+    if (collector.getValidationFailures().isEmpty() && stageConfigurer.getInputSchema() != null) {
       conf.validateSchema(stageConfigurer.getInputSchema(), collector);
     }
     Schema schema = conf.getSchema(collector);
@@ -64,13 +74,37 @@ public class ServiceNowSink extends BatchSink<StructuredRecord, NullWritable, Js
   }
 
   @Override
-  public void prepareRun(BatchSinkContext batchSinkContext) throws Exception {
-    //TODO: Implement Runtime functionality https://cdap.atlassian.net/browse/PLUGIN-1313
-  }
+  public void prepareRun(BatchSinkContext context) throws Exception {
+    Schema inputSchema = context.getInputSchema();
+    FailureCollector collector = context.getFailureCollector();
+    conf.validate(collector);
+    collector.getOrThrowException();
+    Configuration hConf = new Configuration();
+    ServiceNowOutputFormat.setOutput(hConf, conf);
+    context.addOutput(Output.of(conf.referenceName, new ServiceNowOutputFormatProvider(hConf)));
 
+    LineageRecorder lineageRecorder = new LineageRecorder(context, conf.referenceName);
+    lineageRecorder.createExternalDataset(inputSchema);
+    // Record the field level WriteOperation
+    if (inputSchema.getFields() != null && !inputSchema.getFields().isEmpty()) {
+      String operationDescription = String.format("Wrote to Servicenow %s", conf.getTableName());
+      lineageRecorder.recordWrite("Write", operationDescription,
+                                  inputSchema.getFields().stream()
+                                    .map(Schema.Field::getName)
+                                    .collect(Collectors.toList()));
+    }
+
+  }
+  @Override
+  public void initialize(BatchRuntimeContext context) throws Exception {
+    super.initialize(context);
+    this.transformer = new ServiceNowTransformer();
+  }
 
   @Override
   public void transform(StructuredRecord record, Emitter<KeyValue<NullWritable, JsonObject>> emitter) {
-    //TODO: Implement Runtime functionality https://cdap.atlassian.net/browse/PLUGIN-1313
+    JsonObject jsonObject = transformer.transform(record);
+    emitter.emit(new KeyValue<>(null, jsonObject));
   }
+
 }

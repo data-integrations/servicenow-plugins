@@ -14,7 +14,7 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.source.util;
+package io.cdap.plugin.servicenow.util;
 
 import com.google.common.base.Strings;
 import io.cdap.cdap.api.data.schema.Schema;
@@ -67,15 +67,19 @@ public class SchemaBuilder {
   private Schema createSchema(ServiceNowColumn column) {
     switch (column.getTypeName().toLowerCase()) {
       case "decimal":
-        return Schema.of(Schema.Type.DOUBLE);
+        return Schema.decimalOf(ServiceNowConstants.DEFAULT_PRECISION, ServiceNowConstants.DEFAULT_SCALE);
       case "integer":
         return Schema.of(Schema.Type.INT);
       case "boolean":
         return Schema.of(Schema.Type.BOOLEAN);
+      case "glide_date":
+        return Schema.of(Schema.LogicalType.DATE);
+      case "glide_date_time":
+        return Schema.of(Schema.LogicalType.DATETIME);
+      case "glide_time":
+        return Schema.of(Schema.LogicalType.TIME_MICROS);
       case "reference":
       case "currency":
-      case "glide_date":
-      case "glide_date_time":
       case "sys_class_name":
       case "domain_id":
       case "domain_path":

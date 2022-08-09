@@ -18,7 +18,8 @@ package io.cdap.plugin.servicenow.source;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import io.cdap.plugin.servicenow.source.util.ServiceNowTableInfo;
+import io.cdap.plugin.servicenow.sink.ServiceNowSinkConfig;
+import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 import org.apache.hadoop.conf.Configuration;
 
 import java.lang.reflect.Type;
@@ -34,6 +35,8 @@ public class ServiceNowJobConfiguration {
   private static final Type PLUGIN_CONF_TYPE = new TypeToken<ServiceNowSourceConfig>() {
   }.getType();
   private static final Type MULTI_SOURCE_PLUGIN_CONF_TYPE = new TypeToken<ServiceNowMultiSourceConfig>() {
+  }.getType();
+  private static final Type PLUGIN_SINK_CONF_TYPE = new TypeToken<ServiceNowSinkConfig>() {
   }.getType();
   private static final Type INFO_TYPE = new TypeToken<List<ServiceNowTableInfo>>() {
   }.getType();
@@ -57,6 +60,9 @@ public class ServiceNowJobConfiguration {
   public void setMultiSourcePluginConfiguration(ServiceNowMultiSourceConfig conf) {
     set(PLUGIN_CONF_FIELD, GSON.toJson(conf));
   }
+  public void setSinkPluginConfiguration(ServiceNowSinkConfig conf) {
+    set(PLUGIN_CONF_FIELD, GSON.toJson(conf));
+  }
 
   public ServiceNowSourceConfig getPluginConf() {
     return GSON.fromJson(getConf().get(PLUGIN_CONF_FIELD), PLUGIN_CONF_TYPE);
@@ -64,6 +70,10 @@ public class ServiceNowJobConfiguration {
 
   public ServiceNowMultiSourceConfig getMultiSourcePluginConf() {
     return GSON.fromJson(getConf().get(PLUGIN_CONF_FIELD), MULTI_SOURCE_PLUGIN_CONF_TYPE);
+  }
+
+  public ServiceNowSinkConfig getSinkPluginConf() {
+    return GSON.fromJson(getConf().get(PLUGIN_CONF_FIELD), PLUGIN_SINK_CONF_TYPE);
   }
 
   public List<ServiceNowTableInfo> getTableInfos() {
