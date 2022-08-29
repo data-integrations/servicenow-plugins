@@ -25,11 +25,13 @@ jobs:
   build:
     runs-on: k8s-runner-e2e
 
+    if: ${{ github.event.workflow_run.conclusion != 'skipped' }}
+
     steps:
       - uses: haya14busa/action-workflow_run-status@967ed83efa565c257675ed70cfe5231f062ddd94
       - uses: actions/checkout@v2.3.4
         with:
-          repository: data-integrations/google-cloud
+          repository: data-integrations/servicenow-plugins
           path: plugin
 
       - name: Checkout e2e test repo
