@@ -31,8 +31,8 @@ jobs:
       - uses: haya14busa/action-workflow_run-status@967ed83efa565c257675ed70cfe5231f062ddd94
       - uses: actions/checkout@v2.3.4
         with:
-          repository: data-integrations/servicenow-plugins
           path: plugin
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Checkout e2e test repo
         uses: actions/checkout@v2.3.4
@@ -82,13 +82,12 @@ jobs:
           name: Debug files
           path: ./**/target/e2e-debug
 
-      - name: Deploy report
-        uses: peaceiris/actions-gh-pages@v3
-        if: always()
-        with:
-          github_token: ${{ secrets.AUTH_TOKEN }}
-          publish_dir: ./plugin/target/cucumber-reports
-          destination_dir: cucumber-reports/${{ github.ref }}
+     - name: Upload reports to GCS
+       uses: google-github-actions/upload-cloud-storage@v0
+       if: always()
+       with:
+        path: ./plugin/target/cucumber-reports
+        destination: e2e-tests-cucumber-reports/${{ github.event.repository.name }}/${{ github.ref }}
 
       - name: github-status-action
         uses: Sibz/github-status-action@67af1f4042a5a790681aad83c44008ca6cfab83d
@@ -97,5 +96,5 @@ jobs:
           authToken: ${{ secrets.AUTH_TOKEN }}
           state: success
           context: Cucumber report
-          target_url: https://data-integrations.github.io/servicenow-plugins/cucumber-reports/${{ github.ref }}/advanced-reports/cucumber-html-reports/overview-features.html
           sha: ${{github.event.pull_request.head.sha || github.sha}}
+
