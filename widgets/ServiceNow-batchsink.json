@@ -96,18 +96,6 @@
               }
             ]
           }
-        },
-        {
-          "widget-type": "select",
-          "label": "Max Records Per Batch",
-          "name": "maxRecordsPerBatch",
-          "widget-attributes": {
-            "values": [
-              200,
-              500
-            ],
-            "default": 50
-          }
         }
       ]
     }

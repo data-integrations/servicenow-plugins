@@ -14,7 +14,7 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.source.util;
+package io.cdap.plugin.servicenow.util;
 
 import com.google.common.base.Strings;
 import com.google.gson.annotations.SerializedName;

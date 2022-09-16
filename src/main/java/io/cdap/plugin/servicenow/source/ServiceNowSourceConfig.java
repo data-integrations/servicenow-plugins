@@ -20,10 +20,10 @@ import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.etl.api.FailureCollector;
-import io.cdap.plugin.servicenow.ServiceNowConstants;
-import io.cdap.plugin.servicenow.source.util.SourceApplication;
-import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
-import io.cdap.plugin.servicenow.source.util.Util;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import io.cdap.plugin.servicenow.util.SourceApplication;
+import io.cdap.plugin.servicenow.util.SourceQueryMode;
+import io.cdap.plugin.servicenow.util.Util;
 
 import java.util.Optional;
 

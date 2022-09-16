@@ -18,9 +18,9 @@ package io.cdap.plugin.servicenow.source;
 
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.PluginProperties;
-import io.cdap.plugin.servicenow.ServiceNowConstants;
-import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
-import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableDataResponse;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

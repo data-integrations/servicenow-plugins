@@ -75,8 +75,12 @@ public class RestAPIRequest {
     protected HttpEntity entity;
     protected String[] responseHeaders;
 
-    protected Builder(String url) {
+    protected Builder() {
+    }
+
+    public Builder setUrl(String url) {
       this.url = url;
+      return this;
     }
 
     public Builder setAuthHeader(String token) {

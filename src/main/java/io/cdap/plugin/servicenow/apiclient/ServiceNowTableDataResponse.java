@@ -14,9 +14,9 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.source.apiclient;
+package io.cdap.plugin.servicenow.apiclient;
 
-import io.cdap.plugin.servicenow.source.util.ServiceNowColumn;
+import io.cdap.plugin.servicenow.util.ServiceNowColumn;
 
 import java.util.List;
 import java.util.Map;

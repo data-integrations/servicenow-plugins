@@ -18,9 +18,9 @@
 package io.cdap.plugin.servicenow.source;
 
 import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
-import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
-import io.cdap.plugin.servicenow.source.util.SourceQueryMode;
+import io.cdap.plugin.servicenow.util.SourceQueryMode;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;

@@ -14,11 +14,11 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.source.apiclient;
+package io.cdap.plugin.servicenow.apiclient;
 
 import com.google.common.base.Joiner;
 import io.cdap.plugin.servicenow.restapi.RestAPIRequest;
-import io.cdap.plugin.servicenow.source.util.SourceValueType;
+import io.cdap.plugin.servicenow.util.SourceValueType;
 
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -27,10 +27,32 @@ import java.util.Arrays;
  * ServiceNowTableAPIRequestBuilder.
  */
 public class ServiceNowTableAPIRequestBuilder extends RestAPIRequest.Builder {
+
+  /**
+   * ServiceNow API URL to fetch table records
+   */
   private static final String TABLE_API_URL_TEMPLATE = "%s/api/now/table/%s";
 
-  public ServiceNowTableAPIRequestBuilder(String instanceBaseUrl, String tableName) {
-    super(String.format(TABLE_API_URL_TEMPLATE, instanceBaseUrl, tableName));
+  /**
+   * ServiceNow API URL to insert/update records into the table
+   */
+  private static final String BATCH_API_URL_TEMPLATE = "%s/api/now/v1/batch";
+
+  /**
+   * ServiceNow API URL to fetch table metadata
+   */
+  private static final String SCHEMA_API_URL_TEMPLATE = "%s/api/now/doc/table/schema/%s";
+
+  public ServiceNowTableAPIRequestBuilder(String instanceBaseUrl, String tableName, boolean isSchemaRequired) {
+    if (isSchemaRequired) {
+      this.setUrl(String.format(SCHEMA_API_URL_TEMPLATE, instanceBaseUrl, tableName));
+    } else {
+      this.setUrl(String.format(TABLE_API_URL_TEMPLATE, instanceBaseUrl, tableName));
+    }
+  }
+
+  public ServiceNowTableAPIRequestBuilder(String instanceBaseUrl) {
+    this.setUrl(String.format(BATCH_API_URL_TEMPLATE, instanceBaseUrl));
   }
 
   /**

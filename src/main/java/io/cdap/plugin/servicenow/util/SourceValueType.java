@@ -14,7 +14,7 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.source.util;
+package io.cdap.plugin.servicenow.util;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -22,41 +22,47 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Indicates query mode which will be used when fetching ServiceNow data.
+ * Indicates type of value to be returned from ServiceNow Table API.
  */
-public enum SourceQueryMode {
+public enum SourceValueType {
 
   /**
-   * Mode will be used as Reporting for querying data.
+   * Actual values will be returned by ServiceNow Table API.
    */
-  REPORTING("Reporting"),
+  SHOW_ACTUAL_VALUE("Actual", "false"),
 
   /**
-   * Mode will be used as Table for querying data.
+   * Display values will be returned by ServiceNow Table API.
    */
-  TABLE("Table");
+  SHOW_DISPLAY_VALUE("Display", "true");
 
+  private final String valueType;
   private final String value;
 
-  SourceQueryMode(String value) {
+  SourceValueType(String valueType, String value) {
+    this.valueType = valueType;
     this.value = value;
   }
 
   /**
-   * Converts mode string value into {@link SourceQueryMode} enum.
+   * Converts value type string value into {@link SourceValueType} enum.
    *
-   * @param stringValue mode string value
-   * @return source query mode in optional container
+   * @param stringValue value type string value
+   * @return source value type in optional container
    */
-  public static Optional<SourceQueryMode> fromValue(String stringValue) {
+  public static Optional<SourceValueType> fromValue(String stringValue) {
     return Stream.of(values())
-      .filter(keyType -> keyType.value.equalsIgnoreCase(stringValue))
+      .filter(keyType -> keyType.valueType.equalsIgnoreCase(stringValue))
       .findAny();
   }
 
-  public static String getSupportedModes() {
-    return Arrays.stream(SourceQueryMode.values()).map(SourceQueryMode::getValue)
+  public static String getSupportedValueTypes() {
+    return Arrays.stream(SourceValueType.values()).map(SourceValueType::getValueType)
       .collect(Collectors.joining(", "));
+  }
+
+  public String getValueType() {
+    return valueType;
   }
 
   public String getValue() {
