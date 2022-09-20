@@ -462,6 +462,23 @@
               <includes>
                 <include>TestRunner.java</include>
               </includes>
+              <environmentVariables>
+                <SERVICENOW_CLIENT_ID>
+                  ${SERVICENOW_CLIENT_ID}
+                </SERVICENOW_CLIENT_ID>
+                <SERVICENOW_CLIENT_SECRET>
+                  ${SERVICENOW_CLIENT_SECRET}
+                </SERVICENOW_CLIENT_SECRET>
+                <SERVICENOW_REST_API_ENDPOINT>
+                  ${SERVICENOW_REST_API_ENDPOINT}
+                </SERVICENOW_REST_API_ENDPOINT>
+                <SERVICENOW_USERNAME>
+                  ${SERVICENOW_USERNAME}
+                </SERVICENOW_USERNAME>
+                <SERVICENOW_PASSWORD>
+                  ${SERVICENOW_PASSWORD}
+                </SERVICENOW_PASSWORD>
+              </environmentVariables>
             </configuration>
             <executions>
               <execution>
@@ -514,7 +531,7 @@
         <dependency>
           <groupId>io.cdap.tests.e2e</groupId>
           <artifactId>cdap-e2e-framework</artifactId>
-          <version>0.0.1-SNAPSHOT</version>
+          <version>0.1.0-SNAPSHOT</version>
           <scope>test</scope>
         </dependency>
       </dependencies>

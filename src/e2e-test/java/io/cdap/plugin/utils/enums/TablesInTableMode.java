@@ -33,8 +33,9 @@ public enum TablesInTableMode {
   PURCHASE_ORDER("proc_po"),
   PURCHASE_ORDER_LINE_ITEMS("proc_po_item"),
   RECEIVING_SLIP_LINE("proc_rec_slip_item"),
+  AGENT_ASSIST_RECOMMENDATION("agent_assist_recommendation"),
+  SERVICE_OFFERING("service_offering"),
   INVALID_TABLE("blahblah");
-
   public final String value;
 
   TablesInTableMode(String value) {

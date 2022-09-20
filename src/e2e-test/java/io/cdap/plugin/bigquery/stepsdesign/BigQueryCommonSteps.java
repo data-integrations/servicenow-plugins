@@ -19,12 +19,12 @@ package io.cdap.plugin.bigquery.stepsdesign;
 import io.cdap.e2e.pages.actions.CdfBigQueryPropertiesActions;
 import io.cdap.e2e.pages.actions.CdfPipelineRunAction;
 import io.cdap.e2e.utils.BigQueryClient;
+import io.cdap.e2e.utils.PluginPropertyUtils;
 import io.cdap.plugin.tests.hooks.TestSetupHooks;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Assert;
-
 import java.io.IOException;
 
 /**
@@ -44,17 +44,30 @@ public class BigQueryCommonSteps {
   public void configureBqMultiTableSinkPlugin() {
     String referenceName = "Test" + RandomStringUtils.randomAlphanumeric(10);
     CdfBigQueryPropertiesActions.enterBigQueryReferenceName(referenceName);
-    CdfBigQueryPropertiesActions.enterBigQueryDataset(TestSetupHooks.bqTargetDataset);
+    CdfBigQueryPropertiesActions.enterBigQueryDataset(PluginPropertyUtils.pluginProp("bq.target.dataset"));
   }
 
   @Then("Verify count of no of records transferred to the target BigQuery Table")
   public void getCountOfNoOfRecordsTransferredToTargetBigQueryTable() throws IOException, InterruptedException {
     int countRecords = BigQueryClient.countBqQuery(TestSetupHooks.bqTargetDataset, TestSetupHooks.bqTargetTable);
     Assert.assertEquals("Number of records transferred to BigQuery should be equal to " +
-        "records out count displayed on the Source plugin: ",
-      countRecords, CdfPipelineRunAction.getCountDisplayedOnSourcePluginAsRecordsOut());
+                          "records out count displayed on the Source plugin: ",
+                        countRecords, CdfPipelineRunAction.getCountDisplayedOnSourcePluginAsRecordsOut());
     Assert.assertEquals("Number of records transferred to BigQuery should be equal to " +
-        "records in count displayed on the Sink plugin: ",
-      countRecords, CdfPipelineRunAction.getCountDisplayedOnSinkPluginAsRecordsIn());
+                          "records in count displayed on the Sink plugin: ",
+                        countRecords, CdfPipelineRunAction.getCountDisplayedOnSinkPluginAsRecordsIn());
+  }
+
+  @When("Configure BigQuery source plugin for Dataset and Table")
+  public void configureBqSourcePlugin() throws IOException, InterruptedException {
+    String projectId = PluginPropertyUtils.pluginProp("projectId");
+    String datasetProjectId = PluginPropertyUtils.pluginProp("datasetprojectId");
+
+    String referenceName = "Test" + RandomStringUtils.randomAlphanumeric(10);
+    CdfBigQueryPropertiesActions.enterDatasetProjectId(datasetProjectId);
+    CdfBigQueryPropertiesActions.enterProjectId(projectId);
+    CdfBigQueryPropertiesActions.enterBigQueryReferenceName(referenceName);
+    CdfBigQueryPropertiesActions.enterBigQueryDataset(TestSetupHooks.bqSourceDataset);
+    CdfBigQueryPropertiesActions.enterBigQueryTable(TestSetupHooks.bqSourceTable);
   }
 }

@@ -69,11 +69,11 @@ public class ServiceNowPropertiesPageActions {
 
   public static void fillCredentialsSectionForPipelineUser() {
     ServiceNowPropertiesPageActions.fillCredentialsSectionProperties(
-      PluginPropertyUtils.pluginProp("client.id"),
-      PluginPropertyUtils.pluginProp("client.secret"),
-      PluginPropertyUtils.pluginProp("rest.api.endpoint"),
-      PluginPropertyUtils.pluginProp("pipeline.user.username"),
-      PluginPropertyUtils.pluginProp("pipeline.user.password")
+      System.getenv("SERVICE_NOW_CLIENT_ID"),
+      System.getenv("SERVICE_NOW_CLIENT_SECRET"),
+      System.getenv("SERVICE_NOW_REST_API_ENDPOINT"),
+      System.getenv("SERVICE_NOW_USERNAME"),
+      System.getenv("SERVICE_NOW_PASSWORD")
     );
   }
 

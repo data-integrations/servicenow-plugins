@@ -23,19 +23,19 @@ import io.cdap.e2e.utils.PluginPropertyUtils;
  */
 public enum ServiceNowProperty {
   REFERENCE_NAME("referenceName",
-    PluginPropertyUtils.errorProp("required.property.referencename")),
+                 PluginPropertyUtils.errorProp("required.property.referencename")),
   TABLE_NAMES("tableNames",
-    PluginPropertyUtils.errorProp("required.property.tablenames")),
+              PluginPropertyUtils.errorProp("required.property.tablenames")),
   CLIENT_ID("clientId",
-    PluginPropertyUtils.errorProp("required.property.clientid")),
+            PluginPropertyUtils.errorProp("required.property.clientid")),
   CLIENT_SECRET("clientSecret",
-    PluginPropertyUtils.errorProp("required.property.clientsecret")),
+                PluginPropertyUtils.errorProp("required.property.clientsecret")),
   REST_API_ENDPOINT("restApiEndpoint",
-    PluginPropertyUtils.errorProp("required.property.restapiendpoint")),
+                    PluginPropertyUtils.errorProp("required.property.restapiendpoint")),
   USERNAME("user",
-    PluginPropertyUtils.errorProp("required.property.username")),
+           PluginPropertyUtils.errorProp("required.property.username")),
   PASSWORD("password",
-    PluginPropertyUtils.errorProp("required.property.password")),
+           PluginPropertyUtils.errorProp("required.property.password")),
   START_DATE("startDate"),
   END_DATE("endDate");
 

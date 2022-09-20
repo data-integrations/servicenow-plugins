@@ -65,4 +65,8 @@ public class ServiceNowPropertiesPage {
   // Advanced section
   @FindBy(how = How.XPATH, using = "//div[@data-cy='select-valueType']")
   public static WebElement typeOfValuesDropdown;
+
+  @FindBy(how = How.XPATH, using = "//div[@data-cy='schema-fields-list']" +
+    "//*[local-name()='svg' and @data-cy='error-icon']")
+  public static WebElement fieldNotCreatableError;
 }

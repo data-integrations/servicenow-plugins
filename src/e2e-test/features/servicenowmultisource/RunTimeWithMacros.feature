@@ -18,11 +18,10 @@
 @Regression
 Feature: ServiceNow Multi Source - Run time scenarios (macro)
 
-  @TS-SN-MULTI-RNTM-MACRO-01 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-MULTI-RNTM-MACRO-01 @BQ_SINK
   Scenario: Verify user should be able to preview the pipeline when the source plugin is configured with macros
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
-    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And Fill Reference Name
     And Click on the Macro button of Property: "tableNames" and set the value to: "tableNames"
@@ -36,24 +35,23 @@ Feature: ServiceNow Multi Source - Run time scenarios (macro)
     And Select Sink plugin: "BigQueryMultiTable" from the plugins list
     And Connect source as "ServiceNow" and sink as "BigQueryMultiTable" to establish connection
     And Navigate to the properties page of plugin: "BigQuery Multi Table"
-    And Configure BigQuery sink plugin for Dataset and Table
+    And Configure BigQuery Multi Table sink plugin for Dataset
     Then Validate "BigQuery Multi Table" plugin properties
     And Close the Plugin Properties page
     And Preview and run the pipeline
     And Enter runtime argument value "receiving_slip_line" for key "tableNames"
-    And Enter runtime argument value "client.id" for key "clientId"
-    And Enter runtime argument value "client.secret" for key "clientSecret"
-    And Enter runtime argument value "rest.api.endpoint" for key "restApiEndpoint"
-    And Enter runtime argument value "pipeline.user.username" for key "username"
-    And Enter runtime argument value "pipeline.user.password" for key "password"
+    And Enter runtime argument value from environment variable "client.id" for key "clientId"
+    And Enter runtime argument value from environment variable "client.secret" for key "clientSecret"
+    And Enter runtime argument value from environment variable "rest.api.endpoint" for key "restApiEndpoint"
+    And Enter runtime argument value from environment variable "pipeline.user.username" for key "username"
+    And Enter runtime argument value from environment variable "pipeline.user.password" for key "password"
     Then Run the preview of pipeline with runtime arguments
     Then Verify the preview of pipeline is "success"
 
-  @TS-SN-MULTI-RNTM-MACRO-02 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-MULTI-RNTM-MACRO-02 @BQ_SINK
   Scenario: Verify user should be able to run the pipeline when the source plugin is configured with macros
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
-    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "source"
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And Fill Reference Name
     And Click on the Macro button of Property: "tableNames" and set the value to: "tableNames"
@@ -67,16 +65,75 @@ Feature: ServiceNow Multi Source - Run time scenarios (macro)
     And Select Sink plugin: "BigQueryMultiTable" from the plugins list
     And Connect source as "ServiceNow" and sink as "BigQueryMultiTable" to establish connection
     And Navigate to the properties page of plugin: "BigQuery Multi Table"
-    And Configure BigQuery sink plugin for Dataset and Table
+    And Replace input plugin property: "project" with value: "projectId"
+    And Enter input plugin property: "datasetProject" with value: "datasetprojectId"
+    And Configure BigQuery Multi Table sink plugin for Dataset
     Then Validate "BigQuery Multi Table" plugin properties
     And Close the Plugin Properties page
     And Save and Deploy Pipeline
     And Run the Pipeline in Runtime
     And Enter runtime argument value "receiving_slip_line" for key "tableNames"
-    And Enter runtime argument value "client.id" for key "clientId"
-    And Enter runtime argument value "client.secret" for key "clientSecret"
-    And Enter runtime argument value "rest.api.endpoint" for key "restApiEndpoint"
-    And Enter runtime argument value "pipeline.user.username" for key "username"
-    And Enter runtime argument value "pipeline.user.password" for key "password"
+    And Enter runtime argument value from environment variable "client.id" for key "clientId"
+    And Enter runtime argument value from environment variable "client.secret" for key "clientSecret"
+    And Enter runtime argument value from environment variable "rest.api.endpoint" for key "restApiEndpoint"
+    And Enter runtime argument value from environment variable "pipeline.user.username" for key "username"
+    And Enter runtime argument value from environment variable "pipeline.user.password" for key "password"
+    And Run the Pipeline in Runtime with runtime arguments
     And Wait till pipeline is in running status with a timeout of 500 seconds
     And Verify the pipeline status is "Succeeded"
+
+  @TS-SN-MULTI-RNTM-MACRO-03 @BQ_SINK
+  Scenario: Verify pipeline failure message in logs when user provides invalid Table Names with Macros
+    When Open Datafusion Project to configure pipeline
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "ServiceNow Multi Source"
+    And Fill Reference Name
+    And Click on the Macro button of Property: "tableNames" and set the value to: "tableNames"
+    And fill Credentials section for pipeline user
+    Then Validate "ServiceNow Multi Source" plugin properties
+    And Close the Plugin Properties page
+    And Select Sink plugin: "BigQueryMultiTable" from the plugins list
+    And Connect source as "ServiceNow-Multi-Source" and sink as "BigQueryMultiTable" to establish connection
+    And Navigate to the properties page of plugin: "BigQuery Multi Table"
+    And Configure BigQuery Multi Table sink plugin for Dataset
+    Then Validate "BigQuery Multi Table" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Enter runtime argument value "invalid.tables" for key "tableNames"
+    And Run the Pipeline in Runtime with runtime arguments
+    And Wait till pipeline is in running state
+    And Verify the pipeline status is "Failed"
+    Then Open Pipeline logs and verify Log entries having below listed Level and Message:
+      | Level | Message                                   |
+      | ERROR | invalid.tablenames.logsmessage            |
+
+  @TS-SN-RNTM-MACRO-04 @BQ_SINK
+  Scenario: Verify pipeline failure message in logs when user provides invalid Advanced Properties with Macros
+    When Open Datafusion Project to configure pipeline
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "ServiceNow Multi Source"
+    And Fill Reference Name
+    And configure ServiceNow Multi source plugin for below listed tables:
+      | HARDWARE_CATALOG |
+    And Click on the Macro button of Property: "startDate" and set the value to: "startDate"
+    And Click on the Macro button of Property: "endDate" and set the value to: "endDate"
+    And fill Credentials section for pipeline user
+    Then Validate "ServiceNow Multi Source" plugin properties
+    And Close the Plugin Properties page
+    And Select Sink plugin: "BigQueryMultiTable" from the plugins list
+    And Connect source as "ServiceNow-Multi-Source" and sink as "BigQueryMultiTable" to establish connection
+    And Navigate to the properties page of plugin: "BigQuery Multi Table"
+    And Configure BigQuery Multi Table sink plugin for Dataset
+    Then Validate "BigQuery Multi Table" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Enter runtime argument value "invalid.start.date" for key "startDate"
+    And Enter runtime argument value "invalid.end.date" for key "endDate"
+    And Run the Pipeline in Runtime with runtime arguments
+    And Wait till pipeline is in running state
+    And Verify the pipeline status is "Failed"
+    Then Open Pipeline logs and verify Log entries having below listed Level and Message:
+      | Level | Message                                |
+      | ERROR | invalid.filters.logsmessage            |
