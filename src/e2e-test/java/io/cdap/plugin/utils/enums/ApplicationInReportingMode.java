@@ -23,7 +23,6 @@ public enum ApplicationInReportingMode {
   CONTRACT_MANAGEMENT("Contract Management"),
   PRODUCT_CATALOG("Product Catalog"),
   PROCUREMENT("Procurement");
-
   public final String value;
 
   ApplicationInReportingMode(String value) {

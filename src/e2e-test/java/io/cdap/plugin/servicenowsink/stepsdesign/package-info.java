@@ -14,17 +14,7 @@
  * the License.
  */
 
-package io.cdap.plugin.utils.enums;
-
 /**
- * Enum for ServiceNow Source Plugin modes.
+ * ServiceNow sink - Properties page - Steps.
  */
-public enum PluginMode {
-  REPORTING("Reporting"),
-  TABLE("Table");
-  public final String value;
-
-  PluginMode(String value) {
-    this.value = value;
-  }
-}
+package io.cdap.plugin.servicenowsink.stepsdesign;

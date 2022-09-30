@@ -21,7 +21,6 @@ Feature: ServiceNow Source - Design time validation scenarios
   @TS-SN-DSGN-ERROR-01
   Scenario: Verify required fields missing validation messages
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow"
     And Click on the Validate button
@@ -36,7 +35,6 @@ Feature: ServiceNow Source - Design time validation scenarios
   @TS-SN-DSGN-ERROR-02
   Scenario: Verify invalid credentials validation messages
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow"
     And configure ServiceNow source plugin for table: "HARDWARE_CATALOG" in the Table mode
@@ -52,18 +50,16 @@ Feature: ServiceNow Source - Design time validation scenarios
   @TS-SN-DSGN-ERROR-03
   Scenario: Verify validation message for invalid table name
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow"
     And configure ServiceNow source plugin for table: "INVALID_TABLE" in the Table mode
     And fill Credentials section for pipeline user
     And Click on the Validate button
-    Then Verify that the Plugin is displaying an error message: "invalid.property.tablename" on the header
+    Then Verify that the Plugin Property: "tableName" is displaying an in-line error message: "invalid.property.tablename"
 
   @TS-SN-DSGN-ERROR-04
   Scenario: Verify validation message for Start date and End date in invalid format
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow"
     And configure ServiceNow source plugin for table: "HARDWARE_CATALOG" in the Table mode

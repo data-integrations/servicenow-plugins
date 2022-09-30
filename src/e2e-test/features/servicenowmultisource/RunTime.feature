@@ -18,45 +18,46 @@
 @Regression
 Feature: ServiceNow Multi Source - Run time scenarios
 
-  @TS-SN-MULTI-RNTM-01 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-MULTI-RNTM-01 @BQ_SINK
   Scenario: Verify user should be able to preview the pipeline
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
-      | HARDWARE_CATALOG | SOFTWARE_CATALOG | PRODUCT_CATALOG_ITEM | RECEIVING_SLIP_LINE |
+      | HARDWARE_CATALOG | RECEIVING_SLIP_LINE |
     And fill Credentials section for pipeline user
     Then Validate "ServiceNow Multi Source" plugin properties
     And Close the Plugin Properties page
     And Select Sink plugin: "BigQueryMultiTable" from the plugins list
     And Connect source as "ServiceNow" and sink as "BigQueryMultiTable" to establish connection
     And Navigate to the properties page of plugin: "BigQuery Multi Table"
-    And Configure BigQuery sink plugin for Dataset and Table
+    And Configure BigQuery Multi Table sink plugin for Dataset
     Then Validate "BigQuery Multi Table" plugin properties
     And Close the Plugin Properties page
     And Preview and run the pipeline
     And Wait till pipeline preview is in running state with a timeout of 500 seconds
     Then Verify the preview of pipeline is "success"
 
-  @TS-SN-MULTI-RNTM-02 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-MULTI-RNTM-02 @BQ_SINK
   Scenario: Verify user should be able to run the pipeline
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
-      | HARDWARE_CATALOG | SOFTWARE_CATALOG | PRODUCT_CATALOG_ITEM | RECEIVING_SLIP_LINE |
+      | HARDWARE_CATALOG | RECEIVING_SLIP_LINE |
     And fill Credentials section for pipeline user
     Then Validate "ServiceNow Multi Source" plugin properties
     And Close the Plugin Properties page
     And Select Sink plugin: "BigQueryMultiTable" from the plugins list
     And Connect source as "ServiceNow" and sink as "BigQueryMultiTable" to establish connection
     And Navigate to the properties page of plugin: "BigQuery Multi Table"
-    And Configure BigQuery sink plugin for Dataset and Table
+    And Replace input plugin property: "project" with value: "projectId"
+    And Enter input plugin property: "datasetProject" with value: "datasetprojectId"
+    And Configure BigQuery Multi Table sink plugin for Dataset
     Then Validate "BigQuery Multi Table" plugin properties
     And Close the Plugin Properties page
     And Save and Deploy Pipeline
     And Run the Pipeline in Runtime
     And Wait till pipeline is in running status with a timeout of 500 seconds
+    And Open and capture logs
     And Verify the pipeline status is "Succeeded"

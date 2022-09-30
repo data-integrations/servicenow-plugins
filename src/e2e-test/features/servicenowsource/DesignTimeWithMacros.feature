@@ -21,8 +21,7 @@ Feature: ServiceNow Source - Design time scenarios (macro)
   @TS-SN-DSGN-MACRO-01
   Scenario: Verify user should be able to validate plugin with macros in Reporting mode
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
-    And Select plugin: "ServiceNow" from the plugins list as: "source"
+    And Select plugin: "ServiceNow" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow"
     And Fill Reference Name
     And Select mode as: "REPORTING"
@@ -37,8 +36,7 @@ Feature: ServiceNow Source - Design time scenarios (macro)
   @TS-SN-DSGN-MACRO-02
   Scenario: Verify user should be able to validate plugin with macros in Table mode
     When Open Datafusion Project to configure pipeline
-    And Select data pipeline type as: "Data Pipeline - Batch"
-    And Select plugin: "ServiceNow" from the plugins list as: "source"
+    And Select plugin: "ServiceNow" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow"
     And Fill Reference Name
     And Select mode as: "TABLE"

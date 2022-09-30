@@ -37,7 +37,6 @@ import io.cdap.plugin.servicenow.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceValueType;
 import io.cdap.plugin.servicenow.util.Util;
-
 import org.apache.http.HttpEntity;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
@@ -67,6 +66,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   private static final String FIELD_UPDATED_ON = "sys_updated_on";
   private static final String OAUTH_URL_TEMPLATE = "%s/oauth_token.do";
   private static final Gson gson = new Gson();
+  public static JsonArray serviceNowJsonResultArray;
   private final ServiceNowBaseConfig conf;
 
   public ServiceNowTableAPIClientImpl(ServiceNowBaseConfig conf) {
@@ -75,7 +75,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
 
   public String getAccessToken() throws OAuthSystemException, OAuthProblemException {
     return generateAccessToken(String.format(OAUTH_URL_TEMPLATE, conf.getRestApiEndpoint()), conf.getClientId(),
-      conf.getClientSecret(), conf.getUser(), conf.getPassword());
+                               conf.getClientSecret(), conf.getUser(), conf.getPassword());
   }
 
   /**
@@ -147,12 +147,11 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param tableName ServiceNow Table name
    * @param entity    Details of the Record to be created
    */
-  public void createRecord(String tableName, HttpEntity entity) throws IOException {
+  public String createRecord(String tableName, HttpEntity entity) throws IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, false);
-
+    String systemID;
     RestAPIResponse apiResponse = null;
-
     try {
       String accessToken = getAccessToken();
       requestBuilder.setAuthHeader(accessToken);
@@ -160,6 +159,9 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       requestBuilder.setContentTypeHeader("application/json");
       requestBuilder.setEntity(entity);
       apiResponse = executePost(requestBuilder.build());
+
+      systemID = String.valueOf(getSystemId(apiResponse));
+
       if (!apiResponse.isSuccess()) {
         LOG.error("Error - {}", getErrorMessage(apiResponse.getResponseBody()));
       } else {
@@ -169,7 +171,47 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       LOG.error("Error in creating a new record", e);
       throw new RuntimeException("Error in creating a new record");
     }
+
+    return systemID;
   }
+
+  /**
+   * Fetches the System Id of a new Record.
+   *
+   * @param apiResponse API response after Creating a record
+   */
+
+  private String getSystemId(RestAPIResponse apiResponse) {
+    JsonObject jsonObject = gson.fromJson(apiResponse.getResponseBody(), JsonObject.class);
+    JsonObject result = (JsonObject) jsonObject.get(ServiceNowConstants.RESULT);
+
+    return result.get(ServiceNowConstants.SYSTEM_ID).getAsString();
+  }
+
+  /**
+   * Return a record from ServiceNow application.
+   *
+   * @param tableName The ServiceNow table name
+   * @param query     The query
+   */
+  public Map<String, String> getRecordFromServiceNowTable(String tableName, String query)
+    throws OAuthProblemException, OAuthSystemException {
+
+    ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
+      this.conf.getRestApiEndpoint(), tableName, false)
+      .setQuery(query);
+
+    RestAPIResponse apiResponse = null;
+    String accessToken = getAccessToken();
+    requestBuilder.setAuthHeader(accessToken);
+    apiResponse = executeGet(requestBuilder.build());
+    JsonObject jsonObject = gson.fromJson(apiResponse.getResponseBody(), JsonObject.class);
+    serviceNowJsonResultArray = jsonObject.getAsJsonArray(ServiceNowConstants.RESULT);
+    Map<String, String> responseMap = gson.fromJson(serviceNowJsonResultArray.get(0), Map.class);
+
+    return responseMap;
+  }
+
 
   /**
    * Fetches the table schema for ServiceNow table.
@@ -318,7 +360,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       retryer.call(fetchRecords);
     } catch (RetryException | ExecutionException e) {
       LOG.error("Data Recovery failed for batch {} to {}.", offset,
-        (offset + limit));
+                (offset + limit));
     }
 
     return results;

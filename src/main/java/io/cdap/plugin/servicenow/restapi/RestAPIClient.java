@@ -89,7 +89,6 @@ public abstract class RestAPIClient {
 
     return apiResponse;
   }
-
   /**
    * Generates access token and returns the same.
    *
