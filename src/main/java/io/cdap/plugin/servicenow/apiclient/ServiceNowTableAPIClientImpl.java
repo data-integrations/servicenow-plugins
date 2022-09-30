@@ -21,6 +21,7 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -404,7 +405,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     return null;
   }
 
-  private List<SchemaResponse> parseSchemaResponse(String responseBody) {
+  @VisibleForTesting
+  public List<SchemaResponse> parseSchemaResponse(String responseBody) {
     JsonObject jo = gson.fromJson(responseBody, JsonObject.class);
     JsonArray ja = jo.getAsJsonArray(ServiceNowConstants.RESULT);
     Type type = new TypeToken<List<SchemaResponse>>() {

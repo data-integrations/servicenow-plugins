@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.sink;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
@@ -186,15 +187,16 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
    * @param actualSchema   schema calculated based on ServiceNow metadata information
    * @param providedSchema schema provided in the configuration
    */
-  private void checkCompatibility(Schema actualSchema, Schema providedSchema, FailureCollector collector) {
+  @VisibleForTesting
+  void checkCompatibility(Schema actualSchema, Schema providedSchema, FailureCollector collector) {
     for (Schema.Field providedField : Objects.requireNonNull(providedSchema.getFields())) {
       Schema.Field actualField = actualSchema.getField(providedField.getName(), true);
       if (actualField == null) {
         collector.addFailure(
             String.format("Field '%s' does not exist in ServiceNow", providedField.getName()), null)
           .withInputSchemaField(providedField.getName());
+        continue;
       }
-
       Schema providedFieldSchema = providedField.getSchema();
       Schema actualFieldSchema = actualField.getSchema();
 
@@ -214,6 +216,7 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
           .withInputSchemaField(providedField.getName());
       }
     }
+    collector.getOrThrowException();
   }
 
   /**
