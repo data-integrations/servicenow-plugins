@@ -20,7 +20,7 @@ import io.cdap.cdap.etl.api.validation.ValidationFailure;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.source.apiclient.ServiceNowTableAPIClientImpl;
-import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
