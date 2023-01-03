@@ -13,25 +13,29 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package io.cdap.plugin.servicenow.sink;
+package io.cdap.plugin.servicenow.connector;
 
-import com.google.gson.JsonObject;
-import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
-import io.cdap.cdap.api.dataset.lib.KeyValue;
-import io.cdap.cdap.etl.api.Emitter;
-import io.cdap.cdap.etl.api.batch.BatchRuntimeContext;
-import io.cdap.cdap.etl.api.batch.BatchSinkContext;
-import io.cdap.cdap.etl.mock.common.MockArguments;
-import io.cdap.cdap.etl.mock.common.MockPipelineConfigurer;
+import io.cdap.cdap.etl.api.batch.BatchSource;
+import io.cdap.cdap.etl.api.connector.ConnectorContext;
+import io.cdap.cdap.etl.api.connector.ConnectorSpec;
+import io.cdap.cdap.etl.api.connector.ConnectorSpecRequest;
+import io.cdap.cdap.etl.api.connector.PluginSpec;
+import io.cdap.cdap.etl.mock.common.MockConnectorConfigurer;
+import io.cdap.cdap.etl.mock.common.MockConnectorContext;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
-import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
+import io.cdap.plugin.common.ConfigUtil;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
-import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
-import io.cdap.plugin.servicenow.sink.transform.ServiceNowTransformer;
 import io.cdap.plugin.servicenow.source.ServiceNowBaseSourceConfig;
-import org.apache.hadoop.io.NullWritable;
+import io.cdap.plugin.servicenow.source.ServiceNowInputFormat;
+import io.cdap.plugin.servicenow.source.ServiceNowSource;
+import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
+import io.cdap.plugin.servicenow.source.ServiceNowSourceConfigHelper;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
+import io.cdap.plugin.servicenow.util.SourceQueryMode;
+import io.cdap.plugin.servicenow.util.SourceValueType;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -48,26 +52,30 @@ import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ServiceNowTableAPIClientImpl.class, ServiceNowBaseSourceConfig.class, ServiceNowSink.class,
-  HttpClientBuilder.class, RestAPIResponse.class})
-public class ServiceNowSinkTest {
+@PrepareForTest({ServiceNowTableAPIClientImpl.class, ServiceNowBaseSourceConfig.class, ServiceNowSource.class,
+  HttpClientBuilder.class, RestAPIResponse.class, ServiceNowInputFormat.class})
+public class ServiceNowConnectorTest {
+
   private static final String CLIENT_ID = "clientId";
   private static final String CLIENT_SECRET = "clientSecret";
   private static final String REST_API_ENDPOINT = "https://ven05127.service-now.com";
   private static final String USER = "user";
   private static final String PASSWORD = "password";
-  private ServiceNowSink serviceNowSink;
-  private ServiceNowSinkConfig serviceNowSinkConfig;
+  private ServiceNowSource serviceNowSource;
+  private ServiceNowSourceConfig serviceNowSourceConfig;
 
   @Before
   public void initialize() {
-    serviceNowSinkConfig = ServiceNowSinkConfigHelper.newConfigBuilder()
+    serviceNowSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
       .setReferenceName("referenceName")
       .setRestApiEndpoint(REST_API_ENDPOINT)
       .setUser(USER)
@@ -75,47 +83,43 @@ public class ServiceNowSinkTest {
       .setClientId(CLIENT_ID)
       .setClientSecret(CLIENT_SECRET)
       .setTableName("sys_user")
-      .setOperation("Insert")
+      .setValueType("Actual")
+      .setStartDate("2021-01-01")
+      .setEndDate("2022-02-18")
+      .setTableNameField("tablename")
       .build();
-    serviceNowSink = new ServiceNowSink(serviceNowSinkConfig);
+    serviceNowSource = new ServiceNowSource(serviceNowSourceConfig);
   }
 
   @Test
-  public void testConfigurePipeline() throws Exception {
-    Map<String, Object> plugins = new HashMap<>();
-    MockPipelineConfigurer mockPipelineConfigurer = new MockPipelineConfigurer(null, plugins);
+  public void testTest() throws Exception {
+    MockFailureCollector collector = new MockFailureCollector();
+    ConnectorContext context = new MockConnectorContext(new MockConnectorConfigurer());
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
-    int httpStatus = HttpStatus.SC_OK;
-    Map<String, String> headers = new HashMap<>();
-    String responseBody = "{\n" +
-      "    \"result\": []\n" +
-      "}";
-    MockFailureCollector collector = new MockFailureCollector();
-    RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
-    Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
-    serviceNowSink.configurePipeline(mockPipelineConfigurer);
-    Assert.assertTrue(restAPIResponse.isSuccess());
-    Assert.assertEquals(200, restAPIResponse.getHttpStatus());
+    ServiceNowConnector serviceNowConnector = new ServiceNowConnector(serviceNowSourceConfig.getConnection());
+    serviceNowConnector.test(context);
     Assert.assertEquals(0, collector.getValidationFailures().size());
   }
 
   @Test
-  public void testPrepareRun() throws Exception {
-    MockFailureCollector mockFailureCollector = new MockFailureCollector();
-    MockArguments mockArguments = new MockArguments();
-    BatchSinkContext context = Mockito.mock(BatchSinkContext.class);
-    Mockito.when(context.getFailureCollector()).thenReturn(mockFailureCollector);
-    Mockito.when(context.getArguments()).thenReturn(mockArguments);
+  public void testTestWithInvalidToken() throws Exception {
+    ConnectorContext context = new MockConnectorContext(new MockConnectorConfigurer());
+    ServiceNowConnector serviceNowConnector = new ServiceNowConnector(serviceNowSourceConfig.getConnection());
+    serviceNowConnector.test(context);
+    Assert.assertEquals(1, context.getFailureCollector().getValidationFailures().size());
+  }
+
+  @Test
+  public void testGenerateSpec() throws Exception {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
+    Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
     Map<String, Object> map = new HashMap<>();
+    List<Map<String, Object>> result = new ArrayList<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;
@@ -124,17 +128,11 @@ public class ServiceNowSinkTest {
       "    \"result\": [\n" +
       "        {\n" +
       "            \"calendar_integration\": \"1\",\n" +
-      "            \"country\": \"\",\n" +
       "            \"date_format\": \"\",\n" +
       "            \"location\": \"\"\n" +
       "        }\n" +
       "    ]\n" +
       "}";
-    Schema schema = Schema.recordOf("record",
-                                    Schema.Field.of("id", Schema.of(Schema.Type.LONG)),
-                                    Schema.Field.of("price", Schema.of(Schema.Type.DOUBLE)));
-    Emitter<KeyValue<NullWritable, JsonObject>> emitter = Mockito.mock(Emitter.class);
-    Mockito.when(context.getInputSchema()).thenReturn(schema);
     RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
     Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
@@ -156,19 +154,42 @@ public class ServiceNowSinkTest {
     Mockito.when(httpClient.execute(Mockito.any())).thenReturn(httpResponse);
     PowerMockito.when(RestAPIResponse.parse(ArgumentMatchers.any(), ArgumentMatchers.anyString())).
       thenReturn(response);
-    BatchRuntimeContext batchRuntimeContext = Mockito.mock(BatchRuntimeContext.class);
-    StructuredRecord record = Mockito.mock(StructuredRecord.class);
-    Mockito.when(record.get("id")).thenReturn(1L);
-    Mockito.when(record.get("price")).thenReturn(20.2008);
-    Mockito.when(record.getSchema()).thenReturn(schema);
-    ServiceNowTransformer recordToJsonTransformer = new ServiceNowTransformer();
-    recordToJsonTransformer.transform(record);
-    serviceNowSink.initialize(batchRuntimeContext);
-    serviceNowSink.transform(record, emitter);
-    serviceNowSink.prepareRun(context);
-    Assert.assertTrue(restAPIResponse.isSuccess());
-    Assert.assertEquals("1", record.get("id").toString());
-    Assert.assertEquals("20.2008", record.get("price").toString());
-    Assert.assertEquals(0, mockFailureCollector.getValidationFailures().size());
+    ServiceNowConnector serviceNowConnector = new ServiceNowConnector(serviceNowSourceConfig.getConnection());
+    ServiceNowTableInfo serviceNowTableInfo = new ServiceNowTableInfo("table", getPluginSchema(), 1);
+    List<ServiceNowTableInfo> list = new ArrayList<>();
+    list.add(serviceNowTableInfo);
+    PowerMockito.mockStatic(ServiceNowInputFormat.class);
+    SourceQueryMode mode = SourceQueryMode.TABLE;
+    SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
+    Mockito.when(ServiceNowInputFormat.fetchTableInfo(mode, serviceNowSourceConfig.getConnection(),
+                                                      serviceNowSourceConfig.getTableName(),
+                                                      null, valueType,
+                                                      null, null)).thenReturn(list);
+
+    ConnectorSpec connectorSpec = serviceNowConnector.generateSpec(new MockConnectorContext
+                                                                     (new MockConnectorConfigurer()),
+                                                                   ConnectorSpecRequest.builder().setPath
+                                                                       (serviceNowSourceConfig.getTableName())
+                                                                     .setConnection("${conn(connection-id)}").build());
+
+    Schema schema = connectorSpec.getSchema();
+    for (Schema.Field field : schema.getFields()) {
+      Assert.assertNotNull(field.getSchema());
+    }
+    Set<PluginSpec> relatedPlugins = connectorSpec.getRelatedPlugins();
+    Assert.assertEquals(2, relatedPlugins.size());
+    PluginSpec pluginSpec = relatedPlugins.iterator().next();
+    Assert.assertEquals(ServiceNowConstants.PLUGIN_NAME, pluginSpec.getName());
+    Assert.assertEquals(BatchSource.PLUGIN_TYPE, pluginSpec.getType());
+    Map<String, String> properties = pluginSpec.getProperties();
+    Assert.assertEquals("true", properties.get(ConfigUtil.NAME_USE_CONNECTION));
+    Assert.assertEquals("${conn(connection-id)}", properties.get(ConfigUtil.NAME_CONNECTION));
+  }
+
+  private Schema getPluginSchema() throws IOException {
+    String schemaString = "{\"type\":\"record\",\"name\":\"ServiceNowColumnMetaData\",\"fields\":[{\"name\":" +
+      "\"backgroundElementId\",\"type\":\"long\"},{\"name\":\"bgOrderPos\",\"type\":\"long\"},{\"name\":" +
+      "\"description\",\"type\":[\"string\",\"null\"]},{\"name\":\"userId\",\"type\":\"string\"}]}";
+    return Schema.parseJson(schemaString);
   }
 }

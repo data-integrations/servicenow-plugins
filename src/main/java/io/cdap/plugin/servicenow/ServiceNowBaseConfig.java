@@ -22,9 +22,11 @@ import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.FailureCollector;
+import io.cdap.plugin.common.ConfigUtil;
 import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIRequestBuilder;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
@@ -33,6 +35,8 @@ import io.cdap.plugin.servicenow.util.Util;
 import org.apache.http.HttpStatus;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+
+import javax.annotation.Nullable;
 
 /**
  * ServiceNow Base Config. Contains connection properties and methods.
@@ -43,64 +47,31 @@ public class ServiceNowBaseConfig extends PluginConfig {
   @Description("This will be used to uniquely identify this source/sink for lineage, annotating metadata, etc.")
   public String referenceName;
 
-  @Name(ServiceNowConstants.PROPERTY_CLIENT_ID)
-  @Macro
-  @Description(" The Client ID for ServiceNow Instance.")
-  private String clientId;
+  @Name(ConfigUtil.NAME_USE_CONNECTION)
+  @Nullable
+  @Description("Whether to use an existing connection.")
+  private Boolean useConnection;
 
-  @Name(ServiceNowConstants.PROPERTY_CLIENT_SECRET)
+  @Name(ConfigUtil.NAME_CONNECTION)
   @Macro
-  @Description("The Client Secret for ServiceNow Instance.")
-  private String clientSecret;
+  @Nullable
+  @Description("The existing connection to use.")
+  private ServiceNowConnectorConfig connection;
 
-  @Name(ServiceNowConstants.PROPERTY_API_ENDPOINT)
-  @Macro
-  @Description("The REST API Endpoint for ServiceNow Instance. For example, https://instance.service-now.com")
-  private String restApiEndpoint;
-
-  @Name(ServiceNowConstants.PROPERTY_USER)
-  @Macro
-  @Description("The user name for ServiceNow Instance.")
-  private String user;
-
-  @Name(ServiceNowConstants.PROPERTY_PASSWORD)
-  @Macro
-  @Description("The password for ServiceNow Instance.")
-  private String password;
+  @Nullable
+  public ServiceNowConnectorConfig getConnection() {
+    return connection;
+  }
 
   public ServiceNowBaseConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                               String user, String password) {
 
     this.referenceName = referenceName;
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
-    this.restApiEndpoint = restApiEndpoint;
-    this.user = user;
-    this.password = password;
+    this.connection = new ServiceNowConnectorConfig(clientId, clientSecret, restApiEndpoint, user, password);
   }
 
   public String getReferenceName() {
     return referenceName;
-  }
-
-  public String getClientId() {
-    return clientId;
-  }
-
-  public String getClientSecret() {
-    return clientSecret;
-  }
-
-  public String getRestApiEndpoint() {
-    return restApiEndpoint;
-  }
-
-  public String getUser() {
-    return user;
-  }
-
-  public String getPassword() {
-    return password;
   }
 
   /**
@@ -116,39 +87,16 @@ public class ServiceNowBaseConfig extends PluginConfig {
     if (!shouldConnect()) {
       return;
     }
-
-    if (Util.isNullOrEmpty(clientId)) {
-      collector.addFailure("Client ID must be specified.", null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_ID);
+    if (connection != null) {
+      connection.validateCredentialsFields(collector);
+      validateServiceNowConnection(collector);
     }
-
-    if (Util.isNullOrEmpty(clientSecret)) {
-      collector.addFailure("Client Secret must be specified.", null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_SECRET);
-    }
-
-    if (Util.isNullOrEmpty(restApiEndpoint)) {
-      collector.addFailure("API Endpoint must be specified.", null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_API_ENDPOINT);
-    }
-
-    if (Util.isNullOrEmpty(user)) {
-      collector.addFailure("User name must be specified.", null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_USER);
-    }
-
-    if (Util.isNullOrEmpty(password)) {
-      collector.addFailure("Password must be specified.", null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_PASSWORD);
-    }
-
-    validateServiceNowConnection(collector);
   }
   
   @VisibleForTesting
   public void validateServiceNowConnection(FailureCollector collector) {
     try {
-      ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(this);
+      ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(connection);
       restApi.getAccessToken();
     } catch (Exception e) {
       collector.addFailure("Unable to connect to ServiceNow Instance.",
@@ -187,13 +135,13 @@ public class ServiceNowBaseConfig extends PluginConfig {
   public void validateTable(String tableName, SourceValueType valueType, FailureCollector collector) {
     // Call API to fetch first record from the table
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.getRestApiEndpoint(), tableName, false)
+      connection.getRestApiEndpoint(), tableName, false)
       .setExcludeReferenceLink(true)
       .setDisplayValue(valueType)
       .setLimit(1);
 
     RestAPIResponse apiResponse = null;
-    ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(this);
+    ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(connection);
     try {
       String accessToken = serviceNowTableAPIClient.getAccessToken();
       requestBuilder.setAuthHeader(accessToken);

@@ -23,6 +23,7 @@ import io.cdap.cdap.etl.api.validation.ValidationFailure;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIRequest;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
@@ -339,8 +340,8 @@ public class ServiceNowSinkConfigTest {
                                                                              .build(), collector));
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     Schema schema = Schema.recordOf("record",
                                     Schema.Field.of("sys_class_name", Schema.of(Schema.Type.STRING)));
     List<Map<String, Object>> result = new ArrayList<>();

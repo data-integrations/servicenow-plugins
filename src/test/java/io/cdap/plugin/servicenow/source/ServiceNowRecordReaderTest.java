@@ -19,9 +19,9 @@ package io.cdap.plugin.servicenow.source;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.macro.Macros;
 import io.cdap.cdap.api.plugin.PluginProperties;
-import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
@@ -51,7 +51,7 @@ public class ServiceNowRecordReaderTest {
   private static final String REST_API_ENDPOINT = "https://ven05127.service-now.com";
   private static final String USER = "user";
   private static final String PASSWORD = "password";
-  
+
   @Rule
   public ExpectedException thrown = ExpectedException.none();
   private ServiceNowSourceConfig serviceNowSourceConfig;
@@ -85,9 +85,17 @@ public class ServiceNowRecordReaderTest {
   @Test
   public void testConstructor2() throws IOException {
     ServiceNowSourceConfig serviceNowSourceConfig = new ServiceNowSourceConfig("referenceName",
-      "Query Mode", "Application Name", "tablename", "tablename",
-      "42", "Client Secret", "https://ven05127.service-now.com/", "User",
-      "password", "Actual", "2021-12-30", "2021-12-31");
+                                                                               "Query Mode",
+                                                                               "Application Name",
+                                                                               "tablename",
+                                                                               "tablename",
+                                                                               "42",
+                                                                               "Client Secret",
+                                                                               "https://ven05127." +
+                                                                                 "service-now.com/", "User",
+                                                                               "password",
+                                                                               "Actual", "2021-12-30"
+                                                                               , "2021-12-31");
 
     serviceNowRecordReader.close();
     Assert.assertEquals(0, serviceNowRecordReader.pos);
@@ -110,37 +118,37 @@ public class ServiceNowRecordReaderTest {
   public void testConvertToValue() {
     Schema fieldSchema = Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS);
     thrown.expect(IllegalStateException.class);
-    serviceNowRecordReader.convertToValue("Field Name", fieldSchema, new HashMap<>(1));
+    serviceNowSourceConfig.getConnection().convertToValue("Field Name", fieldSchema, new HashMap<>(1));
   }
 
   @Test
   public void testConvertToStringValue() {
-    Assert.assertEquals("Field Value", serviceNowRecordReader.convertToStringValue("Field Value"));
+    Assert.assertEquals("Field Value", serviceNowSourceConfig.getConnection().convertToStringValue("Field Value"));
   }
 
   @Test
   public void testConvertToDoubleValue() {
-    Assert.assertEquals(42.0, serviceNowRecordReader.convertToDoubleValue("42").doubleValue(),
+    Assert.assertEquals(42.0, serviceNowSourceConfig.getConnection().convertToDoubleValue("42").doubleValue(),
                         0.0);
-    Assert.assertEquals(42.0, serviceNowRecordReader.convertToDoubleValue(42).doubleValue(),
+    Assert.assertEquals(42.0, serviceNowSourceConfig.getConnection().convertToDoubleValue(42).doubleValue(),
                         0.0);
-    Assert.assertNull(serviceNowRecordReader.convertToDoubleValue(""));
+    Assert.assertNull(serviceNowSourceConfig.getConnection().convertToDoubleValue(""));
   }
 
   @Test
   public void testConvertToIntegerValue() {
-    Assert.assertEquals(42, serviceNowRecordReader.convertToIntegerValue("42").intValue());
-    Assert.assertEquals(42, serviceNowRecordReader.convertToIntegerValue(42).intValue());
-    Assert.assertNull(serviceNowRecordReader.convertToIntegerValue(""));
+    Assert.assertEquals(42, serviceNowSourceConfig.getConnection().convertToIntegerValue("42").intValue());
+    Assert.assertEquals(42, serviceNowSourceConfig.getConnection().convertToIntegerValue(42).intValue());
+    Assert.assertNull(serviceNowSourceConfig.getConnection().convertToIntegerValue(""));
   }
 
   @Test
   public void testConvertToBooleanValue() {
-    Assert.assertFalse(serviceNowRecordReader.convertToBooleanValue("Field Value"));
-    Assert.assertFalse(serviceNowRecordReader.convertToBooleanValue(42));
-    Assert.assertNull(serviceNowRecordReader.convertToBooleanValue(""));
+    Assert.assertFalse(serviceNowSourceConfig.getConnection().convertToBooleanValue("Field Value"));
+    Assert.assertFalse(serviceNowSourceConfig.getConnection().convertToBooleanValue(42));
+    Assert.assertNull(serviceNowSourceConfig.getConnection().convertToBooleanValue(""));
   }
-  
+
   @Test
   public void testFetchData() throws Exception {
     String tableName = serviceNowSourceConfig.getTableName();
@@ -167,13 +175,14 @@ public class ServiceNowRecordReaderTest {
     response.setColumns(columns);
     response.setResult(results);
     response.setTotalRecordCount(1);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
-      serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(), split.getOffset(),
-      ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
+                                                        serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.
+                                                          getEndDate(), split.getOffset(),
+                                                        ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
     Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType(), null, null,
-      false)).thenReturn(response);
+                                          false)).thenReturn(response);
 
     serviceNowRecordReader.initialize(split, null);
     Assert.assertTrue(serviceNowRecordReader.nextKeyValue());
@@ -221,13 +230,14 @@ public class ServiceNowRecordReaderTest {
     response.setColumns(columns);
     response.setResult(results);
     response.setTotalRecordCount(1);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
-      serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(), split.getOffset(),
-      ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
+                                                        serviceNowSourceConfig.getStartDate(),
+                                                        serviceNowSourceConfig.getEndDate(), split.getOffset(),
+                                                        ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
     Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType(), null, null,
-      false)).thenReturn(response);
+                                          false)).thenReturn(response);
 
     serviceNowRecordReader.initialize(split, null);
     Assert.assertTrue(serviceNowRecordReader.nextKeyValue());
@@ -254,11 +264,12 @@ public class ServiceNowRecordReaderTest {
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     List<Map<String, Object>> results = new ArrayList<>();
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowBaseConfig.class)
-      .withArguments(Mockito.any(ServiceNowBaseConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
+      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getValueType(),
-      serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(), split.getOffset(),
-      ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
+                                           serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(),
+                                           split.getOffset(),
+                                           ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
     serviceNowRecordReader.initialize(split, null);

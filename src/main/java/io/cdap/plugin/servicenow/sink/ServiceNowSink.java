@@ -18,6 +18,8 @@ package io.cdap.plugin.servicenow.sink;
 
 import com.google.gson.JsonObject;
 import io.cdap.cdap.api.annotation.Description;
+import io.cdap.cdap.api.annotation.Metadata;
+import io.cdap.cdap.api.annotation.MetadataProperty;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.annotation.Plugin;
 import io.cdap.cdap.api.data.batch.Output;
@@ -31,6 +33,7 @@ import io.cdap.cdap.etl.api.StageConfigurer;
 import io.cdap.cdap.etl.api.batch.BatchRuntimeContext;
 import io.cdap.cdap.etl.api.batch.BatchSink;
 import io.cdap.cdap.etl.api.batch.BatchSinkContext;
+import io.cdap.cdap.etl.api.connector.Connector;
 import io.cdap.plugin.common.LineageRecorder;
 import io.cdap.plugin.servicenow.sink.output.ServiceNowOutputFormat;
 import io.cdap.plugin.servicenow.sink.output.ServiceNowOutputFormatProvider;
@@ -47,6 +50,7 @@ import java.util.stream.Collectors;
 @Plugin(type = BatchSink.PLUGIN_TYPE)
 @Name(ServiceNowConstants.PLUGIN_NAME)
 @Description("Writes to the target table in ServiceNow.")
+@Metadata(properties = {@MetadataProperty(key = Connector.PLUGIN_TYPE, value = ServiceNowConstants.PLUGIN_NAME)})
 public class ServiceNowSink extends BatchSink<StructuredRecord, NullWritable, JsonObject> {
 
   private final ServiceNowSinkConfig conf;

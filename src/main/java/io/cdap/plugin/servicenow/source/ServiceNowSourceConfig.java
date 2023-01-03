@@ -24,7 +24,6 @@ import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceApplication;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
 import io.cdap.plugin.servicenow.util.Util;
-
 import java.util.Optional;
 
 import javax.annotation.Nullable;

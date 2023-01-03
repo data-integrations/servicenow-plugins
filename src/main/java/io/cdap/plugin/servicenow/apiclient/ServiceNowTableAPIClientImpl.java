@@ -30,6 +30,7 @@ import com.google.gson.reflect.TypeToken;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.sink.model.SchemaResponse;
@@ -68,14 +69,15 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   private static final String OAUTH_URL_TEMPLATE = "%s/oauth_token.do";
   private static final Gson gson = new Gson();
   public static JsonArray serviceNowJsonResultArray;
-  private final ServiceNowBaseConfig conf;
+  private final ServiceNowConnectorConfig conf;
 
-  public ServiceNowTableAPIClientImpl(ServiceNowBaseConfig conf) {
+  public ServiceNowTableAPIClientImpl(ServiceNowConnectorConfig conf) {
     this.conf = conf;
   }
 
   public String getAccessToken() throws OAuthSystemException, OAuthProblemException {
-    return generateAccessToken(String.format(OAUTH_URL_TEMPLATE, conf.getRestApiEndpoint()), conf.getClientId(),
+    return generateAccessToken(String.format(OAUTH_URL_TEMPLATE, conf.getRestApiEndpoint()),
+                               conf.getClientId(),
                                conf.getClientSecret(), conf.getUser(), conf.getPassword());
   }
 

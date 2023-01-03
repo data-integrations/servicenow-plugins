@@ -44,7 +44,7 @@ Feature: ServiceNow Multi Source - Run time scenarios
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
-      | HARDWARE_CATALOG | RECEIVING_SLIP_LINE |
+      | RECEIVING_SLIP_LINE |
     And fill Credentials section for pipeline user
     Then Validate "ServiceNow Multi Source" plugin properties
     And Close the Plugin Properties page

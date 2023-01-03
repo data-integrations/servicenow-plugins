@@ -5,26 +5,37 @@
   "display-name": "ServiceNow",
   "configuration-groups": [
     {
-      "label": "Basic",
+      "label": "Connection",
       "properties": [
         {
-          "widget-type": "textbox",
-          "label": "Reference Name",
-          "name": "referenceName",
+          "widget-type": "toggle",
+          "label": "Use connection",
+          "name": "useConnection",
           "widget-attributes": {
-            "placeholder": "Name used to identify this source for lineage"
+            "on": {
+              "value": "true",
+              "label": "YES"
+            },
+            "off": {
+              "value": "false",
+              "label": "NO"
+            },
+            "default": "false"
           }
-        }
-      ]
-    },
-    {
-      "label": "Credentials",
-      "properties": [
+        },
+        {
+          "widget-type": "connection-select",
+          "label": "Connection",
+          "name": "connection",
+          "widget-attributes": {
+            "connectionType": "ServiceNow"
+          }
+        },
         {
           "widget-type": "textbox",
           "label": "Client ID",
           "name": "clientId",
-          "widget-attributes": {
+          "widget-attributes" : {
             "placeholder": "ServiceNow Client ID"
           }
         },
@@ -32,7 +43,7 @@
           "widget-type": "password",
           "label": "Client Secret",
           "name": "clientSecret",
-          "widget-attributes": {
+          "widget-attributes" : {
             "placeholder": "ServiceNow Client Secret Key"
           }
         },
@@ -40,7 +51,7 @@
           "widget-type": "textbox",
           "label": "REST API Endpoint",
           "name": "restApiEndpoint",
-          "widget-attributes": {
+          "widget-attributes" : {
             "placeholder": "ServiceNow API Endpoint e.g. https://instance.service-now.com"
           }
         },
@@ -48,7 +59,7 @@
           "widget-type": "textbox",
           "label": "User Name",
           "name": "user",
-          "widget-attributes": {
+          "widget-attributes" : {
             "placeholder": "ServiceNow User Name"
           }
         },
@@ -58,6 +69,28 @@
           "name": "password",
           "widget-attributes": {
             "placeholder": "ServiceNow User Password"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Basic",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Reference Name",
+          "name": "referenceName",
+          "widget-attributes": {
+            "placeholder": "Name used to identify this source for lineage"
+          }
+        },
+        {
+          "label": "browse",
+          "widget-type": "connection-browser",
+          "widget-category": "plugin",
+          "widget-attributes": {
+            "connectionType": " SERVICENOW",
+            "label": "Browse"
           }
         }
       ]
@@ -125,5 +158,48 @@
         "ref-property-name": "referenceName"
       }
     ]
-  }
+  },
+  "filters": [
+    {
+      "name": "showConnectionProperties ",
+      "condition": {
+        "expression": "useConnection == false"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "clientId"
+        },
+        {
+          "type": "property",
+          "name": "clientSecret"
+        },
+        {
+          "type": "property",
+          "name": "restApiEndpoint"
+        },
+        {
+          "type": "property",
+          "name": "user"
+        },
+        {
+          "type": "property",
+          "name": "password"
+        }
+
+      ]
+    },
+    {
+      "name": "showConnectionId",
+      "condition": {
+        "expression": "useConnection == true"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "connection"
+        }
+      ]
+    }
+  ]
 }

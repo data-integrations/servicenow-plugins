@@ -21,10 +21,12 @@ import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.util.SchemaBuilder;
 import io.cdap.plugin.servicenow.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
+import io.cdap.plugin.servicenow.util.SourceValueType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -55,7 +57,7 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
    * Updates the jobConfig with the ServiceNow table information, which will then be read in getSplit() function.
    *
    * @param jobConfig the job configuration
-   * @param conf the database conf
+   * @param conf      the database conf
    * @return Collection of ServiceNowTableInfo containing table and schema.
    */
   public static Set<ServiceNowTableInfo> setInput(Configuration jobConfig,
@@ -65,20 +67,23 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
 
     // Depending on conf value fetch the list of fields for each table and create schema object
     // return the schema object for each table as ServiceNowTableInfo
-    Set<ServiceNowTableInfo> tableInfos = fetchTablesInfo(conf);
+    Set<ServiceNowTableInfo> tableInfos = fetchTablesInfo(conf.getConnection(), conf.getTableNames(),
+                                                          conf.getValueType(),
+                                                          conf.getStartDate(), conf.getEndDate());
 
     jobConf.setTableInfos(tableInfos.stream().collect(Collectors.toList()));
 
     return tableInfos;
   }
 
-  static Set<ServiceNowTableInfo> fetchTablesInfo(ServiceNowMultiSourceConfig conf) {
+  static Set<ServiceNowTableInfo> fetchTablesInfo(ServiceNowConnectorConfig conf, String tableNames,
+                                                  SourceValueType valueType, String startDate, String endDate) {
 
     Set<ServiceNowTableInfo> tablesInfos = new LinkedHashSet<>();
 
-    Set<String> tableNames = getList(conf.getTableNames());
-    for (String tableName : tableNames) {
-      ServiceNowTableInfo tableInfo = getTableMetaData(tableName, conf);
+    Set<String> tableNameSet = getList(tableNames);
+    for (String table : tableNameSet) {
+      ServiceNowTableInfo tableInfo = getTableMetaData(table, conf, valueType, startDate, endDate);
       if (tableInfo == null) {
         continue;
       }
@@ -88,12 +93,13 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     return tablesInfos;
   }
 
-  private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowMultiSourceConfig conf) {
+  private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowConnectorConfig conf,
+                                                      SourceValueType valueType, String startDate, String endDate) {
     // Call API to fetch first record from the table
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(conf);
 
-    ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, conf.getValueType(), conf.getStartDate(),
-      conf.getEndDate(), true);
+    ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, valueType, startDate, endDate,
+                                                                    true);
     if (response == null) {
       return null;
     }
@@ -106,6 +112,15 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     Schema schema = SchemaBuilder.constructSchema(tableName, columns);
     LOG.debug("table {}, rows = {}", tableName, response.getTotalRecordCount());
     return new ServiceNowTableInfo(tableName, schema, response.getTotalRecordCount());
+  }
+
+  public static Set<String> getList(String value) {
+    return Strings.isNullOrEmpty(value)
+      ? Collections.emptySet()
+      : Stream.of(value.split(","))
+      .map(String::trim)
+      .filter(name -> !name.isEmpty())
+      .collect(Collectors.toSet());
   }
 
   @Override
@@ -141,14 +156,5 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     ServiceNowMultiSourceConfig pluginConf = jobConfig.getMultiSourcePluginConf();
 
     return new ServiceNowMultiRecordReader(pluginConf);
-  }
-
-  public static Set<String> getList(String value) {
-    return Strings.isNullOrEmpty(value)
-      ? Collections.emptySet()
-      : Stream.of(value.split(","))
-      .map(String::trim)
-      .filter(name -> !name.isEmpty())
-      .collect(Collectors.toSet());
   }
 }
