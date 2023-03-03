@@ -23,6 +23,12 @@ Properties
 
 **Password**: The password for ServiceNow Instance.
 
+**Use Connection:** Whether to use a connection. If a connection is used, you do not need to provide the credentials.
+
+**Connection:** Name of the connection to use. Table Names information will be provided by the connection.
+You also can use the macro function ${conn(connection-name)}.
+
+
 **Operation** The type of operation to be performed. Insert operation will insert the data. Update operation will update
 existing data in the table. "sys_id" must be present in the records.
 

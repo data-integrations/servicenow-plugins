@@ -22,6 +22,10 @@ Properties
 
 **Password**: The password for ServiceNow Instance.
 
+**Use Connection:** Whether to use a connection. If a connection is used, you do not need to provide the credentials.
+
+**Connection:** Name of the connection to use. You also can use the macro function ${conn(connection-name)}.
+
 **Start Date**: The Start date to be used to filter the data. The format must be `yyyy-MM-dd`.
 
 **End Date**: The End date to be used to filter the data. The format must be `yyyy-MM-dd`.
