@@ -8,9 +8,9 @@ Reads from one or multiple tables within ServiceNow
 Properties
 ----------
 
-**Reference Name**: Name used to uniquely identify this source for lineage, annotating metadata, etc.
+**Use Connection:** Whether to use a connection. If a connection is used, you do not need to provide the credentials.
 
-**Table Names**: The name of the ServiceNow table(s) from which data to be fetched.
+**Connection:** Name of the connection to use. You also can use the macro function ${conn(connection-name)}.  
 
 **Client ID**: The Client ID for ServiceNow Instance.
 
@@ -22,9 +22,10 @@ Properties
 
 **Password**: The password for ServiceNow Instance.
 
-**Use Connection:** Whether to use a connection. If a connection is used, you do not need to provide the credentials.
+**Reference Name**: Name used to uniquely identify this source for lineage, annotating metadata, etc.
 
-**Connection:** Name of the connection to use. You also can use the macro function ${conn(connection-name)}.
+**Table Names**: The name of the ServiceNow table(s) from which data to be fetched.
+
 
 **Start Date**: The Start date to be used to filter the data. The format must be `yyyy-MM-dd`.
 

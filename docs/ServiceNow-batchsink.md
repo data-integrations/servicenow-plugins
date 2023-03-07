@@ -9,9 +9,10 @@ destination table. For update operations, sys_id must be present.
 Properties
 ----------
 
-**Reference Name**: Name used to uniquely identify this source for lineage, annotating metadata, etc.
+**Use Connection:** Whether to use a connection. If a connection is used, you do not need to provide the credentials.
 
-**Table Name**: The name of the ServiceNow table into which data is to be pushed.
+**Connection:** Name of the connection to use. Table Name information will be provided by the connection.
+You also can use the macro function ${conn(connection-name)}.
 
 **Client ID**: The Client ID for ServiceNow Instance.
 
@@ -23,10 +24,9 @@ Properties
 
 **Password**: The password for ServiceNow Instance.
 
-**Use Connection:** Whether to use a connection. If a connection is used, you do not need to provide the credentials.
+**Reference Name**: Name used to uniquely identify this source for lineage, annotating metadata, etc.
 
-**Connection:** Name of the connection to use. Table Names information will be provided by the connection.
-You also can use the macro function ${conn(connection-name)}.
+**Table Name**: The name of the ServiceNow table into which data is to be pushed.
 
 
 **Operation** The type of operation to be performed. Insert operation will insert the data. Update operation will update
