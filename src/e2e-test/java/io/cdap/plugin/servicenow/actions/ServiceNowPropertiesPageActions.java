@@ -105,4 +105,9 @@ public class ServiceNowPropertiesPageActions {
     selectMode(PluginMode.TABLE);
     fillTableNamePropertyInTableMode(tableName);
   }
+
+  public static void clickOnServicenowConnection() {
+    String connectionName = PluginPropertyUtils.pluginProp("connection.name");
+    ElementHelper.clickOnElement(CdfPluginPropertiesLocators.locateElementContainingText(connectionName));
+  }
 }

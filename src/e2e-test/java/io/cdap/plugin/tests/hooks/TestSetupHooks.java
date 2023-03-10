@@ -18,6 +18,7 @@ package io.cdap.plugin.tests.hooks;
 
 import com.google.cloud.bigquery.BigQueryException;
 import io.cdap.e2e.utils.BigQueryClient;
+import io.cdap.e2e.utils.PluginPropertyUtils;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
 import io.cdap.plugin.utils.enums.ApplicationInReportingMode;
@@ -229,6 +230,13 @@ public class TestSetupHooks {
   public static void setTempTargetBQTable() {
     bqTargetTable = "TestSN_table" + RandomStringUtils.randomAlphanumeric(10);
     BeforeActions.scenario.write("BigQuery Target table name: " + bqTargetTable);
+  }
+
+  @Before(order = 1, value = "@CONNECTION")
+  public static void setNewConnectionName() {
+    String connectionName = "ServiceNowConnection" + RandomStringUtils.randomAlphanumeric(10);
+    PluginPropertyUtils.addPluginProp("connection.name", connectionName);
+    BeforeActions.scenario.write("New Connection name: " + connectionName);
   }
 
   @After(order = 1, value = "@BQ_SINK_CLEANUP")

@@ -61,3 +61,36 @@ Feature: ServiceNow Multi Source - Run time scenarios
     And Wait till pipeline is in running status with a timeout of 500 seconds
     And Open and capture logs
     And Verify the pipeline status is "Succeeded"
+
+  @TS-SN-MULTI-RNTM-03 @CONNECTION @BQ_SINK
+  Scenario: Verify user should be able to deploy and run the pipeline using connection manager functionality
+    When Open Datafusion Project to configure pipeline
+    And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "ServiceNow Multi Source"
+    And Click plugin property: "switch-useConnection"
+    And Click on the Browse Connections button
+    And Click on the Add Connection button
+    And Click plugin property: "connector-ServiceNow"
+    And Enter input plugin property: "name" with value: "connection.name"
+    And fill Credentials section for pipeline user
+    Then Click on the Test Connection button
+    And Verify the test connection is successful
+    Then Click on the Create button
+    And Use new connection
+    And configure ServiceNow Multi source plugin for below listed tables:
+      | RECEIVING_SLIP_LINE |
+    Then Validate "ServiceNow Multi Source" plugin properties
+    And Close the Plugin Properties page
+    And Select Sink plugin: "BigQueryMultiTable" from the plugins list
+    And Connect source as "ServiceNow" and sink as "BigQueryMultiTable" to establish connection
+    And Navigate to the properties page of plugin: "BigQuery Multi Table"
+    And Replace input plugin property: "project" with value: "projectId"
+    And Enter input plugin property: "datasetProject" with value: "datasetprojectId"
+    And Configure BigQuery Multi Table sink plugin for Dataset
+    Then Validate "BigQuery Multi Table" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running status with a timeout of 500 seconds
+    And Open and capture logs
+    And Verify the pipeline status is "Succeeded"

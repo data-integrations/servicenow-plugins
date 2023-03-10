@@ -143,3 +143,39 @@ Feature: ServiceNow Sink - Run time scenarios
     And Open and capture logs
     And Verify the pipeline status is "Succeeded"
     Then Verify If an updated record in ServiceNow application for table "agent_assist_recommendation" is correct
+
+  @TS-SN-RNTM-SINK-06 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE @CONNECTION
+  Scenario: Verify user should be able to deploy and run the pipeline using connection manager functionality
+    When Open Datafusion Project to configure pipeline
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Replace input plugin property: "project" with value: "projectId"
+    And Enter input plugin property: "datasetProject" with value: "datasetprojectId"
+    And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Capture the generated Output Schema
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Click plugin property: "switch-useConnection"
+    And Click on the Browse Connections button
+    And Click on the Add Connection button
+    And Click plugin property: "connector-ServiceNow"
+    And Enter input plugin property: "name" with value: "connection.name"
+    And fill Credentials section for pipeline user
+    Then Click on the Test Connection button
+    And Verify the test connection is successful
+    Then Click on the Create button
+    And Use new connection
+    And Enter input plugin property: "tableName" with value: "receiving_slip_line"
+    And Enter input plugin property: "referenceName" with value: "test"
+    And Select radio button plugin property: "operation" with value: "INSERT"
+    And Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    Then Verify the pipeline status is "Succeeded"
+    Then Verify If new record created in ServiceNow application for table "receiving_slip_line" is correct
