@@ -17,6 +17,7 @@
 package io.cdap.plugin.servicenow.actions;
 
 import io.cdap.e2e.pages.locators.CdfPluginPropertiesLocators;
+import io.cdap.e2e.utils.AssertionHelper;
 import io.cdap.e2e.utils.ElementHelper;
 import io.cdap.e2e.utils.PluginPropertyUtils;
 import io.cdap.e2e.utils.SeleniumHelper;
@@ -30,7 +31,6 @@ import org.apache.commons.lang3.RandomStringUtils;
  * ServiceNow batch source - Properties page - Actions.
  */
 public class ServiceNowPropertiesPageActions {
-
   static {
     SeleniumHelper.getPropertiesLocators(ServiceNowPropertiesPage.class);
   }
@@ -88,8 +88,8 @@ public class ServiceNowPropertiesPageActions {
   }
 
   public static void selectTypeOfValues(String typeOfValue) {
-    ElementHelper.selectDropdownOption(
-      ServiceNowPropertiesPage.typeOfValuesDropdown, CdfPluginPropertiesLocators.locateDropdownListItem(typeOfValue));
+    ElementHelper.selectDropdownOption(ServiceNowPropertiesPage.typeOfValuesDropdown,
+            CdfPluginPropertiesLocators.locateDropdownListItem(typeOfValue));
   }
 
   public static void configurePluginForReportingMode(ApplicationInReportingMode applicationName) {
@@ -104,5 +104,20 @@ public class ServiceNowPropertiesPageActions {
     fillReferenceName(referenceName);
     selectMode(PluginMode.TABLE);
     fillTableNamePropertyInTableMode(tableName);
+  }
+
+  public static void clickServiceNowConnectorButton() {
+    ElementHelper.clickOnElement(ServiceNowPropertiesPage.connectorServiceNow);
+  }
+
+  public static void clickOnServicenowConnection() {
+    String connectionName = PluginPropertyUtils.pluginProp("connection.name");
+    ElementHelper.clickOnElement(ServiceNowPropertiesPage.serviceNowConnection(connectionName));
+  }
+
+  public static void verifyErrorMessageOnTestConnection(String errorMessageLocation) {
+    String expectedErrorMessage = PluginPropertyUtils.errorProp(errorMessageLocation);
+    AssertionHelper.verifyElementContainsText(ServiceNowPropertiesPage.errorMessageOnTestConnection,
+      expectedErrorMessage);
   }
 }

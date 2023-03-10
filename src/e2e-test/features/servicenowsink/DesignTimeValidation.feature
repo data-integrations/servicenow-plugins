@@ -47,3 +47,17 @@ Feature: ServiceNow Sink - Design time validation scenarios
       | restApiEndpoint |
       | user            |
       | password        |
+
+  @TS-SN-DSGN-SINK-ERROR-03 @CONNECTION
+  Scenario: Verify user should be able to get invalid credentials validation message when using invalid credentials in the connection manager functionality
+    When Open Datafusion Project to configure pipeline
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Click plugin property: "switch-useConnection"
+    And Click on the Browse Connections button
+    And Click on the Add Connection button
+    And Select ServiceNow Connection
+    And Enter input plugin property: "name" with value: "connection.name"
+    And fill Credentials section with invalid credentials
+    Then Click on the Test Connection button
+    Then Verify the invalid credentials error message: "invalid.testconnection.logmessage" on the footer

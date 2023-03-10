@@ -15,11 +15,11 @@
  */
 
 package io.cdap.plugin.servicenow.stepsdesign;
-
 import io.cdap.plugin.servicenow.actions.ServiceNowPropertiesPageActions;
 import io.cdap.plugin.utils.enums.ApplicationInReportingMode;
 import io.cdap.plugin.utils.enums.PluginMode;
 import io.cdap.plugin.utils.enums.TablesInTableMode;
+import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -59,5 +59,20 @@ public class DesignTimeSteps {
   @When("fill Credentials section with invalid credentials")
   public void fillCredentialsSectionWithInvalidCredentials() {
     ServiceNowPropertiesPageActions.fillCredentialsSectionWithInvalidCredentials();
+  }
+
+  @Then("Select ServiceNow Connection")
+  public void clickOnServiceNowConnectorButton() {
+    ServiceNowPropertiesPageActions.clickServiceNowConnectorButton();
+  }
+
+  @Then("Use new connection")
+  public void clickOnNewServiceNowConnection() {
+    ServiceNowPropertiesPageActions.clickOnServicenowConnection();
+  }
+
+  @Then("Verify the invalid credentials error message: {string} on the footer")
+  public void verifyErrorMessageDisplayedOnTestConnection(String errorMessageLocation) {
+    ServiceNowPropertiesPageActions.verifyErrorMessageOnTestConnection(errorMessageLocation);
   }
 }

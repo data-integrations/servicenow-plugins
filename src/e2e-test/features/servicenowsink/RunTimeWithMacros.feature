@@ -197,4 +197,3 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     Then Open Pipeline logs and verify Log entries having below listed Level and Message:
       | Level | Message                                   |
       | ERROR | invalid.credentials.logsmessage           |
-

@@ -16,6 +16,8 @@
 
 package io.cdap.plugin.servicenow.locators;
 
+import io.cdap.e2e.utils.SeleniumDriver;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.How;
@@ -69,4 +71,16 @@ public class ServiceNowPropertiesPage {
   @FindBy(how = How.XPATH, using = "//div[@data-cy='schema-fields-list']" +
     "//*[local-name()='svg' and @data-cy='error-icon']")
   public static WebElement fieldNotCreatableError;
+
+  // Connection Manager
+  @FindBy(how = How.XPATH, using = "//div[@data-cy='connector-ServiceNow']")
+  public static WebElement connectorServiceNow;
+
+  @FindBy(how = How.XPATH, using = "//*[@data-cy='connection-test-failure']/*[contains(@class,'MuiAlert-message')]")
+  public static WebElement errorMessageOnTestConnection;
+
+  public static WebElement serviceNowConnection(String connectionName) {
+    return SeleniumDriver.getDriver().findElement(
+      By.xpath("//div[contains(text(),'" + connectionName + "')]"));
+  }
 }
