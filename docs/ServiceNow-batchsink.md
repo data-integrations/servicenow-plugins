@@ -4,7 +4,7 @@ Description
 -----------
 
 Writes to the specified table within ServiceNow. All the fields in the source table must match with the fields in the 
-destination table. For update operations, sys_id must be present.
+destination table. For update operations, `sys_id` must be present.
 
 Properties
 ----------
@@ -18,7 +18,7 @@ You also can use the macro function ${conn(connection-name)}.
 
 **Client Secret**: The Client Secret for ServiceNow Instance.
 
-**REST API Endpoint**: The REST API Endpoint for ServiceNow Instance. For example, `https://instance.service-now.com`
+**REST API Endpoint**: The REST API Endpoint for ServiceNow Instance. 
 
 **User Name**: The user name for ServiceNow Instance.
 
@@ -29,8 +29,8 @@ You also can use the macro function ${conn(connection-name)}.
 **Table Name**: The name of the ServiceNow table into which data is to be pushed.
 
 
-**Operation** The type of operation to be performed. Insert operation will insert the data. Update operation will update
-existing data in the table. "sys_id" must be present in the records.
+**Operation**: The type of operation to be performed. Insert operation will insert the data. Update operation will 
+update existing data in the table. `sys_id` must be present in the records.
 
 Data Types Mapping
 ----------

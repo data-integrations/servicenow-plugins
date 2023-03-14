@@ -23,8 +23,10 @@ import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.FailureCollector;
+import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
+import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.Util;
 
@@ -41,6 +43,10 @@ import javax.annotation.Nullable;
 public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
 
   public static final String PROPERTY_EXTERNAL_ID_FIELD = "externalIdField";
+
+  @Name("referenceName")
+  @Description("This will be used to uniquely identify this source/sink for lineage, annotating metadata, etc.")
+  public String referenceName;
 
   @Name(ServiceNowConstants.PROPERTY_TABLE_NAME)
   @Macro
@@ -76,6 +82,11 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
     super(referenceName, clientId, clientSecret, restApiEndpoint, user, password);
     this.tableName = tableName;
     this.operation = operation;
+    this.referenceName = referenceName;
+  }
+
+  public String getReferenceName() {
+    return referenceName;
   }
 
   @Nullable
@@ -91,6 +102,7 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
    * Validates {@link ServiceNowSinkConfig} instance.
    */
   public void validate(FailureCollector collector) {
+    IdUtils.validateReferenceName(referenceName, collector);
     super.validate(collector);
     validateTable(collector);
   }

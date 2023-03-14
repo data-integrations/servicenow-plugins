@@ -16,7 +16,7 @@ Properties
 
 **Client Secret**: The Client Secret for ServiceNow Instance.
 
-**REST API Endpoint**: The REST API Endpoint for ServiceNow Instance. For example, `https://instance.service-now.com`
+**REST API Endpoint**: The REST API Endpoint for ServiceNow Instance. 
 
 **User Name**: The user name for ServiceNow Instance.
 

@@ -23,4 +23,6 @@ Properties
 
 Path of the connection
 ----------------------
-To browse, get a sample from, or get the specification for this connection (Not supported in MultiSource-batchSource).
+To browse, get a sample from, or get the specification for this connection (Not supported in ServiceNow Batch Multi 
+Source plugins).  
+/{table} This path indicates a ServiceNow table. A table is the only one that can be sampled.
