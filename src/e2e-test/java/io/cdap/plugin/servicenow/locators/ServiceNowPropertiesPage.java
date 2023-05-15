@@ -73,12 +73,6 @@ public class ServiceNowPropertiesPage {
   public static WebElement fieldNotCreatableError;
 
   // Connection Manager
-  @FindBy(how = How.XPATH, using = "//div[@data-cy='connector-ServiceNow']")
-  public static WebElement connectorServiceNow;
-
-  @FindBy(how = How.XPATH, using = "//*[@data-cy='connection-test-failure']/*[contains(@class,'MuiAlert-message')]")
-  public static WebElement errorMessageOnTestConnection;
-
   public static WebElement serviceNowConnection(String connectionName) {
     return SeleniumDriver.getDriver().findElement(
       By.xpath("//div[contains(text(),'" + connectionName + "')]"));

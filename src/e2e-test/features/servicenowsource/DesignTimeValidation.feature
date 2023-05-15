@@ -80,8 +80,8 @@ Feature: ServiceNow Source - Design time validation scenarios
     And Click plugin property: "switch-useConnection"
     And Click on the Browse Connections button
     And Click on the Add Connection button
-    And Select ServiceNow Connection
+    And Click plugin property: "connector-ServiceNow"
     And Enter input plugin property: "name" with value: "connection.name"
     And fill Credentials section with invalid credentials
     Then Click on the Test Connection button
-    Then Verify the invalid credentials error message: "invalid.testconnection.logmessage" on the footer
+    Then Verify the invalid connection error message: "invalid.testconnection.logmessage" on the footer

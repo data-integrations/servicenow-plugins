@@ -189,7 +189,7 @@ Feature: ServiceNow Sink - Design time scenarios
     And Click plugin property: "switch-useConnection"
     And Click on the Browse Connections button
     And Click on the Add Connection button
-    And Select ServiceNow Connection
+    And Click plugin property: "connector-ServiceNow"
     And Enter input plugin property: "name" with value: "connection.name"
     And fill Credentials section for pipeline user
     Then Click on the Test Connection button

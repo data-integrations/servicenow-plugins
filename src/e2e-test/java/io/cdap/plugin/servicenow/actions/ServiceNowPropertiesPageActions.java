@@ -106,18 +106,8 @@ public class ServiceNowPropertiesPageActions {
     fillTableNamePropertyInTableMode(tableName);
   }
 
-  public static void clickServiceNowConnectorButton() {
-    ElementHelper.clickOnElement(ServiceNowPropertiesPage.connectorServiceNow);
-  }
-
   public static void clickOnServicenowConnection() {
     String connectionName = PluginPropertyUtils.pluginProp("connection.name");
     ElementHelper.clickOnElement(ServiceNowPropertiesPage.serviceNowConnection(connectionName));
-  }
-
-  public static void verifyErrorMessageOnTestConnection(String errorMessageLocation) {
-    String expectedErrorMessage = PluginPropertyUtils.errorProp(errorMessageLocation);
-    AssertionHelper.verifyElementContainsText(ServiceNowPropertiesPage.errorMessageOnTestConnection,
-      expectedErrorMessage);
   }
 }

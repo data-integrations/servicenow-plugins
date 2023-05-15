@@ -61,18 +61,8 @@ public class DesignTimeSteps {
     ServiceNowPropertiesPageActions.fillCredentialsSectionWithInvalidCredentials();
   }
 
-  @Then("Select ServiceNow Connection")
-  public void clickOnServiceNowConnectorButton() {
-    ServiceNowPropertiesPageActions.clickServiceNowConnectorButton();
-  }
-
   @Then("Use new connection")
   public void clickOnNewServiceNowConnection() {
     ServiceNowPropertiesPageActions.clickOnServicenowConnection();
-  }
-
-  @Then("Verify the invalid credentials error message: {string} on the footer")
-  public void verifyErrorMessageDisplayedOnTestConnection(String errorMessageLocation) {
-    ServiceNowPropertiesPageActions.verifyErrorMessageOnTestConnection(errorMessageLocation);
   }
 }
