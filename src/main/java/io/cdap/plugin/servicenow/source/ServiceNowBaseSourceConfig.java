@@ -22,6 +22,7 @@ import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.etl.api.FailureCollector;
+import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
 
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
@@ -85,7 +86,7 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
   public ServiceNowBaseSourceConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                                     String user, String password, String tableNameField, String valueType,
                                     @Nullable String startDate, @Nullable String endDate) {
-    super(referenceName, clientId, clientSecret, restApiEndpoint, user, password);
+    super(clientId, clientSecret, restApiEndpoint, user, password);
     this.referenceName = referenceName;
     this.tableNameField = tableNameField;
     this.valueType = valueType;
@@ -116,6 +117,7 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
    */
   public void validate(FailureCollector collector) {
     super.validate(collector);
+    IdUtils.validateReferenceName(referenceName, collector);
     validateValueType(collector);
     validateDateRange(collector);
   }

@@ -79,7 +79,7 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
    */
   public ServiceNowSinkConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                               String user, String password, String tableName, String operation) {
-    super(referenceName, clientId, clientSecret, restApiEndpoint, user, password);
+    super(clientId, clientSecret, restApiEndpoint, user, password);
     this.tableName = tableName;
     this.operation = operation;
     this.referenceName = referenceName;
