@@ -92,12 +92,7 @@
             "connectionType": " SERVICENOW",
             "label": "Browse"
           }
-        }
-      ]
-    },
-    {
-      "label": "Configuration",
-      "properties": [
+        },
         {
           "widget-type": "textbox",
           "label": "Table Name",

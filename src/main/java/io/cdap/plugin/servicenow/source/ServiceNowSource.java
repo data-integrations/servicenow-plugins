@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  */
 @Plugin(type = BatchSource.PLUGIN_TYPE)
 @Name(ServiceNowConstants.PLUGIN_NAME)
-@Description("Reads from multiple tables in ServiceNow. " +
+@Description("Reads from a table in ServiceNow. " +
   "Outputs one record for each row in each table, with the table name as a record field. " +
   "Also sets a pipeline argument for each table read, which contains the table schema. ")
 @Metadata(properties = {@MetadataProperty(key = Connector.PLUGIN_TYPE, value = ServiceNowConstants.PLUGIN_NAME)})

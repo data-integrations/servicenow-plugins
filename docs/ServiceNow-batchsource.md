@@ -12,6 +12,21 @@ arguments where the key is `multisink.[tablename]` and the value is the schema o
 Properties
 ----------
 
+**Use Connection:** Whether to use a connection. If a connection is used, you do not need to provide the credentials.
+
+**Connection:** Name of the connection to use. Table Name information will be provided by the connection.
+You also can use the macro function ${conn(connection-name)}.
+
+**Client ID**: The Client ID for ServiceNow Instance.
+
+**Client Secret**: The Client Secret for ServiceNow Instance.
+
+**REST API Endpoint**: The REST API Endpoint for ServiceNow Instance. 
+
+**User Name**: The user name for ServiceNow Instance.
+
+**Password**: The password for ServiceNow Instance.
+
 **Reference Name**: Name used to uniquely identify this source for lineage, annotating metadata, etc.
 
 **Mode**: Mode of query. The mode can be one of two values: 
@@ -38,16 +53,6 @@ will be read. Defaults to `tablename`. Note, the Table name field value will be 
 
 **Table Name**: The name of the ServiceNow table from which data to be fetched. Note, the Table name value will be 
 ignored if the Mode is set to `Reporting`.
-
-**Client ID**: The Client ID for ServiceNow Instance.
-
-**Client Secret**: The Client Secret for ServiceNow Instance.
-
-**REST API Endpoint**: The REST API Endpoint for ServiceNow Instance. For example, `https://instance.service-now.com`
-
-**User Name**: The user name for ServiceNow Instance.
-
-**Password**: The password for ServiceNow Instance.
 
 **Start Date**: The Start date to be used to filter the data. The format must be `yyyy-MM-dd`.
 
