@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
  */
 @Plugin(type = BatchSource.PLUGIN_TYPE)
 @Name(ServiceNowConstants.PLUGIN_NAME_MULTI_SOURCE)
-@Description("Reads from one or multiple tables in ServiceNow. " +
+@Description("Reads from multiple tables in ServiceNow. " +
   "Outputs one record for each row in each table, with the table name as a record field. " +
   "Also sets a pipeline argument for each table read, which contains the table schema. ")
 public class ServiceNowMultiSource extends BatchSource<NullWritable, StructuredRecord, StructuredRecord> {
