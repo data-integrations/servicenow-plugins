@@ -43,9 +43,9 @@ import javax.annotation.Nullable;
  */
 public class ServiceNowBaseConfig extends PluginConfig {
 
-  @Name("referenceName")
+  /*@Name("referenceName")
   @Description("This will be used to uniquely identify this source/sink for lineage, annotating metadata, etc.")
-  public String referenceName;
+  public String referenceName;*/
 
   @Name(ConfigUtil.NAME_USE_CONNECTION)
   @Nullable
@@ -66,20 +66,20 @@ public class ServiceNowBaseConfig extends PluginConfig {
   public ServiceNowBaseConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                               String user, String password) {
 
-    this.referenceName = referenceName;
+    //this.referenceName = referenceName;
     this.connection = new ServiceNowConnectorConfig(clientId, clientSecret, restApiEndpoint, user, password);
   }
 
-  public String getReferenceName() {
+ /* public String getReferenceName() {
     return referenceName;
-  }
+  }*/
 
   /**
    * Validates {@link ServiceNowSourceConfig} instance.
    */
   public void validate(FailureCollector collector) {
     // Validates the given referenceName to consists of characters allowed to represent a dataset.
-    IdUtils.validateReferenceName(referenceName, collector);
+    //IdUtils.validateReferenceName(referenceName, collector);
     validateCredentials(collector);
   }
 

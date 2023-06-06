@@ -36,6 +36,9 @@ import javax.annotation.Nullable;
  * Base ServiceNow Batch Source config. Contains common configuration properties and methods.
  */
 public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
+  @Name("referenceName")
+  @Description("This will be used to uniquely identify this source for lineage, annotating metadata, etc.")
+  public String referenceName;
 
   @Name(ServiceNowConstants.PROPERTY_VALUE_TYPE)
   @Macro
@@ -83,10 +86,15 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
                                     String user, String password, String tableNameField, String valueType,
                                     @Nullable String startDate, @Nullable String endDate) {
     super(referenceName, clientId, clientSecret, restApiEndpoint, user, password);
+    this.referenceName = referenceName;
     this.tableNameField = tableNameField;
     this.valueType = valueType;
     this.startDate = startDate;
     this.endDate = endDate;
+  }
+
+  public String getReferenceName() {
+    return referenceName;
   }
 
   @Nullable
