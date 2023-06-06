@@ -54,7 +54,7 @@ public class ServiceNowSourceConfig extends ServiceNowBaseSourceConfig {
   @Macro
   @Nullable
   @Description("The name of the ServiceNow table from which data to be fetched. Note, the Table name value " +
-    "will be ignored if the Mode is set to `Reporting`.")
+    "will be ignored if the Mode is set to `Reporting`. The ServiceNow table can be browsed using browse button.")
   private String tableName;
 
 
