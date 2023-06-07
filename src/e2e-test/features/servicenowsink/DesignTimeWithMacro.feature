@@ -15,7 +15,6 @@
 @ServiceNow
 @SNSink
 @Smoke
-@@Regression
 Feature: ServiceNow Sink - Design time validation scenarios (macro)
 
   @TS-SN-DSGN-SINK-MACRO-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
@@ -70,3 +69,23 @@ Feature: ServiceNow Sink - Design time validation scenarios (macro)
     And Enter input plugin property: "tableName" with value: "receiving_slip_line"
     And Click on the Macro button of Property: "operation" and set the value to: "operation"
     Then Validate "ServiceNow" plugin properties
+
+  @TS-SN-DSGN-SINK-MACRO-04 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
+  Scenario: Verify user should be able to validate plugin with macros for Connection Manager
+    When Open Datafusion Project to configure pipeline
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And Click plugin property: "switch-useConnection"
+    And Click on the Macro button of Property: "connection" and set the value to: "Connection"
+    And Enter input plugin property: "tableName" with value: "receiving_slip_line"
+    Then Validate "ServiceNow" plugin properties
+
+
+

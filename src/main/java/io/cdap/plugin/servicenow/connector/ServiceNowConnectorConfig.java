@@ -29,6 +29,8 @@ import io.cdap.plugin.servicenow.util.Util;
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 
 /**
  * PluginConfig for ServiceNow Connector
@@ -36,26 +38,31 @@ import java.util.Map;
 public class ServiceNowConnectorConfig extends PluginConfig {
   @Name(ServiceNowConstants.PROPERTY_CLIENT_ID)
   @Macro
+  @Nullable
   @Description(" The Client ID for ServiceNow Instance.")
   private final String clientId;
 
   @Name(ServiceNowConstants.PROPERTY_CLIENT_SECRET)
   @Macro
+  @Nullable
   @Description("The Client Secret for ServiceNow Instance.")
   private final String clientSecret;
 
   @Name(ServiceNowConstants.PROPERTY_API_ENDPOINT)
   @Macro
+  @Nullable
   @Description("The REST API Endpoint for ServiceNow Instance. For example, https://instance.service-now.com")
   private final String restApiEndpoint;
 
   @Name(ServiceNowConstants.PROPERTY_USER)
   @Macro
+  @Nullable
   @Description("The user name for ServiceNow Instance.")
   private final String user;
 
   @Name(ServiceNowConstants.PROPERTY_PASSWORD)
   @Macro
+  @Nullable
   @Description("The password for ServiceNow Instance.")
   private final String password;
 

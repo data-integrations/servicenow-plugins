@@ -129,20 +129,20 @@
       "label": "Table Mode",
       "properties": [
         {
+          "widget-type": "textbox",
+          "label": "Table Name",
+          "name": "tableName",
+          "widget-attributes": {
+            "placeholder": "ServiceNow table name from which data to be fetched"
+          }
+        },
+        {
           "label": "browse",
           "widget-type": "connection-browser",
           "widget-category": "plugin",
           "widget-attributes": {
             "connectionType": " SERVICENOW",
             "label": "Browse"
-          }
-        },
-        {
-          "widget-type": "textbox",
-          "label": "Table Name",
-          "name": "tableName",
-          "widget-attributes": {
-            "placeholder": "ServiceNow table name from which data to be fetched"
           }
         }
       ]
@@ -215,6 +215,10 @@
         {
           "type": "property",
           "name": "tableName"
+        } ,
+        {
+          "type": "property",
+          "label": "browse"
         }
       ]
     },

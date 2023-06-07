@@ -26,11 +26,6 @@ Feature: ServiceNow Multi Source - Design time validation scenarios
     And Click on the Validate button
     Then Verify mandatory property error for below listed properties:
       | referenceName   |
-      | clientId        |
-      | clientSecret    |
-      | restApiEndpoint |
-      | user            |
-      | password        |
 
   @TS-SN-MULTI-DSGN-ERROR-02
   Scenario: Verify validation message for invalid table name
