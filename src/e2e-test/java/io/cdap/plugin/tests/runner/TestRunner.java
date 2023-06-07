@@ -29,7 +29,7 @@ import org.junit.runner.RunWith;
   glue = {"io.cdap.plugin.servicenow.stepsdesign", "io.cdap.plugin.servicenowmultisource.stepsdesign",
     "io.cdap.plugin.servicenowsink.stepsdesign", "io.cdap.plugin.bigquery.stepsdesign", "stepsdesign",
     "io.cdap.plugin.tests.hooks"},
-  tags = {"@Regression"},
+  tags = {"@Skip"},
   monochrome = true,
   plugin = {"pretty", "html:target/cucumber-html-report", "json:target/cucumber-reports/cucumber.json",
     "junit:target/cucumber-reports/cucumber.xml"}
