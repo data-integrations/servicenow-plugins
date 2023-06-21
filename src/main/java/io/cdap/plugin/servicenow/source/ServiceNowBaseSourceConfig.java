@@ -24,7 +24,6 @@ import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
-
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceValueType;
 import io.cdap.plugin.servicenow.util.Util;
@@ -44,9 +43,9 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
   @Name(ServiceNowConstants.PROPERTY_VALUE_TYPE)
   @Macro
   @Description("The type of values to be returned."
-          + "`Actual` -  will fetch the actual values from the ServiceNow tables"
-          + "`Display` - will fetch the display values from the ServiceNow tables."
-          + "Default is Actual.")
+    + "`Actual` -  will fetch the actual values from the ServiceNow tables"
+    + "`Display` - will fetch the display values from the ServiceNow tables."
+    + "Default is Actual.")
   private String valueType;
 
   @Name(ServiceNowConstants.PROPERTY_START_DATE)
@@ -72,16 +71,16 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
   /**
    * Constructor for ServiceNowSourceConfig object.
    *
-   * @param referenceName The reference name
-   * @param clientId The Client Id for ServiceNow
-   * @param clientSecret The Client Secret for ServiceNow
+   * @param referenceName   The reference name
+   * @param clientId        The Client Id for ServiceNow
+   * @param clientSecret    The Client Secret for ServiceNow
    * @param restApiEndpoint The rest API endpoint for ServiceNow
-   * @param user The user id for ServiceNow
-   * @param password The password for ServiceNow
-   * @param tableNameField The field name to hold the table name value
-   * @param valueType The value type
-   * @param startDate The start date
-   * @param endDate The end date
+   * @param user            The user id for ServiceNow
+   * @param password        The password for ServiceNow
+   * @param tableNameField  The field name to hold the table name value
+   * @param valueType       The value type
+   * @param startDate       The start date
+   * @param endDate         The end date
    */
   public ServiceNowBaseSourceConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                                     String user, String password, String tableNameField, String valueType,
@@ -137,7 +136,7 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
     }
 
     collector.addFailure("Unsupported type value: " + valueType,
-        String.format("Supported value types are: %s", SourceValueType.getSupportedValueTypes()))
+                         String.format("Supported value types are: %s", SourceValueType.getSupportedValueTypes()))
       .withConfigProperty(ServiceNowConstants.PROPERTY_VALUE_TYPE);
     collector.getOrThrowException();
     return null;
@@ -163,39 +162,31 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
 
   private void validateDateRange(FailureCollector collector) {
     if (containsMacro(ServiceNowConstants.PROPERTY_START_DATE) ||
-      containsMacro(ServiceNowConstants.PROPERTY_END_DATE)) {
-      return;
-    }
-
-    if (!Util.isNullOrEmpty(startDate) && !Util.isNullOrEmpty(endDate) &&
-      !Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, startDate) &&
-      !Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, endDate)) {
-      collector.addFailure("Invalid format for Start date. Correct Format: " +
-          ServiceNowConstants.DATE_FORMAT, null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE);
-      collector.addFailure("Invalid format for End date. Correct Format:" +
-          ServiceNowConstants.DATE_FORMAT, null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
-      return;
-    }
-    // validate the date formats for both start date & end date
-    if (!Util.isNullOrEmpty(startDate) && !Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, startDate)) {
-      collector.addFailure("Invalid format for Start date. Correct Format: " +
-          ServiceNowConstants.DATE_FORMAT, null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE);
-      return;
-    }
-
-    if (!Util.isNullOrEmpty(endDate) && !Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, endDate)) {
-      collector.addFailure("Invalid format for End date. Correct Format:" +
-          ServiceNowConstants.DATE_FORMAT, null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
+      containsMacro(ServiceNowConstants.PROPERTY_END_DATE) ||
+      (Util.isNullOrEmpty(startDate) && Util.isNullOrEmpty(endDate))) {
       return;
     }
 
     if (Util.isNullOrEmpty(startDate) || Util.isNullOrEmpty(endDate)) {
+      collector.addFailure("Enter values for both Start date and End date.", null)
+        .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE)
+        .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
       return;
     }
+
+    // validate the date formats for both start date & end date
+    if (!Util.isNullOrEmpty(startDate) && !Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, startDate)) {
+      collector.addFailure("Invalid format for Start date. Correct Format: " +
+                             ServiceNowConstants.DATE_FORMAT, null)
+        .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE);
+    }
+
+    if (!Util.isNullOrEmpty(endDate) && !Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, endDate)) {
+      collector.addFailure("Invalid format for End date. Correct Format:" +
+                             ServiceNowConstants.DATE_FORMAT, null)
+        .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
+    }
+    collector.getOrThrowException();
 
     // validate the date range by checking if start date is smaller than end date
     LocalDate fromDate = LocalDate.parse(startDate);

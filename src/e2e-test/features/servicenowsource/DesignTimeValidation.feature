@@ -26,11 +26,6 @@ Feature: ServiceNow Source - Design time validation scenarios
     And Click on the Validate button
     Then Verify mandatory property error for below listed properties:
       | referenceName   |
-      | clientId        |
-      | clientSecret    |
-      | restApiEndpoint |
-      | user            |
-      | password        |
 
   @TS-SN-DSGN-ERROR-02
   Scenario: Verify invalid credentials validation messages

@@ -15,7 +15,6 @@
 @ServiceNow
 @SNSink
 @Smoke
-@Regression
 Feature: ServiceNow Sink - Run time scenarios (macro)
 
   @TS-SN-RNTM-SINK-MACRO-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE @BQ_SINK_CLEANUP
@@ -197,4 +196,41 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     Then Open Pipeline logs and verify Log entries having below listed Level and Message:
       | Level | Message                                   |
       | ERROR | invalid.credentials.logsmessage           |
+
+  @TS-SN-RNTM-SINK-MACRO-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE @BQ_SINK_CLEANUP @CONNECTION
+  Scenario: Verify user should be able to preview a pipeline when plugin is configured for Insert operation with macros for connection manager
+    When Open Datafusion Project to configure pipeline
+    And Select plugin: "BigQuery" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Fill Reference Name
+    And Configure BigQuery source plugin for Dataset and Table
+    And Validate "BigQuery" plugin properties
+    And Capture the generated Output Schema
+    And Close the Plugin Properties page
+    And Select Sink plugin: "ServiceNow" from the plugins list
+    And Connect plugins: "BigQuery" and "ServiceNow" to establish connection
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And Select radio button plugin property: "operation" with value: "INSERT"
+    And Click on the Macro button of Property: "tableName" and set the value to: "tableName"
+    And Click on the Macro button of Property: "connection" and set the value to: "Connection"
+    And Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Preview and run the pipeline
+    And Enter runtime argument value "receiving_slip_line" for key "tableName"
+    And Enter runtime argument value "connectionMacros" for key "Connection"
+    And Run the preview of pipeline with runtime arguments
+    Then Verify the preview of pipeline is "success"
+    And Open and capture pipeline preview logs
+    And Close the pipeline logs
+    And Close the preview
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Enter runtime argument value "receiving_slip_line" for key "tableName"
+    And Enter runtime argument value "connectionMacros" for key "Connection"
+    And Run the Pipeline in Runtime with runtime arguments
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    And Verify the pipeline status is "Succeeded"
+    And Close the pipeline logs
 

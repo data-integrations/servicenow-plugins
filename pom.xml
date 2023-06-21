@@ -395,7 +395,7 @@
             <Embed-Directory>lib</Embed-Directory>
             <!--Only @Plugin classes in the export packages will be included as plugin-->
             <_exportcontents>
-              io.cdap.plugin.*;
+              io.cdap.plugin.servicenow.source.*,io.cdap.plugin.servicenow.connector.*;
             </_exportcontents>
           </instructions>
         </configuration>

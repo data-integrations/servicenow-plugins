@@ -15,7 +15,6 @@
 @ServiceNow
 @SNSink
 @Smoke
-@Regression
 Feature: ServiceNow Sink - Design time scenarios
 
   @TS-SN-DSGN-SINK-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE

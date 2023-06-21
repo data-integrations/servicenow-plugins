@@ -15,7 +15,6 @@
 @ServiceNow
 @SNSink
 @Smoke
-@Regression
 Feature: ServiceNow Sink - Design time validation scenarios
 
   @TS-SN-DSGN-SINK-ERROR-01
@@ -26,11 +25,6 @@ Feature: ServiceNow Sink - Design time validation scenarios
     And Click on the Validate button
     Then Verify mandatory property error for below listed properties:
       | referenceName   |
-      | clientId        |
-      | clientSecret    |
-      | restApiEndpoint |
-      | user            |
-      | password        |
 
   @TS-SN-DSGN-SINK-ERROR-02
   Scenario: Verify invalid credentials validation messages

@@ -47,3 +47,15 @@ Feature: ServiceNow Source - Design time scenarios (macro)
     And Click on the Macro button of Property: "user" and set the value to: "username"
     And Click on the Macro button of Property: "password" and set the value to: "password"
     Then Validate "ServiceNow" plugin properties
+
+  @TS-SN-DSGN-MACRO-03
+  Scenario: Verify user should be able to validate plugin with macros for connection manager
+    When Open Datafusion Project to configure pipeline
+    And Select plugin: "ServiceNow" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And Fill Reference Name
+    And Select mode as: "TABLE"
+    And Click on the Macro button of Property: "tableName" and set the value to: "tableName"
+    And Click plugin property: "switch-useConnection"
+    And Click on the Macro button of Property: "connection" and set the value to: "Connection"
+    Then Validate "ServiceNow" plugin properties

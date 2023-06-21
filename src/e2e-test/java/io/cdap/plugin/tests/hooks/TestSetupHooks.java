@@ -237,6 +237,8 @@ public class TestSetupHooks {
     String connectionName = "ServiceNowConnection" + RandomStringUtils.randomAlphanumeric(10);
     PluginPropertyUtils.addPluginProp("connection.name", connectionName);
     BeforeActions.scenario.write("New Connection name: " + connectionName);
+    String connectionMacros = "${conn(" + connectionName + ")}";
+    PluginPropertyUtils.addPluginProp("connectionMacros", connectionMacros);
   }
 
   @After(order = 1, value = "@BQ_SINK_CLEANUP")

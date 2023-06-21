@@ -51,9 +51,10 @@ public class ServiceNowMultiSourceConfigTest {
   @Test
   public void testConstructor() {
     serviceNowMultiSourceConfig = new ServiceNowMultiSourceConfig("referenceName", "client_id",
-      "client_secret", "https://example.com", "user", "password",
-      "tablename", "Actual", "2021-12-30", "2021-12-31",
-       "sys_user");
+                                                                  "client_secret", "https://example.com", "user",
+                                                                  "password",
+                                                                  "tablename", "Actual", "2021-12-30", "2021-12-31",
+                                                                  "sys_user");
     Assert.assertEquals("sys_user", serviceNowMultiSourceConfig.getTableNames());
     Assert.assertEquals("Actual", serviceNowMultiSourceConfig.getValueType().getValueType());
     Assert.assertEquals("2021-12-30", serviceNowMultiSourceConfig.getStartDate());
@@ -74,8 +75,6 @@ public class ServiceNowMultiSourceConfigTest {
         .setClientSecret("client_secret")
         .setTableNames("sys_user")
         .setValueType("Actual")
-        .setStartDate("2021-12-30")
-        .setEndDate("2021-12-31")
         .setTableNameField("tablename")
         .buildMultiSource();
     serviceNowMultiSourceConfig.validate(mockFailureCollector);
@@ -228,8 +227,6 @@ public class ServiceNowMultiSourceConfigTest {
         .setClientSecret("client_secret")
         .setTableNames("sys_user")
         .setValueType("Actual")
-        .setStartDate("2021-12-30")
-        .setEndDate("2021-12-31")
         .setTableNameField("tablename")
         .buildMultiSource();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
