@@ -40,22 +40,22 @@ public class ServiceNowMultiSourceConfig extends ServiceNowBaseSourceConfig {
   /**
    * Constructor for ServiceNowSourceConfig object.
    *
-   * @param referenceName The reference name
-   * @param tableNameField The field name to hold the table name value
-   * @param clientId The Client Id for ServiceNow
-   * @param clientSecret The Client Secret for ServiceNow
+   * @param referenceName   The reference name
+   * @param tableNameField  The field name to hold the table name value
+   * @param clientId        The Client Id for ServiceNow
+   * @param clientSecret    The Client Secret for ServiceNow
    * @param restApiEndpoint The rest API endpoint for ServiceNow
-   * @param user The user id for ServiceNow
-   * @param password The password for ServiceNow
-   * @param valueType The value type
-   * @param startDate The start date
-   * @param endDate The end date
+   * @param user            The user id for ServiceNow
+   * @param password        The password for ServiceNow
+   * @param valueType       The value type
+   * @param startDate       The start date
+   * @param endDate         The end date
    */
   public ServiceNowMultiSourceConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                                      String user, String password, String tableNameField, String valueType,
                                      @Nullable String startDate, @Nullable String endDate, String tableNames) {
     super(referenceName, clientId, clientSecret, restApiEndpoint, user, password, tableNameField, valueType, startDate,
-      endDate);
+          endDate);
     this.tableNames = tableNames;
   }
 
@@ -100,7 +100,7 @@ public class ServiceNowMultiSourceConfig extends ServiceNowBaseSourceConfig {
     } else {
       Set<String> tableNames = ServiceNowMultiInputFormat.getList(getTableNames());
       for (String tableName : tableNames) {
-        validateTable(tableName, getValueType(),  collector);
+        validateTable(tableName, getValueType(), collector, ServiceNowConstants.PROPERTY_TABLE_NAMES);
       }
     }
   }

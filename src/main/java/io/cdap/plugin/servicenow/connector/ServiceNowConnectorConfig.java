@@ -15,47 +15,50 @@
  */
 package io.cdap.plugin.servicenow.connector;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
-import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.Util;
 
-import java.util.Map;
+import javax.annotation.Nullable;
 
 
 /**
  * PluginConfig for ServiceNow Connector
  */
 public class ServiceNowConnectorConfig extends PluginConfig {
+
   @Name(ServiceNowConstants.PROPERTY_CLIENT_ID)
   @Macro
-  @Description(" The Client ID for ServiceNow Instance.")
+  @Nullable
+  @Description("The Client ID for ServiceNow Instance.")
   private final String clientId;
 
   @Name(ServiceNowConstants.PROPERTY_CLIENT_SECRET)
   @Macro
+  @Nullable
   @Description("The Client Secret for ServiceNow Instance.")
   private final String clientSecret;
 
   @Name(ServiceNowConstants.PROPERTY_API_ENDPOINT)
   @Macro
+  @Nullable
   @Description("The REST API Endpoint for ServiceNow Instance. For example, https://instance.service-now.com")
   private final String restApiEndpoint;
 
   @Name(ServiceNowConstants.PROPERTY_USER)
   @Macro
+  @Nullable
   @Description("The user name for ServiceNow Instance.")
   private final String user;
 
   @Name(ServiceNowConstants.PROPERTY_PASSWORD)
   @Macro
+  @Nullable
   @Description("The password for ServiceNow Instance.")
   private final String password;
 
@@ -136,61 +139,5 @@ public class ServiceNowConnectorConfig extends PluginConfig {
     }
   }
 
-  public Object convertToValue(String fieldName, Schema fieldSchema, Map<String, Object> record) {
-    Schema.Type fieldType = fieldSchema.getType();
-    Object fieldValue = record.get(fieldName);
 
-    switch (fieldType) {
-      case STRING:
-        return convertToStringValue(fieldValue);
-      case DOUBLE:
-        return convertToDoubleValue(fieldValue);
-      case INT:
-        return convertToIntegerValue(fieldValue);
-      case BOOLEAN:
-        return convertToBooleanValue(fieldValue);
-      case UNION:
-        if (fieldSchema.isNullable()) {
-          return convertToValue(fieldName, fieldSchema.getNonNullable(), record);
-        }
-        throw new IllegalStateException(
-          String.format("Field '%s' is of unexpected type '%s'. Declared 'complex UNION' types: %s",
-                        fieldName, record.get(fieldName).getClass().getSimpleName(), fieldSchema.getUnionSchemas()));
-      default:
-        throw new IllegalStateException(
-          String.format("Record type '%s' is not supported for field '%s'", fieldType.name(), fieldName));
-    }
-  }
-
-  @VisibleForTesting
-  public String convertToStringValue(Object fieldValue) {
-    return String.valueOf(fieldValue);
-  }
-
-  @VisibleForTesting
-  public Double convertToDoubleValue(Object fieldValue) {
-    if (fieldValue instanceof String && Strings.isNullOrEmpty(String.valueOf(fieldValue))) {
-      return null;
-    }
-
-    return Double.parseDouble(String.valueOf(fieldValue));
-  }
-
-  @VisibleForTesting
-  public Integer convertToIntegerValue(Object fieldValue) {
-    if (fieldValue instanceof String && Strings.isNullOrEmpty(String.valueOf(fieldValue))) {
-      return null;
-    }
-
-    return Integer.parseInt(String.valueOf(fieldValue));
-  }
-
-  @VisibleForTesting
-  public Boolean convertToBooleanValue(Object fieldValue) {
-    if (fieldValue instanceof String && Strings.isNullOrEmpty(String.valueOf(fieldValue))) {
-      return null;
-    }
-
-    return Boolean.parseBoolean(String.valueOf(fieldValue));
-  }
 }

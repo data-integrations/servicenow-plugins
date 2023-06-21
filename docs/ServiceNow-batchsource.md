@@ -67,20 +67,21 @@ ignored if the Mode is set to `Reporting`.
 Data Types Mapping
 ----------
 
-    | ServiceNow Data Type           | CDAP Schema Data Type | Comment                                            |
-    | ------------------------------ | --------------------- | -------------------------------------------------- |
-    | decimal                        | double                |                                                    |
-    | integer                        | int                   |                                                    |
-    | boolean                        | boolean               |                                                    |
-    | reference                      | string                |                                                    |
-    | currency                       | string                |                                                    |
-    | glide_date                     | string                |                                                    |
-    | glide_date_time                | string                |                                                    |
-    | sys_class_name                 | string                |                                                    |
-    | domain_id                      | string                |                                                    |
-    | domain_path                    | string                |                                                    |
-    | guid                           | string                |                                                    |
-    | translated_html                | string                |                                                    |
-    | journal                        | string                |                                                    |
-    | string                         | string                |                                                    |
+    | ServiceNow Data Type           | CDAP Schema Data Type                                         
+    | ------------------------------ | ---------------------
+    | decimal                        | double                                                                    
+    | integer                        | int                                                                       
+    | boolean                        | boolean                                                                   
+    | reference                      | string                                                                    
+    | currency                       | string                                                                    
+    | glide_date                     | date                                                                      
+    | glide_date_time                | datetime                                                                  
+    | glide_time                     | time                                                               
+    | sys_class_name                 | string                                                                    
+    | domain_id                      | string                                                                    
+    | domain_path                    | string                                                                    
+    | guid                           | string                                                                    
+    | translated_html                | string                                                                    
+    | journal                        | string                                                                    
+    | string                         | string                                                                    
 

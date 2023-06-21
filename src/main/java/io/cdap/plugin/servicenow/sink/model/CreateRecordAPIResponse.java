@@ -1,5 +1,5 @@
 /*
- * Copyright © 2022 Cask Data, Inc.
+ * Copyright © 2023 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,21 +16,16 @@
 
 package io.cdap.plugin.servicenow.sink.model;
 
-import java.util.List;
+import java.util.Map;
 
 /**
- * Model class for Schema Response from Schema API
+ * Model class for API Response from ServiceNow Table Create Record APIs
  */
-public class SchemaResponse {
+public class CreateRecordAPIResponse {
 
-  private final List<ServiceNowSchemaField> result;
+  private Map<String, Object> result;
 
-  public SchemaResponse(List<ServiceNowSchemaField> result) {
-    this.result = result;
-  }
-
-  public List<ServiceNowSchemaField> getResult() {
+  public Map<String, Object> getResult() {
     return result;
   }
-  
 }

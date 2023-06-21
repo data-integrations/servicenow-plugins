@@ -70,19 +70,16 @@ public class ServiceNowMultiInputFormatTest {
     serviceNowTableInfos.add(serviceNowTableInfo);
     PowerMockito.mockStatic(ServiceNowMultiInputFormat.class);
     SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
-    PowerMockito.when(ServiceNowMultiInputFormat.fetchTablesInfo(connectorConfig, "table",
-                                                                 valueType, "start", "end")).
+    PowerMockito.when(ServiceNowMultiInputFormat.fetchTablesInfo(connectorConfig, "table")).
       thenReturn(serviceNowTableInfos);
     Assert.assertEquals(1, ServiceNowMultiInputFormat
-      .fetchTablesInfo(connectorConfig, "table",
-                       valueType, "start", "end")
+      .fetchTablesInfo(connectorConfig, "table")
       .size());
   }
 
   @Test
   public void testFetchTablesInfoWithEmptyTableNames() {
     SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
-    Assert.assertTrue(ServiceNowMultiInputFormat.fetchTablesInfo(connectorConfig, "",
-                                         valueType, "start", "end").isEmpty());
+    Assert.assertTrue(ServiceNowMultiInputFormat.fetchTablesInfo(connectorConfig, "").isEmpty());
   }
 }

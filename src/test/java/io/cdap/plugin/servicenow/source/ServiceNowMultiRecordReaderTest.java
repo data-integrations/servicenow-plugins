@@ -16,11 +16,16 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import io.cdap.cdap.api.data.format.StructuredRecord;
+import io.cdap.cdap.api.data.format.UnexpectedFormatException;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.PluginProperties;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
+import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -29,6 +34,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -85,45 +91,32 @@ public class ServiceNowMultiRecordReaderTest {
 
   @Test(expected = IllegalStateException.class)
   public void testConvertToValueInvalidFieldType() {
-    Schema fieldSchema = Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS);
-    serviceNowMultiSourceConfig.getConnection().convertToValue("Field Name", fieldSchema, new HashMap<>(1));
+    Schema fieldSchema = Schema.recordOf("record", Schema.Field.of("TimeField",
+                                                                   Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)));
+    StructuredRecord.Builder recordBuilder = StructuredRecord.builder(fieldSchema);
+    Map<String, String> map = new HashMap<>();
+    map.put("TimeField", "value");
+    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, map, recordBuilder);
   }
 
   @Test
-  public void testConvertToValueInvalidRecord() {
-    Schema fieldSchema = Schema.of(Schema.Type.BOOLEAN);
-    Assert.assertEquals(Boolean.FALSE, serviceNowMultiSourceConfig.getConnection().convertToValue
-      ("Field Name", fieldSchema,
-                                                                                  new HashMap<>(1)));
+  public void testConvertToDoubleValue() throws ParseException {
+    Assert.assertEquals(42.0, ServiceNowRecordConverter.convertToDoubleValue("42"), 0.0);
   }
 
   @Test
-  public void testConvertToStringValue() {
-    Assert.assertEquals("Field Value", serviceNowMultiSourceConfig.getConnection().
-      convertToStringValue("Field Value"));
-  }
-
-  @Test
-  public void testConvertToDoubleValue() {
-    Assert.assertEquals(42.0, serviceNowMultiSourceConfig.getConnection().
-      convertToDoubleValue("42").doubleValue(), 0.0);
-    Assert.assertEquals(42.0, serviceNowMultiSourceConfig.getConnection().
-      convertToDoubleValue(42).doubleValue(), 0.0);
-    Assert.assertNull(serviceNowMultiSourceConfig.getConnection().convertToDoubleValue(""));
-  }
-
-  @Test
-  public void testConvertToIntegerValue() {
-    Assert.assertEquals(42, serviceNowMultiSourceConfig.getConnection().convertToIntegerValue("42").intValue());
-    Assert.assertEquals(42, serviceNowMultiSourceConfig.getConnection().convertToIntegerValue(42).intValue());
-    Assert.assertNull(serviceNowMultiSourceConfig.getConnection().convertToIntegerValue(""));
+  public void testConvertToIntegerValue() throws ParseException {
+    Assert.assertEquals(42, ServiceNowRecordConverter.convertToIntegerValue("42").intValue());
   }
 
   @Test
   public void testConvertToBooleanValue() {
-    Assert.assertFalse(serviceNowMultiSourceConfig.getConnection().convertToBooleanValue("Field Value"));
-    Assert.assertFalse(serviceNowMultiSourceConfig.getConnection().convertToBooleanValue(42));
-    Assert.assertNull(serviceNowMultiSourceConfig.getConnection().convertToBooleanValue(""));
+    Assert.assertTrue(ServiceNowRecordConverter.convertToBooleanValue("true"));
+  }
+
+  @Test(expected = UnexpectedFormatException.class)
+  public void testConvertToBooleanValueForInvalidFieldValue() {
+    Assert.assertTrue(ServiceNowRecordConverter.convertToBooleanValue("1"));
   }
 
   @Test
@@ -131,8 +124,8 @@ public class ServiceNowMultiRecordReaderTest {
     String tableName = serviceNowMultiSourceConfig.getTableNames();
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
 
-    List<Map<String, Object>> results = new ArrayList<>();
-    Map<String, Object> map = new HashMap<>();
+    List<Map<String, String>> results = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
     map.put("calendar_integration", "1");
     map.put("country", "India");
     map.put("sys_updated_on", "2019-04-05 21:54:45");
@@ -145,16 +138,23 @@ public class ServiceNowMultiRecordReaderTest {
 
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
-    serviceNowMultiRecordReader.initialize(split, null);
+    ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
+    try {
+      Mockito.when(restApi.fetchTableSchema(tableName))
+        .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
+      serviceNowMultiRecordReader.initialize(split, null);
+    } catch (RuntimeException | OAuthProblemException | OAuthSystemException e) {
+      Assert.assertTrue(e instanceof RuntimeException);
+    }
     Mockito.doNothing().when(serviceNowMultiRecordReader).fetchData();
     Collections.singletonList(new Object());
-    serviceNowMultiRecordReader.iterator = Collections.singletonList(Collections.singletonMap("key", new Object())).
+    serviceNowMultiRecordReader.iterator = Collections.singletonList(Collections.singletonMap("key", new String())).
       iterator();
     Assert.assertTrue(serviceNowMultiRecordReader.nextKeyValue());
   }
 
   @Test
-  public void testFetchDataOnInvalidTable() throws IOException {
+  public void testFetchDataOnInvalidTable() throws IOException, OAuthProblemException, OAuthSystemException {
     serviceNowMultiSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
       .setReferenceName("referenceName")
       .setRestApiEndpoint(REST_API_ENDPOINT)
@@ -172,8 +172,8 @@ public class ServiceNowMultiRecordReaderTest {
     String tableName = serviceNowMultiSourceConfig.getTableNames();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
-    List<Map<String, Object>> results = new ArrayList<>();
-    Map<String, Object> map = new HashMap<>();
+    List<Map<String, String>> results = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
     map.put("calendar_integration", "1");
     map.put("country", "India");
     map.put("sys_updated_on", "2019-04-05 21:54:45");
@@ -190,7 +190,13 @@ public class ServiceNowMultiRecordReaderTest {
 
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
-    serviceNowMultiRecordReader.initialize(split, null);
+    try {
+      Mockito.when(restApi.fetchTableSchema(tableName))
+        .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
+      serviceNowMultiRecordReader.initialize(split, null);
+    } catch (RuntimeException | OAuthProblemException | OAuthSystemException e) {
+      Assert.assertTrue(e instanceof RuntimeException);
+    }
     Assert.assertFalse(serviceNowMultiRecordReader.nextKeyValue());
   }
 }

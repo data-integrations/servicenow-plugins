@@ -55,7 +55,6 @@ public class ServiceNowMultiSourceConfigTest {
       "client_secret", "https://example.com", "user", "password",
       "tablename", "Actual", "2021-12-30", "2021-12-31",
       "sys_user");
-
     Assert.assertEquals("sys_user", serviceNowMultiSourceConfig.getTableNames());
     Assert.assertEquals("Actual", serviceNowMultiSourceConfig.getValueType().getValueType());
     Assert.assertEquals("2021-12-30", serviceNowMultiSourceConfig.getStartDate());
@@ -113,8 +112,8 @@ public class ServiceNowMultiSourceConfigTest {
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
-    Map<String, Object> map = new HashMap<>();
-    List<Map<String, Object>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
     result.add(map);
     String responseBody = "{\n" +
@@ -244,8 +243,8 @@ public class ServiceNowMultiSourceConfigTest {
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
-    Map<String, Object> map = new HashMap<>();
-    List<Map<String, Object>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
     result.add(map);
     String responseBody = "{\n" +
@@ -321,6 +320,7 @@ public class ServiceNowMultiSourceConfigTest {
       Assert.assertEquals("referenceName", mockFailureCollector.getValidationFailures().get(0).getCauses()
         .get(0).getAttribute("stageConfig"));
     }
+
   }
 
   @Test
@@ -346,8 +346,8 @@ public class ServiceNowMultiSourceConfigTest {
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
-    Map<String, Object> map = new HashMap<>();
-    List<Map<String, Object>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
     result.add(map);
     String responseBody = "{\n" +

@@ -93,8 +93,8 @@ public class ServiceNowRecordWriterTest {
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    Map<String, Object> map = new HashMap<>();
-    List<Map<String, Object>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_INTERNAL_SERVER_ERROR;
@@ -140,8 +140,8 @@ public class ServiceNowRecordWriterTest {
     ServiceNowSinkAPIRequestImpl serviceNowSinkAPIRequest = Mockito.mock(ServiceNowSinkAPIRequestImpl.class);
     PowerMockito.whenNew(ServiceNowSinkAPIRequestImpl.class).withParameterTypes(ServiceNowSinkConfig.class)
       .withArguments(Mockito.any(ServiceNowSinkConfig.class)).thenReturn(serviceNowSinkAPIRequest);
-    Map<String, Object> map = new HashMap<>();
-    List<Map<String, Object>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;
@@ -191,8 +191,8 @@ public class ServiceNowRecordWriterTest {
     ServiceNowSinkAPIRequestImpl serviceNowSinkAPIRequest = Mockito.mock(ServiceNowSinkAPIRequestImpl.class);
     PowerMockito.whenNew(ServiceNowSinkAPIRequestImpl.class).withParameterTypes(ServiceNowSinkConfig.class)
       .withArguments(Mockito.any(ServiceNowSinkConfig.class)).thenReturn(serviceNowSinkAPIRequest);
-    Map<String, Object> map = new HashMap<>();
-    List<Map<String, Object>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;

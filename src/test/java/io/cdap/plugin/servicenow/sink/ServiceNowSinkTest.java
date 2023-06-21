@@ -88,7 +88,7 @@ public class ServiceNowSinkTest {
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<Map<String, String>> result = new ArrayList<>();
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
@@ -114,8 +114,8 @@ public class ServiceNowSinkTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
-    Map<String, Object> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;

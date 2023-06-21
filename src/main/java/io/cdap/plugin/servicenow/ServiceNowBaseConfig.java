@@ -23,7 +23,6 @@ import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.common.ConfigUtil;
-import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIRequestBuilder;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
@@ -31,7 +30,6 @@ import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceValueType;
-import io.cdap.plugin.servicenow.util.Util;
 import org.apache.http.HttpStatus;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
@@ -52,18 +50,17 @@ public class ServiceNowBaseConfig extends PluginConfig {
   @Macro
   @Nullable
   @Description("The existing connection to use.")
-  private ServiceNowConnectorConfig connection;
-
-  @Nullable
-  public ServiceNowConnectorConfig getConnection() {
-    return connection;
-  }
+  private final ServiceNowConnectorConfig connection;
 
   public ServiceNowBaseConfig(String clientId, String clientSecret, String restApiEndpoint,
                               String user, String password) {
     this.connection = new ServiceNowConnectorConfig(clientId, clientSecret, restApiEndpoint, user, password);
   }
 
+  @Nullable
+  public ServiceNowConnectorConfig getConnection() {
+    return connection;
+  }
 
   /**
    * Validates {@link ServiceNowSourceConfig} instance.
@@ -81,7 +78,7 @@ public class ServiceNowBaseConfig extends PluginConfig {
       validateServiceNowConnection(collector);
     }
   }
-  
+
   @VisibleForTesting
   public void validateServiceNowConnection(FailureCollector collector) {
     try {
@@ -89,8 +86,8 @@ public class ServiceNowBaseConfig extends PluginConfig {
       restApi.getAccessToken();
     } catch (Exception e) {
       collector.addFailure("Unable to connect to ServiceNow Instance.",
-          "Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
-            "are correct.")
+                           "Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
+                             "are correct.")
         .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_ID)
         .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_SECRET)
         .withConfigProperty(ServiceNowConstants.PROPERTY_API_ENDPOINT)
@@ -121,7 +118,8 @@ public class ServiceNowBaseConfig extends PluginConfig {
       && !containsMacro(ServiceNowConstants.PROPERTY_VALUE_TYPE);
   }
 
-  public void validateTable(String tableName, SourceValueType valueType, FailureCollector collector) {
+  public void validateTable(String tableName, SourceValueType valueType, FailureCollector collector,
+                            String tableField) {
     // Call API to fetch first record from the table
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       connection.getRestApiEndpoint(), tableName, false)
@@ -142,11 +140,11 @@ public class ServiceNowBaseConfig extends PluginConfig {
       if (!apiResponse.isSuccess()) {
         if (apiResponse.getHttpStatus() == HttpStatus.SC_BAD_REQUEST) {
           collector.addFailure("Bad Request. Table: " + tableName + " is invalid.", "")
-            .withConfigProperty(ServiceNowConstants.PROPERTY_TABLE_NAME);
+            .withConfigProperty(tableField);
         }
       } else if (serviceNowTableAPIClient.parseResponseToResultListOfMap(apiResponse.getResponseBody()).isEmpty()) {
-        collector.addFailure("Table: " + tableName + " is empty.", "")
-          .withConfigProperty(ServiceNowConstants.PROPERTY_TABLE_NAME);
+        // Removed config property as in case of MultiSource, only first table error was populating.
+        collector.addFailure("Table: " + tableName + " is empty.", "");
       }
     } catch (OAuthSystemException | OAuthProblemException e) {
       collector.addFailure("Unable to connect to ServiceNow Instance.",

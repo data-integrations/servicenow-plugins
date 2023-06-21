@@ -22,7 +22,6 @@ import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.util.SourceApplication;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
-import io.cdap.plugin.servicenow.util.SourceValueType;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -49,7 +48,7 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServiceNowTableAPIClientImpl.class, ServiceNowBaseSourceConfig.class, ServiceNowMultiSource.class,
-  HttpClientBuilder.class, RestAPIResponse.class})
+  HttpClientBuilder.class, RestAPIResponse.class, ServiceNowInputFormat.class})
 public class ServiceNowInputFormatTest {
 
   private static final String CLIENT_ID = "clientId";
@@ -72,8 +71,8 @@ public class ServiceNowInputFormatTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
-    Map<String, Object> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;
@@ -162,10 +161,8 @@ public class ServiceNowInputFormatTest {
     PowerMockito.when(RestAPIResponse.parse(ArgumentMatchers.any(), ArgumentMatchers.anyString())).
       thenReturn(response);
     SourceApplication application = SourceApplication.PROCUREMENT;
-    SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
     Assert.assertEquals(1, ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
-                                                                application, valueType, "start", "end")
-                                                                .size());
+                                                                application).size());
   }
 
   @Test
@@ -174,8 +171,8 @@ public class ServiceNowInputFormatTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
-    Map<String, Object> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;
@@ -264,10 +261,8 @@ public class ServiceNowInputFormatTest {
     PowerMockito.when(RestAPIResponse.parse(ArgumentMatchers.any(), ArgumentMatchers.anyString())).
       thenReturn(response);
     SourceApplication application = SourceApplication.PROCUREMENT;
-    SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
     Assert.assertEquals(4, ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
-                                                                application, valueType, "start",
-                                                                "end").size());
+                                                                application).size());
   }
 
   @Test
@@ -276,8 +271,8 @@ public class ServiceNowInputFormatTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
-    Map<String, Object> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;
@@ -289,6 +284,7 @@ public class ServiceNowInputFormatTest {
     Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
+    PowerMockito.mockStatic(ServiceNowInputFormat.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
     OAuthJSONAccessTokenResponse accessTokenResponse = Mockito.mock(OAuthJSONAccessTokenResponse.class);
@@ -307,9 +303,7 @@ public class ServiceNowInputFormatTest {
     PowerMockito.when(RestAPIResponse.parse(ArgumentMatchers.any(), ArgumentMatchers.anyString())).
       thenReturn(response);
     SourceApplication application = SourceApplication.PROCUREMENT;
-    SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
     Assert.assertTrue(ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
-                                                           application, valueType, "start",
-                                                           "end").isEmpty());
+                                                           application).isEmpty());
   }
 }

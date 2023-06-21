@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.batch.BatchSourceContext;
 import io.cdap.cdap.etl.api.validation.ValidationException;
 import io.cdap.cdap.etl.mock.common.MockArguments;
@@ -24,6 +25,7 @@ import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
+import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -43,12 +45,14 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServiceNowTableAPIClientImpl.class, ServiceNowBaseSourceConfig.class, ServiceNowMultiSource.class,
-  HttpClientBuilder.class, RestAPIResponse.class})
+  HttpClientBuilder.class, RestAPIResponse.class, ServiceNowInputFormat.class, ServiceNowMultiInputFormat.class})
 public class ServiceNowMultiSourceTest {
 
   private static final String CLIENT_ID = "clientId";
@@ -86,8 +90,8 @@ public class ServiceNowMultiSourceTest {
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    Map<String, Object> map = new HashMap<>();
-    List<Map<String, Object>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;
@@ -170,7 +174,7 @@ public class ServiceNowMultiSourceTest {
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<Map<String, String>> result = new ArrayList<>();
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
@@ -190,15 +194,30 @@ public class ServiceNowMultiSourceTest {
   @Test
   public void testPrepareRun() throws Exception {
     MockFailureCollector mockFailureCollector = new MockFailureCollector();
+    Set<ServiceNowTableInfo> tableInfo = new HashSet<>();
+    Schema schema = Schema.recordOf("schema",
+                                    Schema.Field.of("IntField", Schema.of(Schema.Type.INT)),
+                                    Schema.Field.of("LongField", Schema.of(Schema.Type.LONG)),
+                                    Schema.Field.of("DoubleField", Schema.nullableOf(Schema.of(Schema.Type.DOUBLE))),
+                                    Schema.Field.of("BooleanField", Schema.nullableOf(Schema.of(Schema.Type.BOOLEAN))),
+                                    Schema.Field.of("DateField", Schema.of(Schema.LogicalType.DATE)),
+                                    Schema.Field.of("TimestampField",
+                                                    Schema.nullableOf(Schema.of(Schema.LogicalType.TIMESTAMP_MICROS))),
+                                    Schema.Field.of("TimeField", Schema.of(Schema.LogicalType.TIMESTAMP_MICROS)),
+                                    Schema.Field.of("StringField", Schema.of(Schema.Type.STRING)),
+                                    Schema.Field.of("ArrayField", Schema.arrayOf(Schema.of(Schema.Type.STRING))));
+    ServiceNowTableInfo serviceNowTableInfo = new ServiceNowTableInfo("table", schema, 1);
+    tableInfo.add(serviceNowTableInfo);
     MockArguments mockArguments = new MockArguments();
+    mockArguments.set("multisink.sys_user", "multisink." + serviceNowMultiSourceConfig.getTableNames());
     BatchSourceContext context = Mockito.mock(BatchSourceContext.class);
     Mockito.when(context.getFailureCollector()).thenReturn(mockFailureCollector);
     Mockito.when(context.getArguments()).thenReturn(mockArguments);
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
-    Map<String, Object> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;
@@ -265,6 +284,8 @@ public class ServiceNowMultiSourceTest {
       "        }\n" +
       "    ]\n" +
       "}";
+    PowerMockito.mockStatic(ServiceNowMultiInputFormat.class);
+    Mockito.when(ServiceNowMultiInputFormat.setInput(Mockito.any(), Mockito.any())).thenReturn((tableInfo));
     RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
     Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
@@ -280,6 +301,7 @@ public class ServiceNowMultiSourceTest {
     HttpClientBuilder httpClientBuilder = Mockito.mock(HttpClientBuilder.class);
     PowerMockito.mockStatic(HttpClientBuilder.class);
     PowerMockito.mockStatic(RestAPIResponse.class);
+    PowerMockito.mockStatic(ServiceNowInputFormat.class);
     PowerMockito.when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
     Mockito.when(httpClientBuilder.build()).thenReturn(httpClient);
     CloseableHttpResponse httpResponse = Mockito.mock(CloseableHttpResponse.class);

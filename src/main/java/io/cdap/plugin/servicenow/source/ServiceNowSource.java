@@ -35,11 +35,9 @@ import io.cdap.cdap.etl.api.batch.BatchSourceContext;
 import io.cdap.cdap.etl.api.connector.Connector;
 import io.cdap.plugin.common.LineageRecorder;
 import io.cdap.plugin.common.SourceInputFormatProvider;
-import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.slf4j.Logger;
@@ -84,10 +82,7 @@ public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord
       List<ServiceNowTableInfo> tableInfo = ServiceNowInputFormat.fetchTableInfo(conf.getQueryMode(collector),
                                                                                  conf.getConnection(),
                                                                                  conf.getTableName(),
-                                                                                 conf.getApplicationName(),
-                                                                                 conf.getValueType(),
-                                                                                 conf.getStartDate(),
-                                                                                 conf.getEndDate());
+                                                                                 conf.getApplicationName());
       stageConfigurer.setOutputSchema(tableInfo.stream().findFirst().get().getSchema());
     } else if (conf.getQueryMode() == SourceQueryMode.REPORTING) {
       stageConfigurer.setOutputSchema(null);
@@ -111,7 +106,7 @@ public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord
     }
 
     context.setInput(Input.of(conf.getReferenceName(),
-      new SourceInputFormatProvider(ServiceNowInputFormat.class, hConf)));
+                              new SourceInputFormatProvider(ServiceNowInputFormat.class, hConf)));
   }
 
   @Override
@@ -128,8 +123,8 @@ public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord
     List<Schema.Field> fields = Objects.requireNonNull(schema).getFields();
     if (fields != null && !fields.isEmpty()) {
       lineageRecorder.recordRead("Read",
-        String.format("Read from '%s' ServiceNow table.", tableName),
-        fields.stream().map(Schema.Field::getName).collect(Collectors.toList()));
+                                 String.format("Read from '%s' ServiceNow table.", tableName),
+                                 fields.stream().map(Schema.Field::getName).collect(Collectors.toList()));
     }
   }
 }

@@ -26,7 +26,6 @@ import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
-import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.Util;
 
@@ -44,10 +43,6 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
 
   public static final String PROPERTY_EXTERNAL_ID_FIELD = "externalIdField";
 
-  @Name("referenceName")
-  @Description("This will be used to uniquely identify this source/sink for lineage, annotating metadata, etc.")
-  public String referenceName;
-
   @Name(ServiceNowConstants.PROPERTY_TABLE_NAME)
   @Macro
   @Description("The name of the ServiceNow table to which data needs to be inserted.")
@@ -59,6 +54,10 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
     "must be present.")
   private final String operation;
 
+  @Name("referenceName")
+  @Description("This will be used to uniquely identify this source/sink for lineage, annotating metadata, etc.")
+  public String referenceName;
+  
   @Name(ServiceNowConstants.NAME_SCHEMA)
   @Macro
   @Nullable
@@ -149,7 +148,7 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
       return;
     }
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(this.getConnection());
-    Schema tableSchema = restApi.fetchServiceNowTableSchema(tableName, collector);
+    Schema tableSchema = restApi.fetchTableSchema(tableName, collector);
     if (tableSchema == null) {
       throw collector.getOrThrowException();
     }
@@ -224,7 +223,7 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
         || !Objects.equals(actualFieldSchema.getLogicalType(), providedFieldSchema.getLogicalType())) {
         collector.addFailure(
             String.format("Expected field '%s' to be of '%s', but it is of '%s'",
-              providedField.getName(), providedFieldSchema, actualFieldSchema), null)
+                          providedField.getName(), providedFieldSchema, actualFieldSchema), null)
           .withInputSchemaField(providedField.getName());
       }
     }
@@ -241,8 +240,7 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
     switch (providedFieldSchema.getType()) {
       case FLOAT:
       case DOUBLE:
-        providedFieldSchema = Schema.decimalOf(ServiceNowConstants.DEFAULT_PRECISION,
-                                               ServiceNowConstants.DEFAULT_SCALE);
+        providedFieldSchema = Schema.of(Schema.Type.DOUBLE);
     }
 
     if (providedFieldSchema.getLogicalType() != null) {

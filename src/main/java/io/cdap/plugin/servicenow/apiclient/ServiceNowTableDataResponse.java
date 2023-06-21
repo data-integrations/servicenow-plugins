@@ -29,7 +29,7 @@ public class ServiceNowTableDataResponse {
 
   private List<ServiceNowColumn> columns;
 
-  private List<Map<String, Object>> result;
+  private List<Map<String, String>> result;
 
   public int getTotalRecordCount() {
     return totalRecordCount;
@@ -47,11 +47,11 @@ public class ServiceNowTableDataResponse {
     this.columns = columns;
   }
 
-  public List<Map<String, Object>> getResult() {
+  public List<Map<String, String>> getResult() {
     return result;
   }
 
-  public void setResult(List<Map<String, Object>> result) {
+  public void setResult(List<Map<String, String>> result) {
     this.result = result;
   }
 }

@@ -24,8 +24,8 @@ import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceApplication;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
 import io.cdap.plugin.servicenow.util.Util;
-import java.util.Optional;
 
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -61,26 +61,26 @@ public class ServiceNowSourceConfig extends ServiceNowBaseSourceConfig {
   /**
    * Constructor for ServiceNowSourceConfig object.
    *
-   * @param referenceName The reference name
-   * @param queryMode The query mode
+   * @param referenceName   The reference name
+   * @param queryMode       The query mode
    * @param applicationName The application name
-   * @param tableNameField The field name to hold the table name value
-   * @param tableName The table name
-   * @param clientId The Client Id for ServiceNow
-   * @param clientSecret The Client Secret for ServiceNow
+   * @param tableNameField  The field name to hold the table name value
+   * @param tableName       The table name
+   * @param clientId        The Client Id for ServiceNow
+   * @param clientSecret    The Client Secret for ServiceNow
    * @param restApiEndpoint The rest API endpoint for ServiceNow
-   * @param user The user id for ServiceNow
-   * @param password The password for ServiceNow
-   * @param valueType The value type
-   * @param startDate The start date
-   * @param endDate The end date
+   * @param user            The user id for ServiceNow
+   * @param password        The password for ServiceNow
+   * @param valueType       The value type
+   * @param startDate       The start date
+   * @param endDate         The end date
    */
   public ServiceNowSourceConfig(String referenceName, String queryMode, @Nullable String applicationName,
                                 @Nullable String tableNameField, @Nullable String tableName, String clientId,
                                 String clientSecret, String restApiEndpoint, String user, String password,
                                 String valueType, @Nullable String startDate, @Nullable String endDate) {
     super(referenceName, clientId, clientSecret, restApiEndpoint, user, password, tableNameField, valueType, startDate,
-      endDate);
+          endDate);
     this.referenceName = referenceName;
     this.queryMode = queryMode;
     this.applicationName = applicationName;
@@ -100,7 +100,7 @@ public class ServiceNowSourceConfig extends ServiceNowBaseSourceConfig {
     }
 
     collector.addFailure("Unsupported query mode value: " + queryMode,
-      String.format("Supported modes are: %s", SourceQueryMode.getSupportedModes()))
+                         String.format("Supported modes are: %s", SourceQueryMode.getSupportedModes()))
       .withConfigProperty(ServiceNowConstants.PROPERTY_QUERY_MODE);
     collector.getOrThrowException();
     return null;
@@ -130,7 +130,7 @@ public class ServiceNowSourceConfig extends ServiceNowBaseSourceConfig {
     }
 
     collector.addFailure("Unsupported application name value: " + applicationName,
-      String.format("Supported applications are: %s", SourceApplication.getSupportedApplications()))
+                         String.format("Supported applications are: %s", SourceApplication.getSupportedApplications()))
       .withConfigProperty(ServiceNowConstants.PROPERTY_APPLICATION_NAME);
     collector.getOrThrowException();
     return null;
@@ -205,7 +205,7 @@ public class ServiceNowSourceConfig extends ServiceNowBaseSourceConfig {
       collector.addFailure("Table name must be specified.", null)
         .withConfigProperty(ServiceNowConstants.PROPERTY_TABLE_NAME);
     } else {
-        validateTable(tableName, getValueType(), collector);
+      validateTable(tableName, getValueType(), collector, ServiceNowConstants.PROPERTY_TABLE_NAME);
     }
   }
 
