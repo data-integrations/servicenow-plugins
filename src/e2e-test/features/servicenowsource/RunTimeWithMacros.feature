@@ -203,6 +203,7 @@ Feature: ServiceNow Source - Run time scenarios (macro)
     Then Click on the Test Connection button
     And Verify the test connection is successful
     Then Click on the Create button
+    And Use new connection
     And Click on the Macro button of Property: "connection" and set the value to: "Connection"
     Then Validate "ServiceNow" plugin properties
     And Close the Plugin Properties page
