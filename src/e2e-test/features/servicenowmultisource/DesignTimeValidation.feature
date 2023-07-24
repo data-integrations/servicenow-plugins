@@ -18,7 +18,7 @@
 @Regression
 Feature: ServiceNow Multi Source - Design time validation scenarios
 
-  @TS-SN-MULTI-DSGN-ERROR-01
+  @TS-SN-MULTI-DSGN-ERROR-01 @Required
   Scenario: Verify required fields missing validation messages
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"

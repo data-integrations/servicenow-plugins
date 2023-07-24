@@ -18,7 +18,7 @@
 @Regression
 Feature: ServiceNow Multi Source - Run time scenarios
 
-  @TS-SN-MULTI-RNTM-01 @BQ_SINK
+  @TS-SN-MULTI-RNTM-01 @BQ_SINK @Required
   Scenario: Verify user should be able to preview the pipeline
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"

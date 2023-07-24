@@ -18,7 +18,7 @@
 @Regression
 Feature: ServiceNow Sink - Design time scenarios
 
-  @TS-SN-DSGN-SINK-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
+  @TS-SN-DSGN-SINK-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE @Required
   Scenario: Verify user should be able to validate when plugin is configured for table Receiving Slip with Input operation
     When Open Datafusion Project to configure pipeline
     And Select plugin: "BigQuery" from the plugins list as: "Source"

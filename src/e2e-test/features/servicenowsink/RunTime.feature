@@ -18,7 +18,7 @@
 @Regression
 Feature: ServiceNow Sink - Run time scenarios
 
-  @TS-SN-RNTM-SINK-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE
+  @TS-SN-RNTM-SINK-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE @Required
   Scenario: Verify user should be able to preview the pipeline when plugin is configured for Insert operation
     When Open Datafusion Project to configure pipeline
     And Select plugin: "BigQuery" from the plugins list as: "Source"

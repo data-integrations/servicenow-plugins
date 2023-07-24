@@ -18,7 +18,7 @@
 @Regression
 Feature: ServiceNow Multi Source - Design time scenarios
 
-  @TS-SN-MULTI-DSGN-01
+  @TS-SN-MULTI-DSGN-01 @Required
   Scenario: Verify user should be able to validate the plugin for tables of the same application
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"

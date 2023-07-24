@@ -18,7 +18,7 @@
 @Regression
 Feature: ServiceNow Source - Run time scenarios
 
-  @TS-SN-RNTM-1 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-RNTM-1 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK @Required
   Scenario: Verify user should be able to preview the pipeline where ServiceNow source is configured for Table mode
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow" from the plugins list as: "Source"

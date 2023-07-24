@@ -18,7 +18,7 @@
 @Regression
 Feature: ServiceNow Source - Design time scenarios
 
-  @TS-SN-DSGN-01
+  @TS-SN-DSGN-01 @Required
   Scenario Outline: Verify user should be able to validate the plugin in Reporting mode
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
