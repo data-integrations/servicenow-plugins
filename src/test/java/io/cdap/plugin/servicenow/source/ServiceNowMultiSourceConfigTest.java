@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import io.cdap.cdap.etl.api.validation.ValidationException;
 import io.cdap.cdap.etl.api.validation.ValidationFailure;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
@@ -53,7 +54,8 @@ public class ServiceNowMultiSourceConfigTest {
     serviceNowMultiSourceConfig = new ServiceNowMultiSourceConfig("referenceName", "client_id",
       "client_secret", "https://example.com", "user", "password",
       "tablename", "Actual", "2021-12-30", "2021-12-31",
-       "sys_user");
+      "sys_user");
+
     Assert.assertEquals("sys_user", serviceNowMultiSourceConfig.getTableNames());
     Assert.assertEquals("Actual", serviceNowMultiSourceConfig.getValueType().getValueType());
     Assert.assertEquals("2021-12-30", serviceNowMultiSourceConfig.getStartDate());
@@ -78,10 +80,14 @@ public class ServiceNowMultiSourceConfigTest {
         .setEndDate("2021-12-31")
         .setTableNameField("tablename")
         .buildMultiSource();
-    serviceNowMultiSourceConfig.validate(mockFailureCollector);
-    Assert.assertEquals(2, mockFailureCollector.getValidationFailures().size());
-    Assert.assertEquals("Unable to connect to ServiceNow Instance.",
-                        mockFailureCollector.getValidationFailures().get(0).getMessage());
+    try {
+      serviceNowMultiSourceConfig.validate(mockFailureCollector);
+      Assert.fail("Exception is not thrown if connection is successful");
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());
+      Assert.assertEquals("Unable to connect to ServiceNow Instance.",
+                          mockFailureCollector.getValidationFailures().get(0).getMessage());
+    }
   }
 
   @Test
@@ -307,11 +313,14 @@ public class ServiceNowMultiSourceConfigTest {
     RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
     Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
-    serviceNowMultiSourceConfig.validate(mockFailureCollector);
-    Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());
-    Assert.assertEquals("Invalid reference name 'Reference Name'.",
-                        mockFailureCollector.getValidationFailures().get(0).getMessage());
-
+    try {
+      serviceNowMultiSourceConfig.validate(mockFailureCollector);
+      Assert.fail("Exception is not thrown with valid reference name");
+    } catch (ValidationException e) {
+      Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());
+      Assert.assertEquals("referenceName", mockFailureCollector.getValidationFailures().get(0).getCauses()
+        .get(0).getAttribute("stageConfig"));
+    }
   }
 
   @Test

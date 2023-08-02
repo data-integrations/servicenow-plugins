@@ -346,7 +346,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    */
   public List<Map<String, Object>> fetchTableRecordsRetryableMode(String tableName, SourceValueType valueType,
                                                                   String startDate, String endDate, int offset,
-                                                                  int limit) {
+                                                                  int limit) throws IOException {
     final List<Map<String, Object>> results = new ArrayList<>();
     Callable<Boolean> fetchRecords = () -> {
       results.addAll(fetchTableRecords(tableName, valueType, startDate, endDate, offset, limit));
@@ -362,8 +362,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     try {
       retryer.call(fetchRecords);
     } catch (RetryException | ExecutionException e) {
-      LOG.error("Data Recovery failed for batch {} to {}.", offset,
-                (offset + limit));
+      throw new IOException(String.format("Data Recovery failed for batch %s to %s.", offset, (offset + limit)), e);
     }
 
     return results;

@@ -84,7 +84,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     return recordBuilder.build();
   }
 
-  private void fetchData() {
+  private void fetchData() throws IOException {
     tableName = split.getTableName();
     tableNameField = pluginConf.getTableNameField();
 
