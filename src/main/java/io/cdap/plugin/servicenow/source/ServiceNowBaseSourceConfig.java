@@ -24,7 +24,6 @@ import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
-
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceValueType;
 import io.cdap.plugin.servicenow.util.Util;
@@ -163,39 +162,38 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
 
   private void validateDateRange(FailureCollector collector) {
     if (containsMacro(ServiceNowConstants.PROPERTY_START_DATE) ||
-      containsMacro(ServiceNowConstants.PROPERTY_END_DATE)) {
+      containsMacro(ServiceNowConstants.PROPERTY_END_DATE) ||
+      (Util.isNullOrEmpty(startDate) && Util.isNullOrEmpty(endDate))) {
       return;
     }
 
-    if (!Util.isNullOrEmpty(startDate) && !Util.isNullOrEmpty(endDate) &&
-      !Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, startDate) &&
-      !Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, endDate)) {
-      collector.addFailure("Invalid format for Start date. Correct Format: " +
-          ServiceNowConstants.DATE_FORMAT, null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE);
-      collector.addFailure("Invalid format for End date. Correct Format:" +
-          ServiceNowConstants.DATE_FORMAT, null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
-      return;
-    }
     // validate the date formats for both start date & end date
-    if (!Util.isNullOrEmpty(startDate) && !Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, startDate)) {
-      collector.addFailure("Invalid format for Start date. Correct Format: " +
-          ServiceNowConstants.DATE_FORMAT, null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE);
-      return;
+    if (!Util.isNullOrEmpty(startDate)) {
+      if (Util.isNullOrEmpty(endDate)) {
+        collector.addFailure("An end date must be given when a start date is given.",
+                             "Enter an end date, or remove the start date")
+          .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
+      }
+      if (!Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, startDate)) {
+        collector.addFailure("Invalid format for Start date. Correct Format: " +
+                               ServiceNowConstants.DATE_FORMAT, null)
+          .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE);
+      }
     }
 
-    if (!Util.isNullOrEmpty(endDate) && !Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, endDate)) {
-      collector.addFailure("Invalid format for End date. Correct Format:" +
-          ServiceNowConstants.DATE_FORMAT, null)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
-      return;
+    if (!Util.isNullOrEmpty(endDate)) {
+      if (Util.isNullOrEmpty(startDate)) {
+        collector.addFailure("A start date must be given when an end date is given.",
+                             "Enter a start date, or remove the end date")
+          .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE);
+      }
+      if (!Util.isValidDateFormat(ServiceNowConstants.DATE_FORMAT, endDate)) {
+        collector.addFailure("Invalid format for End date. Correct Format: " +
+                               ServiceNowConstants.DATE_FORMAT, null)
+          .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
+      }
     }
-
-    if (Util.isNullOrEmpty(startDate) || Util.isNullOrEmpty(endDate)) {
-      return;
-    }
+    collector.getOrThrowException();
 
     // validate the date range by checking if start date is smaller than end date
     LocalDate fromDate = LocalDate.parse(startDate);

@@ -80,7 +80,7 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
   }
 
   @VisibleForTesting
-  void fetchData() {
+  void fetchData() throws IOException {
     tableName = split.getTableName();
     tableNameField = multiSourcePluginConf.getTableNameField();
 
