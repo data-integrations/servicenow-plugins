@@ -77,7 +77,7 @@ public class ServiceNowConnector implements DirectConnector {
   private static final Gson GSON = new Gson();
   private final ServiceNowConnectorConfig config;
 
-  ServiceNowConnector(ServiceNowConnectorConfig config) {
+  public ServiceNowConnector(ServiceNowConnectorConfig config) {
     this.config = config;
   }
 
