@@ -118,8 +118,8 @@ public class ServiceNowConnectorTest {
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    Map<String, Object> map = new HashMap<>();
-    List<Map<String, Object>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;
@@ -163,8 +163,7 @@ public class ServiceNowConnectorTest {
     SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
     Mockito.when(ServiceNowInputFormat.fetchTableInfo(mode, serviceNowSourceConfig.getConnection(),
                                                       serviceNowSourceConfig.getTableName(),
-                                                      null, valueType,
-                                                      null, null)).thenReturn(list);
+                                                      null)).thenReturn(list);
 
     ConnectorSpec connectorSpec = serviceNowConnector.generateSpec(new MockConnectorContext
                                                                      (new MockConnectorConfigurer()),

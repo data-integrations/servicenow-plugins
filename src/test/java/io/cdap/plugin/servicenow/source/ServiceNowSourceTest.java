@@ -25,6 +25,8 @@ import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
+import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
+
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -49,7 +51,7 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServiceNowTableAPIClientImpl.class, ServiceNowBaseSourceConfig.class, ServiceNowSource.class,
-  HttpClientBuilder.class, RestAPIResponse.class})
+  HttpClientBuilder.class, RestAPIResponse.class, ServiceNowInputFormat.class})
 public class ServiceNowSourceTest {
 
   private static final String CLIENT_ID = "clientId";
@@ -80,15 +82,28 @@ public class ServiceNowSourceTest {
 
   @Test
   public void testConfigurePipeline() throws Exception {
+    List<ServiceNowTableInfo> tableInfo = new ArrayList<>();
+    Schema schema = Schema.recordOf("schema",
+      Schema.Field.of("IntField", Schema.of(Schema.Type.INT)),
+      Schema.Field.of("LongField", Schema.of(Schema.Type.LONG)),
+      Schema.Field.of("DoubleField", Schema.nullableOf(Schema.of(Schema.Type.DOUBLE))),
+      Schema.Field.of("BooleanField", Schema.nullableOf(Schema.of(Schema.Type.BOOLEAN))),
+      Schema.Field.of("DateField", Schema.of(Schema.LogicalType.DATE)),
+      Schema.Field.of("TimestampField", Schema.nullableOf(Schema.of(Schema.LogicalType.TIMESTAMP_MICROS))),
+      Schema.Field.of("TimeField", Schema.of(Schema.LogicalType.TIMESTAMP_MICROS)),
+      Schema.Field.of("StringField", Schema.of(Schema.Type.STRING)),
+      Schema.Field.of("ArrayField", Schema.arrayOf(Schema.of(Schema.Type.STRING))));
+    ServiceNowTableInfo serviceNowTableInfo = new ServiceNowTableInfo("table", schema, 1);
+    tableInfo.add(serviceNowTableInfo);
     Map<String, Object> plugins = new HashMap<>();
     MockFailureCollector mockFailureCollector = new MockFailureCollector();
     MockPipelineConfigurer mockPipelineConfigurer = new MockPipelineConfigurer(null, plugins);
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    Mockito.when(restApi.getAccessToken()).thenReturn("token");
+    Mockito.when(restApi.getAccessToken()).thenReturn("token1");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    Map<String, Object> map = new HashMap<>();
-    List<Map<String, Object>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;
@@ -155,6 +170,9 @@ public class ServiceNowSourceTest {
       "        }\n" +
       "    ]\n" +
       "}";
+    PowerMockito.mockStatic(ServiceNowInputFormat.class);
+    Mockito.when(ServiceNowInputFormat.fetchTableInfo(Mockito.any(), Mockito.any(), Mockito.anyString(),
+      Mockito.any())).thenReturn(tableInfo);
     RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
     Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
@@ -189,7 +207,7 @@ public class ServiceNowSourceTest {
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<Map<String, String>> result = new ArrayList<>();
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
@@ -210,14 +228,15 @@ public class ServiceNowSourceTest {
   public void testPrepareRun() throws Exception {
     MockFailureCollector mockFailureCollector = new MockFailureCollector();
     MockArguments mockArguments = new MockArguments();
+    mockArguments.set("multisink.sys_user", "multisink." + serviceNowSourceConfig.getTableName());
     BatchSourceContext context = Mockito.mock(BatchSourceContext.class);
     Mockito.when(context.getFailureCollector()).thenReturn(mockFailureCollector);
     Mockito.when(context.getArguments()).thenReturn(mockArguments);
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    List<Map<String, Object>> result = new ArrayList<>();
-    Map<String, Object> map = new HashMap<>();
+    List<Map<String, String>> result = new ArrayList<>();
+    Map<String, String> map = new HashMap<>();
     map.put("key", "value");
     result.add(map);
     int httpStatus = HttpStatus.SC_OK;
@@ -285,7 +304,7 @@ public class ServiceNowSourceTest {
       "    ]\n" +
       "}";
     RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
-    Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
+    PowerMockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
@@ -299,6 +318,7 @@ public class ServiceNowSourceTest {
     HttpClientBuilder httpClientBuilder = Mockito.mock(HttpClientBuilder.class);
     PowerMockito.mockStatic(HttpClientBuilder.class);
     PowerMockito.mockStatic(RestAPIResponse.class);
+    PowerMockito.mockStatic(ServiceNowInputFormat.class);
     PowerMockito.when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
     Mockito.when(httpClientBuilder.build()).thenReturn(httpClient);
     CloseableHttpResponse httpResponse = Mockito.mock(CloseableHttpResponse.class);

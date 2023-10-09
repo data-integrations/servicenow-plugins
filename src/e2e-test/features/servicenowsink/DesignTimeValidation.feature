@@ -15,7 +15,7 @@
 @ServiceNow
 @SNSink
 @Smoke
-@Regression
+@RegressionSkip
 Feature: ServiceNow Sink - Design time validation scenarios
 
   @TS-SN-DSGN-SINK-ERROR-01

@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 /**
  * A {@link BatchSink} that writes data into the specified table in ServiceNow.
  */
-@Plugin(type = BatchSink.PLUGIN_TYPE)
+// ServiceNow Batch Sink Plugin is not ready for release yet.
 @Name(ServiceNowConstants.PLUGIN_NAME)
 @Description("Writes to the target table in ServiceNow.")
 @Metadata(properties = {@MetadataProperty(key = Connector.PLUGIN_TYPE, value = ServiceNowConstants.PLUGIN_NAME)})

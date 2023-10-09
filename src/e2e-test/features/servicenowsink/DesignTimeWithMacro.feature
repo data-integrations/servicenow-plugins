@@ -15,7 +15,7 @@
 @ServiceNow
 @SNSink
 @Smoke
-@@Regression
+@@RegressionSkip
 Feature: ServiceNow Sink - Design time validation scenarios (macro)
 
   @TS-SN-DSGN-SINK-MACRO-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE

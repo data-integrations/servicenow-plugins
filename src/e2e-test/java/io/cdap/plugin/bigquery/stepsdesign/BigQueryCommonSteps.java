@@ -44,7 +44,7 @@ public class BigQueryCommonSteps {
   public void configureBqMultiTableSinkPlugin() {
     String referenceName = "Test" + RandomStringUtils.randomAlphanumeric(10);
     CdfBigQueryPropertiesActions.enterBigQueryReferenceName(referenceName);
-    CdfBigQueryPropertiesActions.enterBigQueryDataset(PluginPropertyUtils.pluginProp("bq.target.dataset"));
+    CdfBigQueryPropertiesActions.enterBigQueryDataset(PluginPropertyUtils.pluginProp("bq.target.dataset2"));
   }
 
   @Then("Verify count of no of records transferred to the target BigQuery Table")

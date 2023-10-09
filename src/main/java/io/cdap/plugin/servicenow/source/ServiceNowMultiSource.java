@@ -34,7 +34,6 @@ import io.cdap.plugin.common.LineageRecorder;
 import io.cdap.plugin.common.SourceInputFormatProvider;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.slf4j.Logger;
@@ -92,7 +91,7 @@ public class ServiceNowMultiSource extends BatchSource<NullWritable, StructuredR
     }
 
     context.setInput(Input.of(conf.getReferenceName(),
-      new SourceInputFormatProvider(ServiceNowMultiInputFormat.class, hConf)));
+                              new SourceInputFormatProvider(ServiceNowMultiInputFormat.class, hConf)));
   }
 
   @Override
@@ -109,8 +108,8 @@ public class ServiceNowMultiSource extends BatchSource<NullWritable, StructuredR
     List<Schema.Field> fields = Objects.requireNonNull(schema).getFields();
     if (fields != null && !fields.isEmpty()) {
       lineageRecorder.recordRead("Read",
-        String.format("Read from '%s' ServiceNow table.", tableName),
-        fields.stream().map(Schema.Field::getName).collect(Collectors.toList()));
+                                 String.format("Read from '%s' ServiceNow table.", tableName),
+                                 fields.stream().map(Schema.Field::getName).collect(Collectors.toList()));
     }
   }
 }

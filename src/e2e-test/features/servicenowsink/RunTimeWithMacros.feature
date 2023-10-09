@@ -15,7 +15,7 @@
 @ServiceNow
 @SNSink
 @Smoke
-@Regression
+@RegressionSkip
 Feature: ServiceNow Sink - Run time scenarios (macro)
 
   @TS-SN-RNTM-SINK-MACRO-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE @BQ_SINK_CLEANUP
@@ -197,4 +197,3 @@ Feature: ServiceNow Sink - Run time scenarios (macro)
     Then Open Pipeline logs and verify Log entries having below listed Level and Message:
       | Level | Message                                   |
       | ERROR | invalid.credentials.logsmessage           |
-

@@ -31,7 +31,7 @@ public class SchemaBuilder {
    * Constructs Schema object using input parameters.
    *
    * @param tableName The table name to be used in Schema object
-   * @param columns The list of ServiceNowColumn objects that will be added as Schema.Field
+   * @param columns   The list of ServiceNowColumn objects that will be added as Schema.Field
    * @return The instance of Schema object
    */
   public static Schema constructSchema(String tableName, List<ServiceNowColumn> columns) {
@@ -67,7 +67,7 @@ public class SchemaBuilder {
   private Schema createSchema(ServiceNowColumn column) {
     switch (column.getTypeName().toLowerCase()) {
       case "decimal":
-        return Schema.decimalOf(ServiceNowConstants.DEFAULT_PRECISION, ServiceNowConstants.DEFAULT_SCALE);
+        return Schema.of(Schema.Type.DOUBLE);
       case "integer":
         return Schema.of(Schema.Type.INT);
       case "boolean":

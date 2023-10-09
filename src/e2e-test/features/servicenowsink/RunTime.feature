@@ -15,7 +15,7 @@
 @ServiceNow
 @SNSink
 @Smoke
-@Regression
+@RegressionSkip
 Feature: ServiceNow Sink - Run time scenarios
 
   @TS-SN-RNTM-SINK-01 @BQ_SOURCE_TEST_RECEIVING_SLIP_LINE

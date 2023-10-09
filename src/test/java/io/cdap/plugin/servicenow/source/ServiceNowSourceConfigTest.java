@@ -563,7 +563,8 @@ public class ServiceNowSourceConfigTest {
                                                               FailureCollector collector) {
     ServiceNowSourceConfig spy = Mockito.spy(config);
     Mockito.doNothing().when(spy).validateServiceNowConnection(collector);
-    Mockito.doNothing().when(spy).validateTable(config.getTableName(), config.getValueType(), collector);
+    Mockito.doNothing().when(spy)
+      .validateTable(config.getTableName(), config.getValueType(), collector, ServiceNowConstants.PROPERTY_TABLE_NAME);
     return spy;
   }
 

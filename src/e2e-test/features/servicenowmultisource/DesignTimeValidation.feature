@@ -26,11 +26,6 @@ Feature: ServiceNow Multi Source - Design time validation scenarios
     And Click on the Validate button
     Then Verify mandatory property error for below listed properties:
       | referenceName   |
-      | clientId        |
-      | clientSecret    |
-      | restApiEndpoint |
-      | user            |
-      | password        |
 
   @TS-SN-MULTI-DSGN-ERROR-02
   Scenario: Verify validation message for invalid table name
@@ -41,7 +36,7 @@ Feature: ServiceNow Multi Source - Design time validation scenarios
       | INVALID_TABLE |
     And fill Credentials section for pipeline user
     And Click on the Validate button
-    Then Verify that the Plugin is displaying an error message: "invalid.property.tablename" on the header
+    Then Verify that the Plugin Property: "tableNames" is displaying an in-line error message: "invalid.property.tablename"
 
   @TS-SN-MULTI-DSGN-ERROR-03
   Scenario: Verify validation message for Start date and End date in invalid format

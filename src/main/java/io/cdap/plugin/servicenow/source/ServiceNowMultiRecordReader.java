@@ -20,9 +20,12 @@ import com.google.common.annotations.VisibleForTesting;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
-import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
-import io.cdap.plugin.servicenow.util.SchemaBuilder;
+import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,12 +37,23 @@ import java.util.List;
  * Record reader that reads the entire contents of a ServiceNow table.
  */
 public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiRecordReader.class);
+
   private final ServiceNowMultiSourceConfig multiSourcePluginConf;
+  private ServiceNowTableAPIClientImpl restApi;
 
   ServiceNowMultiRecordReader(ServiceNowMultiSourceConfig multiSourcePluginConf) {
     super();
     this.multiSourcePluginConf = multiSourcePluginConf;
+  }
+
+  @Override
+  public void initialize(InputSplit split, TaskAttemptContext context) {
+    this.split = (ServiceNowInputSplit) split;
+    this.pos = 0;
+    restApi = new ServiceNowTableAPIClientImpl(multiSourcePluginConf.getConnection());
+    tableName = ((ServiceNowInputSplit) split).getTableName();
+    tableNameField = multiSourcePluginConf.getTableNameField();
+    fetchSchema(restApi);
   }
 
   @Override
@@ -70,8 +84,8 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
     try {
       for (Schema.Field field : tableFields) {
         String fieldName = field.getName();
-        Object fieldValue = multiSourcePluginConf.getConnection().convertToValue(fieldName, field.getSchema(), row);
-        recordBuilder.set(fieldName, fieldValue);
+        ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), row,
+                                                 recordBuilder);
       }
     } catch (Exception e) {
       throw new IOException("Error decoding row from table " + tableName, e);
@@ -81,39 +95,26 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
 
   @VisibleForTesting
   void fetchData() throws IOException {
-    tableName = split.getTableName();
-    tableNameField = multiSourcePluginConf.getTableNameField();
-
-    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(multiSourcePluginConf.getConnection());
-
     // Get the table data
     results = restApi.fetchTableRecordsRetryableMode(tableName, multiSourcePluginConf.getValueType(),
                                                      multiSourcePluginConf.getStartDate(),
                                                      multiSourcePluginConf.getEndDate(), split.getOffset(),
                                                      ServiceNowConstants.PAGE_SIZE);
-    LOG.debug("Results size={}", results.size());
-    if (!results.isEmpty()) {
-      fetchSchema(restApi);
-    }
 
     iterator = results.iterator();
   }
 
   private void fetchSchema(ServiceNowTableAPIClientImpl restApi) {
-    // Fetch the column definition
-    ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, multiSourcePluginConf.getValueType(),
-                                                                    null, null, false);
-    if (response == null) {
-      return;
+    // Fetch the schema
+    try {
+      Schema tempSchema = restApi.fetchTableSchema(tableName);
+      tableFields = tempSchema.getFields();
+      List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
+      schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
+      schema = Schema.recordOf(tableName, schemaFields);
+    } catch (OAuthProblemException | OAuthSystemException e) {
+      throw new RuntimeException(e);
     }
-
-    // Build schema
-    Schema tempSchema = SchemaBuilder.constructSchema(tableName, response.getColumns());
-    tableFields = tempSchema.getFields();
-    List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
-    schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
-
-    schema = Schema.recordOf(tableName, schemaFields);
   }
 
 }

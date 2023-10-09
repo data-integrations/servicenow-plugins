@@ -21,13 +21,13 @@ import io.cdap.cdap.etl.api.validation.CauseAttributes;
 import io.cdap.cdap.etl.api.validation.ValidationException;
 import io.cdap.cdap.etl.api.validation.ValidationFailure;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
-import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIRequest;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.sink.model.SchemaResponse;
+import io.cdap.plugin.servicenow.sink.model.ServiceNowSchemaField;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -47,7 +47,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -293,11 +292,11 @@ public class ServiceNowSinkConfigTest {
       "        }\n" +
       "    ]\n" +
       "}";
-    SchemaResponse schemaResponse = new SchemaResponse();
-    schemaResponse.setLabel("Class");
-    schemaResponse.setName("sys_class_name");
-    schemaResponse.setInternalType("sys_class_name");
-    schemaResponse.setExampleValue("");
+    ServiceNowSchemaField schemaField = new ServiceNowSchemaField("Class", "sys_class_name",
+                                                                  "sys_class_name", "sys_class_name");
+    List<ServiceNowSchemaField> schemaFields = new ArrayList<>();
+    schemaFields.add(schemaField);
+    SchemaResponse schemaResponse = new SchemaResponse(schemaFields);
     RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
@@ -317,17 +316,16 @@ public class ServiceNowSinkConfigTest {
     Mockito.when(httpClient.execute(Mockito.any())).thenReturn(httpResponse);
     PowerMockito.when(RestAPIResponse.parse(httpResponse, null)).thenReturn(response);
     Mockito.when(restApi.executeGet(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
-    Mockito.when(restApi.fetchServiceNowTableSchema(Mockito.anyString(), Mockito.any())).thenReturn(schema);
+    Mockito.when(restApi.fetchTableSchema(Mockito.anyString(), Mockito.any())).thenReturn(schema);
     Mockito.when(restApi.parseSchemaResponse(restAPIResponse.getResponseBody()))
-      .thenReturn(Collections.singletonList(schemaResponse));
+      .thenReturn(schemaResponse);
     try {
       config.validateSchema(schema, collector);
       collector.getOrThrowException();
       Assert.fail("Exception is not thrown if apiResponse is successful");
-    } catch (ValidationException e) {
-       //Exception as the apiResponse is unsuccessful, it will not be able to fetch the schema of the table.
-      Assert.assertEquals("Errors were encountered during validation. Unable to fetch schema for table " +
-                            "tableName", e.getMessage());
+    } catch (RuntimeException e) {
+      //Exception as the apiResponse is unsuccessful, it will not be able to fetch the schema of the table.
+      Assert.assertEquals(1, collector.getValidationFailures().size());
     }
   }
 
@@ -379,7 +377,7 @@ public class ServiceNowSinkConfigTest {
     Mockito.when(httpClient.execute(Mockito.any())).thenReturn(httpResponse);
     PowerMockito.when(RestAPIResponse.parse(httpResponse, null)).thenReturn(response);
     Mockito.when(restApi.executeGet(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
-    Mockito.when(restApi.fetchServiceNowTableSchema("tableName", collector)).
+    Mockito.when(restApi.fetchTableSchema("tableName", collector)).
       thenReturn(schema);
     config.validateSchema(schema, collector);
     Assert.assertEquals(0, collector.getValidationFailures().size());

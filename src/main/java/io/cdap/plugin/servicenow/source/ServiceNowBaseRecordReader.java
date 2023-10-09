@@ -16,14 +16,10 @@
 
 package io.cdap.plugin.servicenow.source;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -41,16 +37,11 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
 
   protected String tableName;
   protected String tableNameField;
-  protected List<Map<String, Object>> results;
-  protected Iterator<Map<String, Object>> iterator;
-  protected Map<String, Object> row;
+  protected List<Map<String, String>> results;
+  protected Iterator<Map<String, String>> iterator;
+  protected Map<String, String> row;
 
   public ServiceNowBaseRecordReader() {
-  }
-
-  public void initialize(InputSplit split, TaskAttemptContext context) {
-    this.split = (ServiceNowInputSplit) split;
-    this.pos = 0;
   }
 
   public abstract boolean nextKeyValue() throws IOException;

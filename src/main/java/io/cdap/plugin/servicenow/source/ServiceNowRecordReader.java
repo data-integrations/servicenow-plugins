@@ -19,10 +19,13 @@ package io.cdap.plugin.servicenow.source;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
-import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
-import io.cdap.plugin.servicenow.util.SchemaBuilder;
+import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +39,21 @@ import java.util.List;
 public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowRecordReader.class);
   private final ServiceNowSourceConfig pluginConf;
+  private ServiceNowTableAPIClientImpl restApi;
 
   ServiceNowRecordReader(ServiceNowSourceConfig pluginConf) {
     super();
     this.pluginConf = pluginConf;
+  }
+
+  @Override
+  public void initialize(InputSplit split, TaskAttemptContext context) {
+    this.split = (ServiceNowInputSplit) split;
+    this.pos = 0;
+    restApi = new ServiceNowTableAPIClientImpl(pluginConf.getConnection());
+    tableName = ((ServiceNowInputSplit) split).getTableName();
+    tableNameField = pluginConf.getTableNameField();
+    fetchSchema(restApi);
   }
 
   @Override
@@ -74,8 +88,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     try {
       for (Schema.Field field : tableFields) {
         String fieldName = field.getName();
-        Object fieldValue = pluginConf.getConnection().convertToValue(fieldName, field.getSchema(), row);
-        recordBuilder.set(fieldName, fieldValue);
+        ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), row, recordBuilder);
       }
     } catch (Exception e) {
       LOG.error("Error decoding row from table " + tableName, e);
@@ -85,41 +98,29 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
   }
 
   private void fetchData() throws IOException {
-    tableName = split.getTableName();
-    tableNameField = pluginConf.getTableNameField();
-
-    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(pluginConf.getConnection());
-
     // Get the table data
     results = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(), pluginConf.getStartDate(),
                                                      pluginConf.getEndDate(), split.getOffset(),
                                                      ServiceNowConstants.PAGE_SIZE);
     LOG.debug("Results size={}", results.size());
-    if (!results.isEmpty()) {
-      fetchSchema(restApi);
-    }
 
     iterator = results.iterator();
   }
 
   private void fetchSchema(ServiceNowTableAPIClientImpl restApi) {
-    // Fetch the column definition
-    ServiceNowTableDataResponse response = restApi.fetchTableSchema(tableName, pluginConf.getValueType(), null,
-                                                                    null, false);
-    if (response == null) {
-      return;
+    try {
+      Schema tempSchema = restApi.fetchTableSchema(tableName);
+      tableFields = tempSchema.getFields();
+      List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
+
+      if (pluginConf.getQueryMode() == SourceQueryMode.REPORTING) {
+        schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
+      }
+
+      schema = Schema.recordOf(tableName, schemaFields);
+    } catch (OAuthProblemException | OAuthSystemException e) {
+      throw new RuntimeException(e);
     }
-
-    // Build schema
-    Schema tempSchema = SchemaBuilder.constructSchema(tableName, response.getColumns());
-    tableFields = tempSchema.getFields();
-    List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
-
-    if (pluginConf.getQueryMode() == SourceQueryMode.REPORTING) {
-      schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
-    }
-
-    schema = Schema.recordOf(tableName, schemaFields);
   }
 
 }

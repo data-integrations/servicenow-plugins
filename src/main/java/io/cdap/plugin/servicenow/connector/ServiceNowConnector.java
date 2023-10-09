@@ -58,7 +58,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 
@@ -153,7 +152,7 @@ public class ServiceNowConnector implements DirectConnector {
       specBuilder.setSchema(schema);
     }
     return specBuilder.addRelatedPlugin(new PluginSpec(ServiceNowConstants.PLUGIN_NAME, BatchSource.PLUGIN_TYPE,
-        properties))
+                                                       properties))
       .addRelatedPlugin(new PluginSpec(ServiceNowConstants.PLUGIN_NAME, BatchSink.PLUGIN_TYPE, properties)).build();
   }
 
@@ -194,7 +193,7 @@ public class ServiceNowConnector implements DirectConnector {
     requestBuilder.setAuthHeader(accessToken);
     requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
     apiResponse = serviceNowTableAPIClient.executeGet(requestBuilder.build());
-    List<Map<String, Object>> result = serviceNowTableAPIClient.parseResponseToResultListOfMap
+    List<Map<String, String>> result = serviceNowTableAPIClient.parseResponseToResultListOfMap
       (apiResponse.getResponseBody());
     List<StructuredRecord> recordList = new ArrayList<>();
     Schema schema = getSchema(tableName);
@@ -204,8 +203,7 @@ public class ServiceNowConnector implements DirectConnector {
         StructuredRecord.Builder recordBuilder = StructuredRecord.builder(schema);
         for (Schema.Field field : tableFields) {
           String fieldName = field.getName();
-          Object fieldValue = config.convertToValue(fieldName, field.getSchema(), result.get(i));
-          recordBuilder.set(fieldName, fieldValue);
+          ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), result.get(i), recordBuilder);
         }
         StructuredRecord structuredRecord = recordBuilder.build();
         recordList.add(structuredRecord);
@@ -214,14 +212,12 @@ public class ServiceNowConnector implements DirectConnector {
     return recordList;
 
   }
-  
+
   @Nullable
   private Schema getSchema(String tableName) {
     SourceQueryMode mode = SourceQueryMode.TABLE;
-    SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
     List<ServiceNowTableInfo> tableInfo = ServiceNowInputFormat.fetchTableInfo(mode, config, tableName,
-                                                                               null, valueType,
-                                                                               null, null);
+                                                                               null);
     Schema schema = tableInfo.stream().findFirst().isPresent() ? tableInfo.stream().findFirst().get().getSchema() :
       null;
     return schema;
