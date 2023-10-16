@@ -132,9 +132,15 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       apiResponse = executeGet(requestBuilder.build());
       if (!apiResponse.isSuccess()) {
         if (apiResponse.isRetryable()) {
-          throw new RetryableException();
+          throw new RetryableException(
+                  String.format(
+                          "Error in fetchTableRecords, http response code = %d, message = %s",
+                          apiResponse.getHttpStatus(), apiResponse.getResponseBody()));
         }
-        return Collections.emptyList();
+        throw new RuntimeException(
+                String.format(
+                        "Error in fetchTableRecords, http response code = %d, message = %s",
+                        apiResponse.getHttpStatus(), apiResponse.getResponseBody()));
       }
 
       return parseResponseToResultListOfMap(apiResponse.getResponseBody());
