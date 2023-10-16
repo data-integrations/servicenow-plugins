@@ -117,6 +117,13 @@ public class RestAPIResponse {
   }
 
   private void checkRetryable() {
+    if (httpStatus == HTTP_STATUS_TOO_MANY_REQUESTS) {
+      isRetryable = true;
+      this.responseBody =
+              String.format(
+                      JSON_ERROR_RESPONSE_TEMPLATE,
+                      "Too many requests to ServiceNow API - decrease concurrent requests");
+    }
     Gson gson = new Gson();
     try {
       JsonObject jo = gson.fromJson(this.responseBody, JsonObject.class);
@@ -128,19 +135,8 @@ public class RestAPIResponse {
               .contains(ServiceNowConstants.MAXIMUM_EXECUTION_TIME_EXCEEDED)) {
         isRetryable = true;
       }
-    } catch (JsonSyntaxException e) {
-      // Response Body is not a json object - check status code for error
-      // Response body necessarily need not be json always (when 429 error is thrown -
-      // responseBody is HTML)
-      if (httpStatus == HTTP_STATUS_TOO_MANY_REQUESTS) {
-        isRetryable = true;
-        this.responseBody =
-                String.format(
-                        JSON_ERROR_RESPONSE_TEMPLATE,
-                        "Too many requests to ServiceNow API - decrease concurrent requests");
-      }
     } catch (Throwable t) {
-      // Any other exception
+      // Any exception
       isRetryable = false;
       this.responseBody = String.format(JSON_ERROR_RESPONSE_TEMPLATE, t.getMessage());
     }
