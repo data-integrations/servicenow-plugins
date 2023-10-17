@@ -101,7 +101,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     // Get the table data
     results = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(), pluginConf.getStartDate(),
                                                      pluginConf.getEndDate(), split.getOffset(),
-                                                     ServiceNowConstants.PAGE_SIZE);
+                                                     pluginConf.getPageSize());
     LOG.debug("Results size={}", results.size());
 
     iterator = results.iterator();

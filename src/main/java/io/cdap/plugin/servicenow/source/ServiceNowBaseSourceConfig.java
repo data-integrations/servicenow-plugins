@@ -69,6 +69,12 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
     "is set to `Table`.")
   protected String tableNameField;
 
+  @Name(ServiceNowConstants.PROPERTY_PAGE_SIZE)
+  @Macro
+  @Nullable
+  @Description("The number of records to fetch from ServiceNow. Default is 5000.")
+  private Integer pageSize;
+
   /**
    * Constructor for ServiceNowSourceConfig object.
    *
@@ -82,16 +88,18 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
    * @param valueType The value type
    * @param startDate The start date
    * @param endDate The end date
+   * @param pageSize The page size
    */
   public ServiceNowBaseSourceConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                                     String user, String password, String tableNameField, String valueType,
-                                    @Nullable String startDate, @Nullable String endDate) {
+                                    @Nullable String startDate, @Nullable String endDate, Integer pageSize) {
     super(clientId, clientSecret, restApiEndpoint, user, password);
     this.referenceName = referenceName;
     this.tableNameField = tableNameField;
     this.valueType = valueType;
     this.startDate = startDate;
     this.endDate = endDate;
+    this.pageSize = pageSize;
   }
 
   public String getReferenceName() {
@@ -112,6 +120,10 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
     return Strings.isNullOrEmpty(tableNameField) ? ServiceNowConstants.TABLE_NAME_FIELD_DEFAULT : tableNameField;
   }
 
+  public Integer getPageSize() {
+    return pageSize == null ? ServiceNowConstants.PAGE_SIZE : pageSize;
+  }
+
   /**
    * Validates {@link ServiceNowBaseSourceConfig} instance.
    */
@@ -120,6 +132,7 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
     IdUtils.validateReferenceName(referenceName, collector);
     validateValueType(collector);
     validateDateRange(collector);
+    validatePageSize(collector);
   }
 
   /**
@@ -205,6 +218,18 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
       collector.addFailure("End date must be greater than Start date.", null)
         .withConfigProperty(ServiceNowConstants.PROPERTY_START_DATE)
         .withConfigProperty(ServiceNowConstants.PROPERTY_END_DATE);
+    }
+  }
+
+  private void validatePageSize(FailureCollector collector) {
+    if (containsMacro(ServiceNowConstants.PROPERTY_PAGE_SIZE)) {
+      return;
+    }
+
+    if (getPageSize() <= 0 || getPageSize() > 10000) {
+      collector.addFailure("Invalid Page Size.", "Page Size must be greater than 0 and " +
+          "less than or equal to 10000.")
+        .withConfigProperty(ServiceNowConstants.PROPERTY_PAGE_SIZE);
     }
   }
 

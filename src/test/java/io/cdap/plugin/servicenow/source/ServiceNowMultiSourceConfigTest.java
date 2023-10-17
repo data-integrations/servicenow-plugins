@@ -53,7 +53,7 @@ public class ServiceNowMultiSourceConfigTest {
   public void testConstructor() {
     serviceNowMultiSourceConfig = new ServiceNowMultiSourceConfig("referenceName", "client_id",
       "client_secret", "https://example.com", "user", "password",
-      "tablename", "Actual", "2021-12-30", "2021-12-31",
+      "tablename", "Actual", "2021-12-30", "2021-12-31", 10,
       "sys_user");
     Assert.assertEquals("sys_user", serviceNowMultiSourceConfig.getTableNames());
     Assert.assertEquals("Actual", serviceNowMultiSourceConfig.getValueType().getValueType());
@@ -426,7 +426,8 @@ public class ServiceNowMultiSourceConfigTest {
     ServiceNowMultiSourceConfig serviceNowMultiSourceConfig = new ServiceNowMultiSourceConfig(
       "Reference Name", "42", "client_secret",
       "https://config.us-east-2.amazonaws.com", "User", "password",
-      "tablename", "Actual", "2020-03-01", "2020-03-01", ",");
+      "tablename", "Actual", "2020-03-01", "2020-03-01", 10,
+      ",");
     serviceNowMultiSourceConfig.validateTableNames(new MockFailureCollector("Stage Name"));
     Assert.assertEquals("42", serviceNowMultiSourceConfig.getConnection().getClientId());
     Assert.assertEquals("tablename", serviceNowMultiSourceConfig.tableNameField);
@@ -446,7 +447,7 @@ public class ServiceNowMultiSourceConfigTest {
     ServiceNowMultiSourceConfig serviceNowMultiSourceConfig = new ServiceNowMultiSourceConfig(
       "Reference Name", "Table Name Field", "42", "Client Secret",
       "https://config.us-east-2.amazonaws.com", "User", "password", "42",
-      "2020-03-01", "2020-03-01", "");
+      "2020-03-01", "2020-03-01", 10, "");
     MockFailureCollector mockFailureCollector = new MockFailureCollector("Stage Name");
     serviceNowMultiSourceConfig.validateTableNames(mockFailureCollector);
     List<ValidationFailure> validationFailures = mockFailureCollector.getValidationFailures();

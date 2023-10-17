@@ -50,12 +50,14 @@ public class ServiceNowMultiSourceConfig extends ServiceNowBaseSourceConfig {
    * @param valueType       The value type
    * @param startDate       The start date
    * @param endDate         The end date
+   * @param pageSize        The page size
    */
   public ServiceNowMultiSourceConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                                      String user, String password, String tableNameField, String valueType,
-                                     @Nullable String startDate, @Nullable String endDate, String tableNames) {
+                                     @Nullable String startDate, @Nullable String endDate, Integer pageSize,
+                                     String tableNames) {
     super(referenceName, clientId, clientSecret, restApiEndpoint, user, password, tableNameField, valueType, startDate,
-          endDate);
+          endDate, pageSize);
     this.tableNames = tableNames;
   }
 

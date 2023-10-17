@@ -99,7 +99,7 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
     results = restApi.fetchTableRecordsRetryableMode(tableName, multiSourcePluginConf.getValueType(),
                                                      multiSourcePluginConf.getStartDate(),
                                                      multiSourcePluginConf.getEndDate(), split.getOffset(),
-                                                     ServiceNowConstants.PAGE_SIZE);
+                                                     multiSourcePluginConf.getPageSize());
 
     iterator = results.iterator();
   }

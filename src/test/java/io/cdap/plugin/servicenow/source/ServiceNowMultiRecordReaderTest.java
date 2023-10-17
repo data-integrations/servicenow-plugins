@@ -166,6 +166,7 @@ public class ServiceNowMultiRecordReaderTest {
       .setValueType("Actual")
       .setStartDate("2021-01-01")
       .setEndDate("2022-02-18")
+      .setPageSize(10)
       .setTableNameField("tablename")
       .buildMultiSource();
 
@@ -186,7 +187,7 @@ public class ServiceNowMultiRecordReaderTest {
     restApi.fetchTableRecords(tableName, serviceNowMultiSourceConfig.getValueType(),
                               serviceNowMultiSourceConfig.getStartDate(), serviceNowMultiSourceConfig.getEndDate(),
                               split.getOffset(),
-                              ServiceNowConstants.PAGE_SIZE);
+                              serviceNowMultiSourceConfig.getPageSize());
 
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);

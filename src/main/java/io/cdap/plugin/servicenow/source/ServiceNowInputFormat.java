@@ -114,28 +114,28 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
   @Override
   public List<InputSplit> getSplits(JobContext jobContext) {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(jobContext.getConfiguration());
-
+    int pageSize = jobConfig.getPluginConf().getPageSize().intValue();
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
     List<InputSplit> resultSplits = new ArrayList<>();
 
     for (ServiceNowTableInfo tableInfo : tableInfos) {
       String tableName = tableInfo.getTableName();
       int totalRecords = tableInfo.getRecordCount();
-      if (totalRecords <= ServiceNowConstants.PAGE_SIZE) {
+      if (totalRecords <= pageSize) {
         // add single split for table and continue
         resultSplits.add(new ServiceNowInputSplit(tableName, 0));
         continue;
       }
 
-      int pages = (tableInfo.getRecordCount() / ServiceNowConstants.PAGE_SIZE);
-      if (tableInfo.getRecordCount() % ServiceNowConstants.PAGE_SIZE > 0) {
+      int pages = (tableInfo.getRecordCount() / pageSize);
+      if (tableInfo.getRecordCount() % pageSize > 0) {
         pages++;
       }
       int offset = 0;
 
       for (int page = 1; page <= pages; page++) {
         resultSplits.add(new ServiceNowInputSplit(tableName, offset));
-        offset += ServiceNowConstants.PAGE_SIZE;
+        offset += pageSize;
       }
     }
 
