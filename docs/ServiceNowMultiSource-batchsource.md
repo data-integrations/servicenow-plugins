@@ -31,6 +31,8 @@ Properties
 
 **End Date**: The End date to be used to filter the data. The format must be `yyyy-MM-dd`.
 
+**Page Size**: The number of records to fetch from ServiceNow. Default is 5000.
+
 **Type of values**: The type of values to be returned. The type can be one of two values: 
 
 `Actual` -  will fetch the actual values from the ServiceNow tables,  

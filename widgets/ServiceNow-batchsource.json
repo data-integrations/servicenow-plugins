@@ -177,6 +177,15 @@
           "widget-attributes" : {
             "placeholder": "End date to be used to filter the data"
           }
+        },
+        {
+          "widget-type": "number",
+          "label": "Page Size",
+          "name": "pageSize",
+          "widget-attributes" : {
+            "placeholder": "Number of records to fetch from ServiceNow",
+            "default": 5000
+          }
         }
       ]
     }

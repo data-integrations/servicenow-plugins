@@ -132,6 +132,15 @@
           }
         },
         {
+          "widget-type": "number",
+          "label": "Page Size",
+          "name": "pageSize",
+          "widget-attributes" : {
+            "placeholder": "Number of records to fetch from ServiceNow",
+            "default": 5000
+          }
+        },
+        {
           "widget-type": "textbox",
           "label": "Table Name Field",
           "name": "tableNameField",

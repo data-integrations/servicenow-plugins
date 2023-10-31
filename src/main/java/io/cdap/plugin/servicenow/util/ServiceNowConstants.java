@@ -87,6 +87,11 @@ public interface ServiceNowConstants {
   String PROPERTY_OPERATION = "operation";
 
   /**
+   * Configuration property name used to specify the page size.
+   */
+  String PROPERTY_PAGE_SIZE = "pageSize";
+
+  /**
    * Configuration property name used to get the schema.
    */
   String NAME_SCHEMA = "schema";

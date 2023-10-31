@@ -74,6 +74,7 @@ public class ServiceNowRecordReaderTest {
       .setValueType("Actual")
       .setStartDate("2021-12-30")
       .setEndDate("2021-12-31")
+      .setPageSize(10)
       .setTableNameField("tablename")
       .build();
 
@@ -98,8 +99,9 @@ public class ServiceNowRecordReaderTest {
                                                                                "https://ven05127." +
                                                                                  "service-now.com/", "User",
                                                                                "password",
-                                                                               "Actual", "2021-12-30",
-                                                                               "2021-12-31");
+                                                                               "Actual",
+                                                                               "2021-12-30",
+                                                                               "2021-12-31", 10);
 
     serviceNowRecordReader.close();
     Assert.assertEquals(0, serviceNowRecordReader.pos);
@@ -182,7 +184,7 @@ public class ServiceNowRecordReaderTest {
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                                         serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.
                                                           getEndDate(), split.getOffset(),
-                                                        ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
+                                                        serviceNowSourceConfig.getPageSize())).thenReturn(results);
     Mockito.when(restApi.fetchTableSchema(tableName))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split, null);
@@ -236,7 +238,7 @@ public class ServiceNowRecordReaderTest {
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                                         serviceNowSourceConfig.getStartDate(),
                                                         serviceNowSourceConfig.getEndDate(), split.getOffset(),
-                                                        ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
+                                                        serviceNowSourceConfig.getPageSize())).thenReturn(results);
     Mockito.when(restApi.fetchTableSchema(tableName))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split, null);
@@ -269,7 +271,7 @@ public class ServiceNowRecordReaderTest {
     Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getValueType(),
                                            serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(),
                                            split.getOffset(),
-                                           ServiceNowConstants.PAGE_SIZE)).thenReturn(results);
+                                           serviceNowSourceConfig.getPageSize())).thenReturn(results);
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
     Mockito.when(restApi.fetchTableSchema(tableName))
