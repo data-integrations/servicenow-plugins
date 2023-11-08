@@ -18,6 +18,7 @@ package io.cdap.plugin.servicenow.restapi;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -48,6 +49,7 @@ public class RestAPIResponse {
     "    },\n" +
     "    \"status\": \"failure\"\n" +
     "}";
+  private static final int HTTP_STATUS_TOO_MANY_REQUESTS = 429;
   private int httpStatus;
   private Map<String, String> headers;
   private String responseBody;
@@ -115,13 +117,28 @@ public class RestAPIResponse {
   }
 
   private void checkRetryable() {
-    Gson gson = new Gson();
-    JsonObject jo = gson.fromJson(this.responseBody, JsonObject.class);
-    if (jo.get(ServiceNowConstants.STATUS) != null &&
-      jo.get(ServiceNowConstants.STATUS).getAsString().equals(ServiceNowConstants.FAILURE) &&
-      jo.getAsJsonObject(ServiceNowConstants.ERROR).get(ServiceNowConstants.MESSAGE).getAsString()
-        .contains(ServiceNowConstants.MAXIMUM_EXECUTION_TIME_EXCEEDED)) {
+    if (httpStatus == HTTP_STATUS_TOO_MANY_REQUESTS) {
       isRetryable = true;
+      this.responseBody =
+              String.format(
+                      JSON_ERROR_RESPONSE_TEMPLATE,
+                      "Too many requests to ServiceNow API - decrease concurrent requests");
+    }
+    Gson gson = new Gson();
+    try {
+      JsonObject jo = gson.fromJson(this.responseBody, JsonObject.class);
+      if (jo.get(ServiceNowConstants.STATUS) != null
+              && jo.get(ServiceNowConstants.STATUS).getAsString().equals(ServiceNowConstants.FAILURE)
+              && jo.getAsJsonObject(ServiceNowConstants.ERROR)
+              .get(ServiceNowConstants.MESSAGE)
+              .getAsString()
+              .contains(ServiceNowConstants.MAXIMUM_EXECUTION_TIME_EXCEEDED)) {
+        isRetryable = true;
+      }
+    } catch (Throwable t) {
+      // Any exception
+      isRetryable = false;
+      this.responseBody = String.format(JSON_ERROR_RESPONSE_TEMPLATE, t.getMessage());
     }
   }
 
