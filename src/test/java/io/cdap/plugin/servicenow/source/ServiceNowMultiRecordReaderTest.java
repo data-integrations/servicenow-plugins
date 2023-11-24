@@ -153,7 +153,7 @@ public class ServiceNowMultiRecordReaderTest {
     Assert.assertTrue(serviceNowMultiRecordReader.nextKeyValue());
   }
 
-  @Test
+  @Test(expected = IOException.class)
   public void testFetchDataOnInvalidTable() throws IOException, OAuthProblemException, OAuthSystemException {
     serviceNowMultiSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
       .setReferenceName("referenceName")
@@ -198,6 +198,6 @@ public class ServiceNowMultiRecordReaderTest {
     } catch (RuntimeException | OAuthProblemException | OAuthSystemException e) {
       Assert.assertTrue(e instanceof RuntimeException);
     }
-    Assert.assertFalse(serviceNowMultiRecordReader.nextKeyValue());
+    serviceNowMultiRecordReader.fetchData();
   }
 }

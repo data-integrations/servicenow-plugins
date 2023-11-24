@@ -39,6 +39,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -647,20 +648,13 @@ public class ServiceNowSourceConfigTest {
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
       .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
-    int httpStatus = HttpStatus.SC_BAD_REQUEST;
-    Map<String, String> headers = new HashMap<>();
-    String responseBody = "{\n" +
-      "    \"error\": {\n" +
-      "        \"message\": \"Invalid table sys_user1\",\n" +
-      "        \"detail\": null\n" +
-      "    },\n" +
-      "    \"status\": \"failure\"\n" +
-      "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(httpStatus, headers, responseBody);
-    Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
+    String errorMessage = "Http call returned 400 response code";
+    Mockito.when(restApi.executeGet(Mockito.any())).thenThrow(new IOException(errorMessage));
     config.validate(mockFailureCollector);
     Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());
-    Assert.assertEquals("Bad Request. Table: sys_user1 is invalid.",
+    String expectedErrorMessage = "ServiceNow API returned an unexpected result or the specified " +
+            "table may not exist. Cause: " + errorMessage;
+    Assert.assertEquals(expectedErrorMessage,
                         mockFailureCollector.getValidationFailures().get(0).getMessage());
 
   }

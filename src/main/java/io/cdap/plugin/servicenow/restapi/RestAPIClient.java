@@ -16,6 +16,11 @@
 
 package io.cdap.plugin.servicenow.restapi;
 
+import com.jcraft.jsch.IO;
+import io.cdap.plugin.servicenow.apiclient.NonRetryableException;
+import io.cdap.plugin.servicenow.apiclient.RetryableException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -33,32 +38,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * An abstract class to call Rest API.
  */
 public abstract class RestAPIClient {
   private static final Logger LOG = LoggerFactory.getLogger(RestAPIClient.class);
+
   /**
    * Executes the Rest API request and returns the response.
    *
    * @param request the Rest API request
    * @return an instance of RestAPIResponse object.
    */
-  public RestAPIResponse executeGet(RestAPIRequest request) {
+  public RestAPIResponse executeGet(RestAPIRequest request) throws IOException {
     HttpGet httpGet = new HttpGet(request.getUrl());
     request.getHeaders().entrySet().forEach(e -> httpGet.addHeader(e.getKey(), e.getValue()));
-    RestAPIResponse apiResponse = null;
 
     try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
       try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
-        apiResponse = RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
+        return RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
       }
-    } catch (Exception e) {
-      apiResponse = RestAPIResponse.defaultErrorResponse(e.getMessage());
     }
-
-    return apiResponse;
   }
 
   /**
@@ -71,23 +77,15 @@ public abstract class RestAPIClient {
     HttpPost httpPost = new HttpPost(request.getUrl());
     request.getHeaders().entrySet().forEach(e -> httpPost.addHeader(e.getKey(), e.getValue()));
     httpPost.setEntity(request.getEntity());
-    RestAPIResponse apiResponse;
 
+    // We're retrying all transport exceptions while executing the HTTP POST method and the generic transport
+    // exceptions in HttpClient are represented by the standard java.io.IOException class
+    // https://hc.apache.org/httpclient-legacy/exception-handling.html
     try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
       try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
-        apiResponse = RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
+        return RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
       }
-    } catch (IOException e) {
-      // We're retrying all transport exceptions while executing the HTTP POST method and the generic transport
-      // exceptions in HttpClient are represented by the standard java.io.IOException class
-      // https://hc.apache.org/httpclient-legacy/exception-handling.html
-      throw e;
-    } catch (Exception e) {
-      LOG.error("Exception while executing post request", e);
-      apiResponse = RestAPIResponse.defaultErrorResponse(e.getMessage());
     }
-
-    return apiResponse;
   }
   /**
    * Generates access token and returns the same.

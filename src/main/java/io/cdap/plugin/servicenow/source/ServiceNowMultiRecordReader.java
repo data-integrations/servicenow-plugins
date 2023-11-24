@@ -112,7 +112,7 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
       List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
       schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
       schema = Schema.recordOf(tableName, schemaFields);
-    } catch (OAuthProblemException | OAuthSystemException e) {
+    } catch (OAuthProblemException | OAuthSystemException | IOException e) {
       throw new RuntimeException(e);
     }
   }
