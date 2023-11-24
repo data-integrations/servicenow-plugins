@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -111,7 +110,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @return The list of Map; each Map representing a table row
    */
   public List<Map<String, String>> fetchTableRecords(String tableName, SourceValueType valueType, String startDate,
-                                                     String endDate, int offset, int limit) {
+                                                     String endDate, int offset, int limit) throws IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, false)
       .setExcludeReferenceLink(true)
@@ -124,25 +123,15 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
 
     applyDateRangeToRequest(requestBuilder, startDate, endDate);
 
-    RestAPIResponse apiResponse = null;
-
     try {
       String accessToken = getAccessToken();
       requestBuilder.setAuthHeader(accessToken);
-      apiResponse = executeGet(requestBuilder.build());
-      if (!apiResponse.isSuccess()) {
-        if (apiResponse.isRetryable()) {
-          throw new RetryableException();
-        }
-        return Collections.emptyList();
-      }
-
+      RestAPIResponse apiResponse = executeGet(requestBuilder.build());
       return parseResponseToResultListOfMap(apiResponse.getResponseBody());
     } catch (OAuthSystemException e) {
-      throw new RetryableException();
+      throw new RetryableException("Authentication error occurred", e);
     } catch (OAuthProblemException e) {
-      LOG.error("Error in fetchTableRecords", e);
-      return Collections.emptyList();
+      throw new IOException("Problem occurred while authenticating", e);
     }
   }
 
@@ -255,10 +244,10 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     Schema schema = null;
     try {
       schema = fetchTableSchema(tableName);
-    } catch (OAuthProblemException | OAuthSystemException | RuntimeException e) {
-      LOG.error("Error in connection - {}", e.getMessage());
+    } catch (Exception e) {
+      LOG.error("Failed to fetch schema on table {}", tableName, e);
       collector.addFailure(String.format("Connection failed. Unable to fetch schema for table: %s. Cause: %s",
-                                         tableName, e.getStackTrace()), null);
+                                         tableName, e.getMessage()), null);
     }
     return schema;
   }
@@ -276,7 +265,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @throws OAuthProblemException
    * @throws OAuthSystemException
    */
-  public Schema fetchTableSchema(String tableName) throws OAuthProblemException, OAuthSystemException {
+  public Schema fetchTableSchema(String tableName)
+      throws OAuthProblemException, OAuthSystemException, IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, true)
       .setExcludeReferenceLink(true);
@@ -285,9 +275,6 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     String accessToken = getAccessToken();
     requestBuilder.setAuthHeader(accessToken);
     apiResponse = executeGet(requestBuilder.build());
-    if (!apiResponse.isSuccess()) {
-      throw new RuntimeException("Error - " + getErrorMessage(apiResponse.getResponseBody()));
-    }
     SchemaResponse response = parseSchemaResponse(apiResponse.getResponseBody());
     List<ServiceNowColumn> columns = new ArrayList<>();
 
@@ -308,7 +295,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @throws OAuthProblemException
    * @throws OAuthSystemException
    */
-  public int getTableRecordCount(String tableName) throws OAuthProblemException, OAuthSystemException {
+  public int getTableRecordCount(String tableName)
+      throws OAuthProblemException, OAuthSystemException, IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, false)
       .setExcludeReferenceLink(true)
@@ -319,9 +307,6 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
     requestBuilder.setAuthHeader(accessToken);
     apiResponse = executeGet(requestBuilder.build());
-    if (!apiResponse.isSuccess()) {
-      throw new RuntimeException("Error : " + apiResponse);
-    }
     return getRecordCountFromHeader(apiResponse);
   }
 
@@ -346,10 +331,6 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       apiResponse = executePost(requestBuilder.build());
 
       systemID = String.valueOf(getSystemId(apiResponse));
-
-      if (!apiResponse.isSuccess()) {
-        LOG.error("Error - {}", getErrorMessage(apiResponse.getResponseBody()));
-      }
     } catch (OAuthSystemException | OAuthProblemException | UnsupportedEncodingException e) {
       throw new IOException("Error in creating a new record", e);
     }
@@ -363,14 +344,14 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   }
 
   /**
-   * This function is being used in end-to-end (e2e) tests to fetch a record
-   * Return a record from ServiceNow application.
+   * This function is being used in end-to-end (e2e) tests to fetch a record Return a record from
+   * ServiceNow application.
    *
    * @param tableName The ServiceNow table name
-   * @param query     The query
+   * @param query The query
    */
   public Map<String, String> getRecordFromServiceNowTable(String tableName, String query)
-    throws OAuthProblemException, OAuthSystemException {
+      throws OAuthProblemException, OAuthSystemException, IOException {
 
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, false)

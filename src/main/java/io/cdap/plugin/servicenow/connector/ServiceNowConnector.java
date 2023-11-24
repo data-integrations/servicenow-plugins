@@ -125,16 +125,8 @@ public class ServiceNowConnector implements DirectConnector {
     requestBuilder.setAuthHeader(accessToken);
     requestBuilder.setAcceptHeader(MediaType.APPLICATION_JSON);
     requestBuilder.setContentTypeHeader(MediaType.APPLICATION_JSON);
-    RestAPIResponse apiResponse = null;
-    apiResponse = serviceNowTableAPIClient.executeGet(requestBuilder.build());
-    if (!apiResponse.isSuccess()) {
-      LOG.error("Error - {}", getErrorMessage(apiResponse.getResponseBody()));
-      throw new IOException(getErrorMessage(apiResponse.getResponseBody()));
-    } else {
-      String response = null;
-      response = apiResponse.getResponseBody();
-      return GSON.fromJson(response, TableList.class);
-    }
+    RestAPIResponse apiResponse = serviceNowTableAPIClient.executeGet(requestBuilder.build());
+    return GSON.fromJson(apiResponse.getResponseBody(), TableList.class);
   }
 
   public ConnectorSpec generateSpec(ConnectorContext connectorContext, ConnectorSpecRequest connectorSpecRequest) {
@@ -156,16 +148,6 @@ public class ServiceNowConnector implements DirectConnector {
       .addRelatedPlugin(new PluginSpec(ServiceNowConstants.PLUGIN_NAME, BatchSink.PLUGIN_TYPE, properties)).build();
   }
 
-
-  private String getErrorMessage(String responseBody) {
-    try {
-      JsonObject jo = GSON.fromJson(responseBody, JsonObject.class);
-      return jo.getAsJsonObject(ServiceNowConstants.ERROR).get(ServiceNowConstants.MESSAGE).getAsString();
-    } catch (Exception e) {
-      return e.getMessage();
-    }
-  }
-
   @Override
   public List<StructuredRecord> sample(ConnectorContext connectorContext, SampleRequest sampleRequest)
     throws IOException {
@@ -180,19 +162,18 @@ public class ServiceNowConnector implements DirectConnector {
     }
   }
 
-  private List<StructuredRecord> getTableData(String tableName, int limit) throws OAuthProblemException,
-    OAuthSystemException {
+  private List<StructuredRecord> getTableData(String tableName, int limit)
+      throws OAuthProblemException, OAuthSystemException, IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       config.getRestApiEndpoint(), tableName, false)
       .setExcludeReferenceLink(true)
       .setDisplayValue(SourceValueType.SHOW_DISPLAY_VALUE)
       .setLimit(limit);
-    RestAPIResponse apiResponse = null;
     ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(config);
     String accessToken = serviceNowTableAPIClient.getAccessToken();
     requestBuilder.setAuthHeader(accessToken);
     requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
-    apiResponse = serviceNowTableAPIClient.executeGet(requestBuilder.build());
+    RestAPIResponse apiResponse = serviceNowTableAPIClient.executeGet(requestBuilder.build());
     List<Map<String, String>> result = serviceNowTableAPIClient.parseResponseToResultListOfMap
       (apiResponse.getResponseBody());
     List<StructuredRecord> recordList = new ArrayList<>();

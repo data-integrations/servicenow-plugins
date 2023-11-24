@@ -99,7 +99,6 @@ public class ServiceNowSinkTest {
     Mockito.when(restApi.executeGet(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     serviceNowSink.configurePipeline(mockPipelineConfigurer);
-    Assert.assertTrue(restAPIResponse.isSuccess());
     Assert.assertEquals(200, restAPIResponse.getHttpStatus());
     Assert.assertEquals(0, collector.getValidationFailures().size());
   }
@@ -166,7 +165,6 @@ public class ServiceNowSinkTest {
     serviceNowSink.initialize(batchRuntimeContext);
     serviceNowSink.transform(record, emitter);
     serviceNowSink.prepareRun(context);
-    Assert.assertTrue(restAPIResponse.isSuccess());
     Assert.assertEquals("1", record.get("id").toString());
     Assert.assertEquals("20.2008", record.get("price").toString());
     Assert.assertEquals(0, mockFailureCollector.getValidationFailures().size());

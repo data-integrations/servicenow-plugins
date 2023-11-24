@@ -34,6 +34,7 @@ import org.apache.http.HttpStatus;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 
+import java.io.IOException;
 import javax.annotation.Nullable;
 
 /**
@@ -137,24 +138,15 @@ public class ServiceNowBaseConfig extends PluginConfig {
       requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
 
       apiResponse = serviceNowTableAPIClient.executeGet(requestBuilder.build());
-      if (!apiResponse.isSuccess()) {
-        if (apiResponse.getHttpStatus() == HttpStatus.SC_BAD_REQUEST) {
-          collector.addFailure("Bad Request. Table: " + tableName + " is invalid.", "")
-            .withConfigProperty(tableField);
-        }
-      } else if (serviceNowTableAPIClient.parseResponseToResultListOfMap(apiResponse.getResponseBody()).isEmpty()) {
+      if (serviceNowTableAPIClient.parseResponseToResultListOfMap(apiResponse.getResponseBody()).isEmpty()) {
         // Removed config property as in case of MultiSource, only first table error was populating.
         collector.addFailure("Table: " + tableName + " is empty.", "");
       }
-    } catch (OAuthSystemException | OAuthProblemException e) {
-      collector.addFailure("Unable to connect to ServiceNow Instance.",
-                           "Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
-                             "are correct.")
-        .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_ID)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_SECRET)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_API_ENDPOINT)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_USER)
-        .withConfigProperty(ServiceNowConstants.PROPERTY_PASSWORD);
+    } catch (Exception e) {
+      collector.addFailure(String.format("ServiceNow API returned an unexpected result or the specified table may " +
+                              "not exist. Cause: %s", e.getMessage()),
+                           "Ensure specified table exists in the datasource. ")
+        .withConfigProperty(ServiceNowConstants.PROPERTY_TABLE_NAME);
     }
   }
 

@@ -121,64 +121,50 @@ public class ServiceNowSinkAPIRequestImpl {
       requestBuilder.setEntity(stringEntity);
       apiResponse = restApi.executePost(requestBuilder.build());
 
-      if (!apiResponse.isSuccess()) {
-        LOG.error("Error - {}", getErrorMessage(apiResponse.getResponseBody()));
-        throw new RetryableException();
-      } else {
-        JsonObject responseJSON = jsonParser.parse(apiResponse.getResponseBody()).getAsJsonObject();
-        JsonArray servicedRequestsArray = responseJSON.get(ServiceNowConstants.SERVICED_REQUESTS).getAsJsonArray();
-        JsonElement failedRequestId = null;
-        for (int i = 0; i < servicedRequestsArray.size(); i++) {
-          int statusCode = servicedRequestsArray.get(i).getAsJsonObject().get(ServiceNowConstants.STATUS_CODE)
-            .getAsInt();
-          if (statusCode / 100 == 4 || statusCode / 100 == 5) {
-            String encodedResponseBody = servicedRequestsArray.get(i).getAsJsonObject().get(ServiceNowConstants.BODY)
-              .getAsString();
-            String decodedResponseBody = new String(Base64.getDecoder().decode(encodedResponseBody));
-            String errorDetail = jsonParser.parse(decodedResponseBody).getAsJsonObject().get(ServiceNowConstants.ERROR)
-              .getAsJsonObject().get(ServiceNowConstants.ERROR_DETAIL).getAsString();
-            
-            if (errorDetail.equals(ServiceNowConstants.ACL_EXCEPTION)) {
-              throw new IllegalStateException(String.format("Permission denied for '%s' operation.",
-                                                            config.getOperation()));
-            } else if (errorDetail.contains(ServiceNowConstants.INSERT_ERROR) ||
-              errorDetail.equals(ServiceNowConstants.UPDATE_ERROR)) {
-              LOG.warn("Error Response : {} ", decodedResponseBody);
-            } else if (errorDetail.contains((ServiceNowConstants.MAXIMUM_EXECUTION_TIME_EXCEEDED))) {
-              failedRequestId = servicedRequestsArray.get(i).getAsJsonObject().get(ServiceNowConstants.ID);
-            } else {
-              throw new IllegalStateException(errorDetail);
-            }
+      JsonObject responseJSON = jsonParser.parse(apiResponse.getResponseBody()).getAsJsonObject();
+      JsonArray servicedRequestsArray = responseJSON.get(ServiceNowConstants.SERVICED_REQUESTS).getAsJsonArray();
+      JsonElement failedRequestId = null;
+      for (int i = 0; i < servicedRequestsArray.size(); i++) {
+        int statusCode = servicedRequestsArray.get(i).getAsJsonObject().get(ServiceNowConstants.STATUS_CODE)
+                .getAsInt();
+        if (statusCode / 100 == 4 || statusCode / 100 == 5) {
+          String encodedResponseBody = servicedRequestsArray.get(i).getAsJsonObject().get(ServiceNowConstants.BODY)
+                  .getAsString();
+          String decodedResponseBody = new String(Base64.getDecoder().decode(encodedResponseBody));
+          String errorDetail = jsonParser.parse(decodedResponseBody).getAsJsonObject().get(ServiceNowConstants.ERROR)
+                  .getAsJsonObject().get(ServiceNowConstants.ERROR_DETAIL).getAsString();
+
+          if (errorDetail.equals(ServiceNowConstants.ACL_EXCEPTION)) {
+            throw new IllegalStateException(String.format("Permission denied for '%s' operation.",
+                    config.getOperation()));
+          } else if (errorDetail.contains(ServiceNowConstants.INSERT_ERROR) ||
+                  errorDetail.equals(ServiceNowConstants.UPDATE_ERROR)) {
+            LOG.warn("Error Response : {} ", decodedResponseBody);
+          } else if (errorDetail.contains((ServiceNowConstants.MAXIMUM_EXECUTION_TIME_EXCEEDED))) {
+            failedRequestId = servicedRequestsArray.get(i).getAsJsonObject().get(ServiceNowConstants.ID);
+          } else {
+            throw new IllegalStateException(errorDetail);
           }
         }
+      }
 
-        JsonArray unservicedRequestsArray = responseJSON.get(ServiceNowConstants.UNSERVICED_REQUESTS).getAsJsonArray();
+      JsonArray unservicedRequestsArray = responseJSON.get(ServiceNowConstants.UNSERVICED_REQUESTS).getAsJsonArray();
 
-        if (unservicedRequestsArray.size() > 0) {
-          // Add failed request Id to unserviced requests
-          if (failedRequestId != null) {
-            unservicedRequestsArray.add(failedRequestId);
-          }
-
-          // Process unserviced requests array into unserviced requests map
-          Map<String, RestRequest> unservicedRequestsMap = processUnservicedRequestsArray(restRequestsMap,
-                                                                                          unservicedRequestsArray);
-          // Retry unserviced requests
-          createPostRequest(unservicedRequestsMap, accessToken);
+      if (unservicedRequestsArray.size() > 0) {
+        // Add failed request Id to unserviced requests
+        if (failedRequestId != null) {
+          unservicedRequestsArray.add(failedRequestId);
         }
+
+        // Process unserviced requests array into unserviced requests map
+        Map<String, RestRequest> unservicedRequestsMap = processUnservicedRequestsArray(restRequestsMap,
+                unservicedRequestsArray);
+        // Retry unserviced requests
+        createPostRequest(unservicedRequestsMap, accessToken);
       }
     } catch (IOException e) {
       LOG.error("Error while connecting to ServiceNow", e.getMessage());
-      throw new RetryableException();
-    }
-  }
-
-  private String getErrorMessage(String responseBody) {
-    try {
-      JsonObject jo = gson.fromJson(responseBody, JsonObject.class);
-      return jo.getAsJsonObject(ServiceNowConstants.ERROR).get(ServiceNowConstants.MESSAGE).getAsString();
-    } catch (Exception e) {
-      return e.getMessage();
+      throw new RetryableException("Error while connecting to ServiceNow", e);
     }
   }
 
