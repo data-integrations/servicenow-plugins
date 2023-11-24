@@ -17,19 +17,19 @@
 package io.cdap.plugin.servicenow.apiclient;
 
 /** Custom Exception Class for handling retrying API calls */
-public class RetryableException extends RuntimeException {
+public class NonRetryableException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;
 
-  public RetryableException() {
+  public NonRetryableException() {
     super();
   }
 
-  public RetryableException(String message) {
+  public NonRetryableException(String message) {
     super(message);
   }
 
-  public RetryableException(String message, Throwable throwable) {
+  public NonRetryableException(String message, Throwable throwable) {
     super(message, throwable);
   }
 }
