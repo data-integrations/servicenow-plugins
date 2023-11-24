@@ -41,7 +41,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
   private final ServiceNowSourceConfig pluginConf;
   private ServiceNowTableAPIClientImpl restApi;
 
-  ServiceNowRecordReader(ServiceNowSourceConfig pluginConf) {
+  public ServiceNowRecordReader(ServiceNowSourceConfig pluginConf) {
     super();
     this.pluginConf = pluginConf;
   }
@@ -54,6 +54,17 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     tableName = ((ServiceNowInputSplit) split).getTableName();
     tableNameField = pluginConf.getTableNameField();
     fetchSchema(restApi);
+  }
+
+  /**
+   * Initialize with only the provided split.
+   * This method should not be called directly from the code,
+   * as Hadoop runtime initialize internally during execution.
+   *
+   * @param split Split to read by the current reader.
+   */
+  public void initialize(InputSplit split) {
+    initialize(split, null);
   }
 
   @Override

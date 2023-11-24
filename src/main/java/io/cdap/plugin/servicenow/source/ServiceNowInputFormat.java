@@ -113,7 +113,17 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
 
   @Override
   public List<InputSplit> getSplits(JobContext jobContext) {
-    ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(jobContext.getConfiguration());
+    return getSplits(jobContext.getConfiguration());
+  }
+
+  /**
+   * Get the split details based on the given Configuration.
+   *
+   * @param configuration Hadoop's configuration object
+   * @return List of InputSplits based on the tableInfo details from the Configuration object.
+   */
+  public List<InputSplit> getSplits(Configuration configuration) {
+    ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(configuration);
     int pageSize = jobConfig.getPluginConf().getPageSize().intValue();
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
     List<InputSplit> resultSplits = new ArrayList<>();
