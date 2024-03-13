@@ -318,7 +318,7 @@ public class ServiceNowSinkConfigTest {
     Mockito.when(httpClient.execute(Mockito.any())).thenReturn(httpResponse);
     PowerMockito.when(RestAPIResponse.parse(httpResponse, null)).thenReturn(response);
     Mockito.when(restApi.executeGet(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
-    Mockito.when(restApi.fetchTableSchema(Mockito.anyString(), Mockito.any())).thenReturn(schema);
+    Mockito.when(restApi.fetchTableSchema(Mockito.anyString(), Mockito.any(FailureCollector.class))).thenReturn(schema);
     Mockito.when(restApi.parseSchemaResponse(restAPIResponse.getResponseBody()))
       .thenReturn(schemaResponse);
     try {

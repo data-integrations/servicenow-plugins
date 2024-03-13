@@ -20,15 +20,12 @@ import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
-import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
-import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,23 +45,20 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
 
   @Override
   public void initialize(InputSplit split, TaskAttemptContext context) {
-    this.split = (ServiceNowInputSplit) split;
-    this.pos = 0;
-    restApi = new ServiceNowTableAPIClientImpl(pluginConf.getConnection());
-    tableName = ((ServiceNowInputSplit) split).getTableName();
-    tableNameField = pluginConf.getTableNameField();
-    fetchSchema(restApi);
+    initialize(split);
+    fetchAndInitializeSchema(new ServiceNowJobConfiguration(context.getConfiguration()).getTableInfos(), tableName);
   }
 
   /**
-   * Initialize with only the provided split.
+   * Initialize with only the provided split and given schema
    * This method should not be called directly from the code,
    * as Hadoop runtime initialize internally during execution.
    *
    * @param split Split to read by the current reader.
    */
-  public void initialize(InputSplit split) {
-    initialize(split, null);
+  public void initialize(InputSplit split, Schema schema) {
+    initialize(split);
+    initializeSchema(tableName, schema);
   }
 
   @Override
@@ -118,20 +112,36 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     iterator = results.iterator();
   }
 
-  private void fetchSchema(ServiceNowTableAPIClientImpl restApi) {
-    try {
-      Schema tempSchema = restApi.fetchTableSchema(tableName);
-      tableFields = tempSchema.getFields();
-      List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
-
-      if (pluginConf.getQueryMode() == SourceQueryMode.REPORTING) {
-        schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
-      }
-
-      schema = Schema.recordOf(tableName, schemaFields);
-    } catch (OAuthProblemException | OAuthSystemException | IOException e) {
-      throw new RuntimeException(e);
-    }
+  protected void initialize(InputSplit split) {
+    this.split = (ServiceNowInputSplit) split;
+    this.pos = 0;
+    restApi = new ServiceNowTableAPIClientImpl(pluginConf.getConnection());
+    tableName = ((ServiceNowInputSplit) split).getTableName();
+    tableNameField = pluginConf.getTableNameField();
   }
 
+  /**
+   * Fetches the schema of the given tableName from the tableInfos and initialize schema using it.
+   *
+   * @param tableInfos List of TableInfo objects containing TableName, RecordCount and Schema.
+   * @param tableName Table Name to initialize this reader for.
+   */
+  private void fetchAndInitializeSchema(List<ServiceNowTableInfo> tableInfos, String tableName) {
+    Schema tempSchema = tableInfos.stream()
+        .filter((tableInfo) -> tableInfo.getTableName().equalsIgnoreCase(tableName))
+        .findFirst().get().getSchema();
+
+    initializeSchema(tableName, tempSchema);
+  }
+
+  private void initializeSchema(String tableName, Schema schema) {
+    tableFields = schema.getFields();
+    List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
+
+    if (pluginConf.getQueryMode() == SourceQueryMode.REPORTING) {
+      schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
+    }
+
+    this.schema = Schema.recordOf(tableName, schemaFields);
+  }
 }
