@@ -187,7 +187,7 @@ public class ServiceNowRecordReaderTest {
                                                         serviceNowSourceConfig.getPageSize())).thenReturn(results);
     Mockito.when(restApi.fetchTableSchema(tableName))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
-    serviceNowRecordReader.initialize(split);
+    serviceNowRecordReader.initialize(split, null);
     Assert.assertTrue(serviceNowRecordReader.nextKeyValue());
   }
 
@@ -241,7 +241,7 @@ public class ServiceNowRecordReaderTest {
                                                         serviceNowSourceConfig.getPageSize())).thenReturn(results);
     Mockito.when(restApi.fetchTableSchema(tableName))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
-    serviceNowRecordReader.initialize(split);
+    serviceNowRecordReader.initialize(split, null);
     Assert.assertTrue(serviceNowRecordReader.nextKeyValue());
   }
 
@@ -276,7 +276,7 @@ public class ServiceNowRecordReaderTest {
     response.setResult(results);
     Mockito.when(restApi.fetchTableSchema(tableName))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
-    serviceNowRecordReader.initialize(split);
+    serviceNowRecordReader.initialize(split, null);
     Assert.assertFalse(serviceNowRecordReader.nextKeyValue());
   }
 }
