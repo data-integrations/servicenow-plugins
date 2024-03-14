@@ -89,26 +89,12 @@ public class ServiceNowConnector implements DirectConnector {
 
   @Override
   public BrowseDetail browse(ConnectorContext connectorContext, BrowseRequest browseRequest) throws IOException {
-    ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(config);
-    try {
-      String accessToken = serviceNowTableAPIClient.getAccessToken();
-      return browse(connectorContext, accessToken);
-    } catch (OAuthSystemException | OAuthProblemException e) {
-      throw new IOException(e);
-    }
-  }
-
-  /**
-   * Browse Details for the given AccessToken.
-   */
-  public BrowseDetail browse(ConnectorContext connectorContext,
-                             String accessToken) throws IOException {
     int count = 0;
     FailureCollector collector = connectorContext.getFailureCollector();
     config.validateCredentialsFields(collector);
     collector.getOrThrowException();
     BrowseDetail.Builder browseDetailBuilder = BrowseDetail.builder();
-    Table[] table = listTables(accessToken).getResult();
+    Table[] table = listTables().getResult();
     for (int i = 0; i < table.length; i++) {
       String name = table[i].getName();
       String label = table[i].getLabel();
@@ -122,16 +108,23 @@ public class ServiceNowConnector implements DirectConnector {
     return browseDetailBuilder.setTotalCount(count).build();
   }
 
+
   /**
    * @return the list of tables.
    */
-  private TableList listTables(String accessToken) throws IOException {
+  private TableList listTables() throws IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       config.getRestApiEndpoint(), OBJECT_TABLE_LIST, false);
+    String accessToken = null;
+    ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(config);
+    try {
+      accessToken = serviceNowTableAPIClient.getAccessToken();
+    } catch (OAuthSystemException | OAuthProblemException e) {
+      throw new IOException(e);
+    }
     requestBuilder.setAuthHeader(accessToken);
     requestBuilder.setAcceptHeader(MediaType.APPLICATION_JSON);
     requestBuilder.setContentTypeHeader(MediaType.APPLICATION_JSON);
-    ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(config);
     RestAPIResponse apiResponse = serviceNowTableAPIClient.executeGet(requestBuilder.build());
     return GSON.fromJson(apiResponse.getResponseBody(), TableList.class);
   }
