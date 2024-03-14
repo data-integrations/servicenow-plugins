@@ -267,22 +267,12 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    */
   public Schema fetchTableSchema(String tableName)
       throws OAuthProblemException, OAuthSystemException, IOException {
-    return fetchTableSchema(tableName, getAccessToken());
-  }
-
-  /**
-   * Fetches the table schema from ServiceNow
-   *
-   * @param tableName ServiceNow table name for which schema is getting fetched
-   * @param accessToken Access Token to use
-   * @return schema for given ServiceNow table
-   */
-  public Schema fetchTableSchema(String tableName, String accessToken) throws IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, true)
       .setExcludeReferenceLink(true);
 
     RestAPIResponse apiResponse;
+    String accessToken = getAccessToken();
     requestBuilder.setAuthHeader(accessToken);
     apiResponse = executeGet(requestBuilder.build());
     SchemaResponse response = parseSchemaResponse(apiResponse.getResponseBody());
@@ -307,24 +297,13 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    */
   public int getTableRecordCount(String tableName)
       throws OAuthProblemException, OAuthSystemException, IOException {
-    return getTableRecordCount(tableName, getAccessToken());
-  }
-
-  /**
-   * Get the total number of records in the table
-   *
-   * @param tableName ServiceNow table name for which record count is fetched.
-   * @param accessToken Access Token for the call
-   * @return the table record count
-   * @throws IOException
-   */
-  public int getTableRecordCount(String tableName, String accessToken) throws IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, false)
       .setExcludeReferenceLink(true)
       .setDisplayValue(SourceValueType.SHOW_DISPLAY_VALUE)
       .setLimit(1);
     RestAPIResponse apiResponse = null;
+    String accessToken = getAccessToken();
     requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
     requestBuilder.setAuthHeader(accessToken);
     apiResponse = executeGet(requestBuilder.build());

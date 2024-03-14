@@ -50,7 +50,7 @@ public class ServiceNowSinkPropertiesPageActions {
   private static Gson gson = new Gson();
 
   public static void getRecordFromServiceNowTable(String query, String tableName)
-    throws OAuthProblemException, OAuthSystemException, IOException {
+    throws OAuthProblemException, OAuthSystemException {
     config = new ServiceNowSourceConfig(
       "", "", "", "", "",
       System.getenv("SERVICE_NOW_CLIENT_ID"),
@@ -58,7 +58,7 @@ public class ServiceNowSinkPropertiesPageActions {
       System.getenv("SERVICE_NOW_REST_API_ENDPOINT"),
       System.getenv("SERVICE_NOW_USERNAME"),
       System.getenv("SERVICE_NOW_PASSWORD"),
-      "", "", "", null);
+      "", "", "");
 
     ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     responseFromServiceNowTable = tableAPIClient.getRecordFromServiceNowTable(tableName, query);
