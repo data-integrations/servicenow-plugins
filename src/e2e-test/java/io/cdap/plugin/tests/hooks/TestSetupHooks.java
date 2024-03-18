@@ -58,7 +58,7 @@ public class TestSetupHooks {
       System.getenv("SERVICE_NOW_REST_API_ENDPOINT"),
       System.getenv("SERVICE_NOW_USERNAME"),
       System.getenv("SERVICE_NOW_PASSWORD"),
-      "", "", "");
+      "", "", "", null);
   }
 
   @Before(order = 2, value = "@SN_PRODUCT_CATALOG_ITEM")
