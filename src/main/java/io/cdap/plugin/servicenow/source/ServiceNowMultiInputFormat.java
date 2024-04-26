@@ -97,7 +97,7 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     try {
       schema = restApi.fetchTableSchema(tableName);
       recordCount = restApi.getTableRecordCount(tableName);
-    } catch (OAuthProblemException | OAuthSystemException e) {
+    } catch (OAuthProblemException | OAuthSystemException | IOException e) {
       throw new RuntimeException(e);
     }
     LOG.debug("table {}, rows = {}", tableName, recordCount);

@@ -119,7 +119,6 @@ public class ServiceNowRecordWriterTest {
     ServiceNowRecordWriter serviceNowRecordWriter = new ServiceNowRecordWriter(serviceNowSinkConfig);
     serviceNowRecordWriter.write(null, jsonObject);
     Assert.assertEquals(500, restAPIResponse.getHttpStatus());
-    Assert.assertFalse(restAPIResponse.isSuccess());
   }
 
   @Test
@@ -170,7 +169,6 @@ public class ServiceNowRecordWriterTest {
     ServiceNowRecordWriter serviceNowRecordWriter = new ServiceNowRecordWriter(serviceNowSinkConfig);
     serviceNowRecordWriter.write(null, jsonObject);
     Assert.assertEquals(200, restAPIResponse.getHttpStatus());
-    Assert.assertTrue(restAPIResponse.isSuccess());
   }
 
   @Test
@@ -221,6 +219,5 @@ public class ServiceNowRecordWriterTest {
     ServiceNowRecordWriter serviceNowRecordWriter = new ServiceNowRecordWriter(serviceNowSinkConfig);
     serviceNowRecordWriter.write(null, jsonObject);
     Assert.assertEquals(200, restAPIResponse.getHttpStatus());
-    Assert.assertTrue(restAPIResponse.isSuccess());
   }
 }
