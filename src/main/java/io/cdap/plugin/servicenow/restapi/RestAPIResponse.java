@@ -118,9 +118,9 @@ public class RestAPIResponse {
       return;
     }
     if (RETRYABLE_CODES.contains(code)) {
-      throw new RetryableException(String.format(HTTP_ERROR_MESSAGE, code));
+      throw new RetryableException(String.format(HTTP_ERROR_MESSAGE, code), code);
     }
-    throw new NonRetryableException(String.format(HTTP_ERROR_MESSAGE, code));
+    throw new NonRetryableException(String.format(HTTP_ERROR_MESSAGE, code), code);
   }
 
   public Map<String, String> getHeaders() {

@@ -12,13 +12,13 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicStatusLine;
 import org.apache.http.util.EntityUtils;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
 import java.io.IOException;
 
 @RunWith(PowerMockRunner.class)
@@ -50,7 +50,12 @@ public class RestAPIClientTest {
 
     ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
     ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config);
-    client.executeGet(request);
+    try {
+      client.executeGet(request);
+    } catch (RetryableException e) {
+      Assert.assertEquals(Integer.valueOf(429), e.getHttpStatusCode());
+      throw e;
+    }
   }
 
   @Test(expected = NonRetryableException.class)
@@ -72,7 +77,13 @@ public class RestAPIClientTest {
 
     ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
     ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config);
-    client.executeGet(request);
+    try {
+      client.executeGet(request);
+    } catch (NonRetryableException e) {
+      Assert.assertEquals(
+          Integer.valueOf(HttpStatus.SC_INTERNAL_SERVER_ERROR), e.getHttpStatusCode());
+      throw e;
+    }
   }
 
   @Test

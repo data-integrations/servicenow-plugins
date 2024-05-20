@@ -16,20 +16,37 @@
 
 package io.cdap.plugin.servicenow.apiclient;
 
+import org.jetbrains.annotations.Nullable;
+
 /** Custom Exception Class for handling retrying API calls */
-public class NonRetryableException extends RuntimeException {
+public class NonRetryableException extends RuntimeException implements ExceptionWithHttpStatus {
 
   private static final long serialVersionUID = 1L;
+  private final Integer httpStatusCode;
 
   public NonRetryableException() {
     super();
+    this.httpStatusCode = null;
   }
 
   public NonRetryableException(String message) {
     super(message);
+    this.httpStatusCode = null;
   }
 
   public NonRetryableException(String message, Throwable throwable) {
     super(message, throwable);
+    this.httpStatusCode = null;
+  }
+
+  public NonRetryableException(String message, Integer httpStatusCode) {
+    super(message);
+    this.httpStatusCode = httpStatusCode;
+  }
+
+  @Nullable
+  @Override
+  public Integer getHttpStatusCode() {
+    return httpStatusCode;
   }
 }
