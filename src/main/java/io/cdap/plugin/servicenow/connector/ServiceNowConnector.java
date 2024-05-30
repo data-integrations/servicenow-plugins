@@ -40,6 +40,7 @@ import io.cdap.cdap.etl.api.validation.ValidationException;
 import io.cdap.plugin.common.ConfigUtil;
 import io.cdap.plugin.common.Constants;
 import io.cdap.plugin.common.ReferenceNames;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIRequestBuilder;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
@@ -61,10 +62,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 
-
-/**
- * ServiceNow Connector Plugin
- */
+/** ServiceNow Connector Plugin */
 @Plugin(type = Connector.PLUGIN_TYPE)
 @Name(ServiceNowConstants.PLUGIN_NAME)
 @Description("Connection to access data in Servicenow tables.")
@@ -88,21 +86,21 @@ public class ServiceNowConnector implements DirectConnector {
   }
 
   @Override
-  public BrowseDetail browse(ConnectorContext connectorContext, BrowseRequest browseRequest) throws IOException {
-    ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(config);
+  public BrowseDetail browse(ConnectorContext connectorContext, BrowseRequest browseRequest)
+      throws IOException {
+    ServiceNowTableAPIClientImpl serviceNowTableAPIClient =
+        new ServiceNowTableAPIClientImpl(config);
     try {
       String accessToken = serviceNowTableAPIClient.getAccessToken();
       return browse(connectorContext, accessToken);
-    } catch (OAuthSystemException | OAuthProblemException e) {
+    } catch (OAuthSystemException | OAuthProblemException | ServiceNowAPIException e) {
       throw new IOException(e);
     }
   }
 
-  /**
-   * Browse Details for the given AccessToken.
-   */
-  public BrowseDetail browse(ConnectorContext connectorContext,
-                             String accessToken) throws IOException {
+  /** Browse Details for the given AccessToken. */
+  public BrowseDetail browse(ConnectorContext connectorContext, String accessToken)
+      throws ServiceNowAPIException {
     int count = 0;
     FailureCollector collector = connectorContext.getFailureCollector();
     config.validateCredentialsFields(collector);
@@ -112,10 +110,12 @@ public class ServiceNowConnector implements DirectConnector {
     for (int i = 0; i < table.length; i++) {
       String name = table[i].getName();
       String label = table[i].getLabel();
-      BrowseEntity.Builder entity = (BrowseEntity.builder(name, name, ENTITY_TYPE_TABLE).
-        canBrowse(false).canSample(true));
-      entity.addProperty(LABEL_NAME, BrowseEntityPropertyValue.builder(label, BrowseEntityPropertyValue.
-        PropertyType.STRING).build());
+      BrowseEntity.Builder entity =
+          (BrowseEntity.builder(name, name, ENTITY_TYPE_TABLE).canBrowse(false).canSample(true));
+      entity.addProperty(
+          LABEL_NAME,
+          BrowseEntityPropertyValue.builder(label, BrowseEntityPropertyValue.PropertyType.STRING)
+              .build());
       browseDetailBuilder.addEntity(entity.build());
       count++;
     }
@@ -125,18 +125,21 @@ public class ServiceNowConnector implements DirectConnector {
   /**
    * @return the list of tables.
    */
-  private TableList listTables(String accessToken) throws IOException {
-    ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      config.getRestApiEndpoint(), OBJECT_TABLE_LIST, false);
+  private TableList listTables(String accessToken) throws ServiceNowAPIException {
+    ServiceNowTableAPIRequestBuilder requestBuilder =
+        new ServiceNowTableAPIRequestBuilder(config.getRestApiEndpoint(), OBJECT_TABLE_LIST, false);
     requestBuilder.setAuthHeader(accessToken);
     requestBuilder.setAcceptHeader(MediaType.APPLICATION_JSON);
     requestBuilder.setContentTypeHeader(MediaType.APPLICATION_JSON);
-    ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(config);
-    RestAPIResponse apiResponse = serviceNowTableAPIClient.executeGet(requestBuilder.build());
+    ServiceNowTableAPIClientImpl serviceNowTableAPIClient =
+        new ServiceNowTableAPIClientImpl(config);
+    RestAPIResponse apiResponse =
+        serviceNowTableAPIClient.executeGetWithRetries(requestBuilder.build());
     return GSON.fromJson(apiResponse.getResponseBody(), TableList.class);
   }
 
-  public ConnectorSpec generateSpec(ConnectorContext connectorContext, ConnectorSpecRequest connectorSpecRequest) {
+  public ConnectorSpec generateSpec(
+      ConnectorContext connectorContext, ConnectorSpecRequest connectorSpecRequest) {
     ConnectorSpec.Builder specBuilder = ConnectorSpec.builder();
     Map<String, String> properties = new HashMap<>();
     properties.put(io.cdap.plugin.common.ConfigUtil.NAME_USE_CONNECTION, "true");
@@ -144,45 +147,51 @@ public class ServiceNowConnector implements DirectConnector {
     String tableName = connectorSpecRequest.getPath();
     if (tableName != null) {
       properties.put(ServiceNowConstants.PROPERTY_TABLE_NAME, tableName);
-      properties.put(Constants.Reference.REFERENCE_NAME, ReferenceNames.cleanseReferenceName(tableName));
+      properties.put(
+          Constants.Reference.REFERENCE_NAME, ReferenceNames.cleanseReferenceName(tableName));
     }
     Schema schema = getSchema(tableName);
     if (schema != null) {
       specBuilder.setSchema(schema);
     }
-    return specBuilder.addRelatedPlugin(new PluginSpec(ServiceNowConstants.PLUGIN_NAME, BatchSource.PLUGIN_TYPE,
-                                                       properties))
-      .addRelatedPlugin(new PluginSpec(ServiceNowConstants.PLUGIN_NAME, BatchSink.PLUGIN_TYPE, properties)).build();
+    return specBuilder
+        .addRelatedPlugin(
+            new PluginSpec(ServiceNowConstants.PLUGIN_NAME, BatchSource.PLUGIN_TYPE, properties))
+        .addRelatedPlugin(
+            new PluginSpec(ServiceNowConstants.PLUGIN_NAME, BatchSink.PLUGIN_TYPE, properties))
+        .build();
   }
 
   @Override
-  public List<StructuredRecord> sample(ConnectorContext connectorContext, SampleRequest sampleRequest)
-    throws IOException {
+  public List<StructuredRecord> sample(
+      ConnectorContext connectorContext, SampleRequest sampleRequest) throws IOException {
     String table = sampleRequest.getPath();
     if (table == null) {
       throw new IllegalArgumentException("Path should contain table name.");
     }
     try {
       return getTableData(table, sampleRequest.getLimit());
-    } catch (OAuthProblemException | OAuthSystemException e) {
-      throw new IOException("Unable to fetch the data.");
+    } catch (OAuthProblemException | OAuthSystemException | ServiceNowAPIException e) {
+      throw new IOException("Unable to fetch the data.", e);
     }
   }
 
   private List<StructuredRecord> getTableData(String tableName, int limit)
-      throws OAuthProblemException, OAuthSystemException, IOException {
-    ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      config.getRestApiEndpoint(), tableName, false)
-      .setExcludeReferenceLink(true)
-      .setDisplayValue(SourceValueType.SHOW_DISPLAY_VALUE)
-      .setLimit(limit);
-    ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(config);
+      throws OAuthProblemException, OAuthSystemException, ServiceNowAPIException {
+    ServiceNowTableAPIRequestBuilder requestBuilder =
+        new ServiceNowTableAPIRequestBuilder(config.getRestApiEndpoint(), tableName, false)
+            .setExcludeReferenceLink(true)
+            .setDisplayValue(SourceValueType.SHOW_DISPLAY_VALUE)
+            .setLimit(limit);
+    ServiceNowTableAPIClientImpl serviceNowTableAPIClient =
+        new ServiceNowTableAPIClientImpl(config);
     String accessToken = serviceNowTableAPIClient.getAccessToken();
     requestBuilder.setAuthHeader(accessToken);
     requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
-    RestAPIResponse apiResponse = serviceNowTableAPIClient.executeGet(requestBuilder.build());
-    List<Map<String, String>> result = serviceNowTableAPIClient.parseResponseToResultListOfMap
-      (apiResponse.getResponseBody());
+    RestAPIResponse apiResponse =
+        serviceNowTableAPIClient.executeGetWithRetries(requestBuilder.build());
+    List<Map<String, String>> result =
+        serviceNowTableAPIClient.parseResponseToResultListOfMap(apiResponse.getResponseBody());
     List<StructuredRecord> recordList = new ArrayList<>();
     Schema schema = getSchema(tableName);
     if (schema != null) {
@@ -191,23 +200,25 @@ public class ServiceNowConnector implements DirectConnector {
         StructuredRecord.Builder recordBuilder = StructuredRecord.builder(schema);
         for (Schema.Field field : tableFields) {
           String fieldName = field.getName();
-          ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), result.get(i), recordBuilder);
+          ServiceNowRecordConverter.convertToValue(
+              fieldName, field.getSchema(), result.get(i), recordBuilder);
         }
         StructuredRecord structuredRecord = recordBuilder.build();
         recordList.add(structuredRecord);
       }
     }
     return recordList;
-
   }
 
   @Nullable
   private Schema getSchema(String tableName) {
     SourceQueryMode mode = SourceQueryMode.TABLE;
-    List<ServiceNowTableInfo> tableInfo = ServiceNowInputFormat.fetchTableInfo(mode, config, tableName,
-                                                                               null);
-    Schema schema = tableInfo.stream().findFirst().isPresent() ? tableInfo.stream().findFirst().get().getSchema() :
-      null;
+    List<ServiceNowTableInfo> tableInfo =
+        ServiceNowInputFormat.fetchTableInfo(mode, config, tableName, null);
+    Schema schema =
+        tableInfo.stream().findFirst().isPresent()
+            ? tableInfo.stream().findFirst().get().getSchema()
+            : null;
     return schema;
   }
 }

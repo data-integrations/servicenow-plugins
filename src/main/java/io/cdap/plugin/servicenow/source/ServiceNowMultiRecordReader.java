@@ -19,6 +19,7 @@ package io.cdap.plugin.servicenow.source;
 import com.google.common.annotations.VisibleForTesting;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
@@ -33,9 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Record reader that reads the entire contents of a ServiceNow table.
- */
+/** Record reader that reads the entire contents of a ServiceNow table. */
 public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
 
   private final ServiceNowMultiSourceConfig multiSourcePluginConf;
@@ -84,8 +83,7 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
     try {
       for (Schema.Field field : tableFields) {
         String fieldName = field.getName();
-        ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), row,
-                                                 recordBuilder);
+        ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), row, recordBuilder);
       }
     } catch (Exception e) {
       throw new IOException("Error decoding row from table " + tableName, e);
@@ -96,10 +94,14 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
   @VisibleForTesting
   void fetchData() throws IOException {
     // Get the table data
-    results = restApi.fetchTableRecordsRetryableMode(tableName, multiSourcePluginConf.getValueType(),
-                                                     multiSourcePluginConf.getStartDate(),
-                                                     multiSourcePluginConf.getEndDate(), split.getOffset(),
-                                                     multiSourcePluginConf.getPageSize());
+    results =
+        restApi.fetchTableRecordsRetryableMode(
+            tableName,
+            multiSourcePluginConf.getValueType(),
+            multiSourcePluginConf.getStartDate(),
+            multiSourcePluginConf.getEndDate(),
+            split.getOffset(),
+            multiSourcePluginConf.getPageSize());
 
     iterator = results.iterator();
   }
@@ -112,9 +114,11 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
       List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
       schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));
       schema = Schema.recordOf(tableName, schemaFields);
-    } catch (OAuthProblemException | OAuthSystemException | IOException e) {
+    } catch (OAuthProblemException
+        | OAuthSystemException
+        | IOException
+        | ServiceNowAPIException e) {
       throw new RuntimeException(e);
     }
   }
-
 }

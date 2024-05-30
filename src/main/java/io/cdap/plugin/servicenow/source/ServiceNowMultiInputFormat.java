@@ -19,6 +19,7 @@ package io.cdap.plugin.servicenow.source;
 import com.google.common.base.Strings;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
@@ -44,35 +45,36 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * ServiceNow input format.
- */
+/** ServiceNow input format. */
 public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, StructuredRecord> {
 
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiInputFormat.class);
 
   /**
-   * Updates the jobConfig with the ServiceNow table information, which will then be read in getSplit() function.
+   * Updates the jobConfig with the ServiceNow table information, which will then be read in
+   * getSplit() function.
    *
    * @param jobConfig the job configuration
-   * @param conf      the database conf
+   * @param conf the database conf
    * @return Collection of ServiceNowTableInfo containing table and schema.
    */
-  public static Set<ServiceNowTableInfo> setInput(Configuration jobConfig,
-                                                  ServiceNowMultiSourceConfig conf) {
+  public static Set<ServiceNowTableInfo> setInput(
+      Configuration jobConfig, ServiceNowMultiSourceConfig conf) {
     ServiceNowJobConfiguration jobConf = new ServiceNowJobConfiguration(jobConfig);
     jobConf.setMultiSourcePluginConfiguration(conf);
 
     // Depending on conf value fetch the list of fields for each table and create schema object
     // return the schema object for each table as ServiceNowTableInfo
-    Set<ServiceNowTableInfo> tableInfos = fetchTablesInfo(conf.getConnection(), conf.getTableNames());
+    Set<ServiceNowTableInfo> tableInfos =
+        fetchTablesInfo(conf.getConnection(), conf.getTableNames());
 
     jobConf.setTableInfos(tableInfos.stream().collect(Collectors.toList()));
 
     return tableInfos;
   }
 
-  static Set<ServiceNowTableInfo> fetchTablesInfo(ServiceNowConnectorConfig conf, String tableNames) {
+  static Set<ServiceNowTableInfo> fetchTablesInfo(
+      ServiceNowConnectorConfig conf, String tableNames) {
 
     Set<ServiceNowTableInfo> tablesInfos = new LinkedHashSet<>();
 
@@ -88,7 +90,8 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     return tablesInfos;
   }
 
-  private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowConnectorConfig conf) {
+  private static ServiceNowTableInfo getTableMetaData(
+      String tableName, ServiceNowConnectorConfig conf) {
     // Call API to fetch first record from the table
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(conf);
 
@@ -97,7 +100,10 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     try {
       schema = restApi.fetchTableSchema(tableName);
       recordCount = restApi.getTableRecordCount(tableName);
-    } catch (OAuthProblemException | OAuthSystemException | IOException e) {
+    } catch (OAuthProblemException
+        | OAuthSystemException
+        | IOException
+        | ServiceNowAPIException e) {
       throw new RuntimeException(e);
     }
     LOG.debug("table {}, rows = {}", tableName, recordCount);
@@ -106,16 +112,18 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
 
   public static Set<String> getList(String value) {
     return Strings.isNullOrEmpty(value)
-      ? Collections.emptySet()
-      : Stream.of(value.split(","))
-      .map(String::trim)
-      .filter(name -> !name.isEmpty())
-      .collect(Collectors.toSet());
+        ? Collections.emptySet()
+        : Stream.of(value.split(","))
+            .map(String::trim)
+            .filter(name -> !name.isEmpty())
+            .collect(Collectors.toSet());
   }
 
   @Override
-  public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
-    ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(jobContext.getConfiguration());
+  public List<InputSplit> getSplits(JobContext jobContext)
+      throws IOException, InterruptedException {
+    ServiceNowJobConfiguration jobConfig =
+        new ServiceNowJobConfiguration(jobContext.getConfiguration());
     int pageSize = jobConfig.getPluginConf().getPageSize().intValue();
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
     List<InputSplit> resultSplits = new ArrayList<>();
@@ -140,9 +148,10 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
   }
 
   @Override
-  public RecordReader<NullWritable, StructuredRecord> createRecordReader(InputSplit inputSplit,
-                                                                         TaskAttemptContext taskAttemptContext) {
-    ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(taskAttemptContext.getConfiguration());
+  public RecordReader<NullWritable, StructuredRecord> createRecordReader(
+      InputSplit inputSplit, TaskAttemptContext taskAttemptContext) {
+    ServiceNowJobConfiguration jobConfig =
+        new ServiceNowJobConfiguration(taskAttemptContext.getConfiguration());
     ServiceNowMultiSourceConfig pluginConf = jobConfig.getMultiSourcePluginConf();
 
     return new ServiceNowMultiRecordReader(pluginConf);

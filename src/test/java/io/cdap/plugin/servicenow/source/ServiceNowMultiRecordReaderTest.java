@@ -20,6 +20,7 @@ import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.format.UnexpectedFormatException;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.PluginProperties;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
@@ -49,28 +50,30 @@ public class ServiceNowMultiRecordReaderTest {
   private static final String USER = "user";
   private static final String PASSWORD = "password";
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
   private ServiceNowMultiSourceConfig serviceNowMultiSourceConfig;
   private ServiceNowMultiRecordReader serviceNowMultiRecordReader;
 
   @Before
   public void initializeTests() {
-    serviceNowMultiSourceConfig = Mockito.spy(new ServiceNowSourceConfigHelper.ConfigBuilder()
-                                                .setReferenceName("referenceName")
-                                                .setRestApiEndpoint(REST_API_ENDPOINT)
-                                                .setUser(USER)
-                                                .setPassword(PASSWORD)
-                                                .setClientId(CLIENT_ID)
-                                                .setClientSecret(CLIENT_SECRET)
-                                                .setTableNames("sys_user")
-                                                .setValueType("Actual")
-                                                .setStartDate("2021-01-01")
-                                                .setEndDate("2022-02-18")
-                                                .setTableNameField("tablename")
-                                                .buildMultiSource());
+    serviceNowMultiSourceConfig =
+        Mockito.spy(
+            new ServiceNowSourceConfigHelper.ConfigBuilder()
+                .setReferenceName("referenceName")
+                .setRestApiEndpoint(REST_API_ENDPOINT)
+                .setUser(USER)
+                .setPassword(PASSWORD)
+                .setClientId(CLIENT_ID)
+                .setClientSecret(CLIENT_SECRET)
+                .setTableNames("sys_user")
+                .setValueType("Actual")
+                .setStartDate("2021-01-01")
+                .setEndDate("2022-02-18")
+                .setTableNameField("tablename")
+                .buildMultiSource());
 
-    serviceNowMultiRecordReader = Mockito.spy(new ServiceNowMultiRecordReader(serviceNowMultiSourceConfig));
+    serviceNowMultiRecordReader =
+        Mockito.spy(new ServiceNowMultiRecordReader(serviceNowMultiSourceConfig));
   }
 
   @Test
@@ -79,8 +82,9 @@ public class ServiceNowMultiRecordReaderTest {
     Assert.assertEquals("user", serviceNowMultiSourceConfig.getConnection().getUser());
     Assert.assertEquals("sys_user", serviceNowMultiSourceConfig.getTableNames());
     Assert.assertEquals("2021-01-01", serviceNowMultiSourceConfig.getStartDate());
-    Assert.assertEquals("https://ven05127.service-now.com", serviceNowMultiSourceConfig.getConnection()
-      .getRestApiEndpoint());
+    Assert.assertEquals(
+        "https://ven05127.service-now.com",
+        serviceNowMultiSourceConfig.getConnection().getRestApiEndpoint());
     Assert.assertEquals("referenceName", serviceNowMultiSourceConfig.getReferenceName());
     Assert.assertEquals("2022-02-18", serviceNowMultiSourceConfig.getEndDate());
     PluginProperties properties = serviceNowMultiSourceConfig.getProperties();
@@ -91,8 +95,9 @@ public class ServiceNowMultiRecordReaderTest {
 
   @Test(expected = IllegalStateException.class)
   public void testConvertToValueInvalidFieldType() {
-    Schema fieldSchema = Schema.recordOf("record", Schema.Field.of("TimeField",
-                                                                   Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)));
+    Schema fieldSchema =
+        Schema.recordOf(
+            "record", Schema.Field.of("TimeField", Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)));
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(fieldSchema);
     Map<String, String> map = new HashMap<>();
     map.put("TimeField", "value");
@@ -141,34 +146,41 @@ public class ServiceNowMultiRecordReaderTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     try {
       Mockito.when(restApi.fetchTableSchema(tableName))
-        .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
+          .thenReturn(
+              Schema.recordOf(
+                  Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
       serviceNowMultiRecordReader.initialize(split, null);
-    } catch (RuntimeException | OAuthProblemException | OAuthSystemException e) {
+    } catch (RuntimeException
+        | OAuthProblemException
+        | OAuthSystemException
+        | ServiceNowAPIException e) {
       Assert.assertTrue(e instanceof RuntimeException);
     }
     Mockito.doNothing().when(serviceNowMultiRecordReader).fetchData();
     Collections.singletonList(new Object());
-    serviceNowMultiRecordReader.iterator = Collections.singletonList(Collections.singletonMap("key", new String())).
-      iterator();
+    serviceNowMultiRecordReader.iterator =
+        Collections.singletonList(Collections.singletonMap("key", new String())).iterator();
     Assert.assertTrue(serviceNowMultiRecordReader.nextKeyValue());
   }
 
   @Test(expected = IOException.class)
-  public void testFetchDataOnInvalidTable() throws IOException, OAuthProblemException, OAuthSystemException {
-    serviceNowMultiSourceConfig = ServiceNowSourceConfigHelper.newConfigBuilder()
-      .setReferenceName("referenceName")
-      .setRestApiEndpoint(REST_API_ENDPOINT)
-      .setUser(USER)
-      .setPassword(PASSWORD)
-      .setClientId(CLIENT_ID)
-      .setClientSecret(CLIENT_SECRET)
-      .setTableNames("")
-      .setValueType("Actual")
-      .setStartDate("2021-01-01")
-      .setEndDate("2022-02-18")
-      .setPageSize(10)
-      .setTableNameField("tablename")
-      .buildMultiSource();
+  public void testFetchDataOnInvalidTable()
+      throws IOException, OAuthProblemException, OAuthSystemException, ServiceNowAPIException {
+    serviceNowMultiSourceConfig =
+        ServiceNowSourceConfigHelper.newConfigBuilder()
+            .setReferenceName("referenceName")
+            .setRestApiEndpoint(REST_API_ENDPOINT)
+            .setUser(USER)
+            .setPassword(PASSWORD)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setTableNames("")
+            .setValueType("Actual")
+            .setStartDate("2021-01-01")
+            .setEndDate("2022-02-18")
+            .setPageSize(10)
+            .setTableNameField("tablename")
+            .buildMultiSource();
 
     String tableName = serviceNowMultiSourceConfig.getTableNames();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
@@ -184,16 +196,21 @@ public class ServiceNowMultiRecordReaderTest {
     map.put("sys_updated_by", "system");
     map.put("sys_created_on", "2019-04-05 21:09:12");
     results.add(map);
-    restApi.fetchTableRecords(tableName, serviceNowMultiSourceConfig.getValueType(),
-                              serviceNowMultiSourceConfig.getStartDate(), serviceNowMultiSourceConfig.getEndDate(),
-                              split.getOffset(),
-                              serviceNowMultiSourceConfig.getPageSize());
+    restApi.fetchTableRecords(
+        tableName,
+        serviceNowMultiSourceConfig.getValueType(),
+        serviceNowMultiSourceConfig.getStartDate(),
+        serviceNowMultiSourceConfig.getEndDate(),
+        split.getOffset(),
+        serviceNowMultiSourceConfig.getPageSize());
 
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
     try {
       Mockito.when(restApi.fetchTableSchema(tableName))
-        .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
+          .thenReturn(
+              Schema.recordOf(
+                  Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
       serviceNowMultiRecordReader.initialize(split, null);
     } catch (RuntimeException | OAuthProblemException | OAuthSystemException e) {
       Assert.assertTrue(e instanceof RuntimeException);
