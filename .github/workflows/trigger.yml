@@ -1,4 +1,4 @@
-#  Copyright © 2022 Cask Data, Inc.
+# Copyright © 2021 Cask Data, Inc.
 #  Licensed under the Apache License, Version 2.0 (the "License"); you may not
 #  use this file except in compliance with the License. You may obtain a copy of
 #  the License at
@@ -21,12 +21,12 @@ on:
     branches: [ develop, release/** ]
   pull_request:
     branches: [ develop, release/** ]
-    types: [ opened, synchronize, reopened, labeled ]
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 
 jobs:
   trigger:
-    runs-on: k8s-runner-e2e
+    runs-on: ubuntu-latest
 
     # We allow builds:
     # 1) When triggered manually
@@ -34,13 +34,14 @@ jobs:
     # 3) For PRs that are labeled as build and
     #  - It's a code change
     #  - A build label was just added
-    # A bit complex, but prevents builds when other labels are manipulated.
+    # A bit complex, but prevents builds when other labels are manipulated
     if: >
       github.event_name == 'workflow_dispatch'
       || github.event_name == 'push'
       || (contains(github.event.pull_request.labels.*.name, 'build')
          && (github.event.action != 'labeled' || github.event.label.name == 'build')
          )
+
     steps:
       - name: Trigger build
         run: echo Maven build will be triggered now
