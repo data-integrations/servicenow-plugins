@@ -26,16 +26,11 @@ public class ServiceNowAPIException extends Exception {
       HttpStatus.SC_GATEWAY_TIMEOUT));
 
   public ServiceNowAPIException(String message, @Nullable HttpResponse httpResponse) {
-    super(message);
-    this.httpResponse = httpResponse;
-    this.manualRetry = false;
+    this(message, null, httpResponse, false);
   }
 
   public ServiceNowAPIException(Throwable t, @Nullable HttpResponse httpResponse) {
-    super(t);
-    this.httpResponse = httpResponse;
-    this.manualRetry = false;
-
+    this(null, t, httpResponse, false)
   }
 
   public ServiceNowAPIException(String message, Throwable t,
