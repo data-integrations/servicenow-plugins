@@ -22,6 +22,7 @@ import com.google.gson.JsonObject;
 import io.cdap.e2e.utils.AssertionHelper;
 import io.cdap.e2e.utils.BigQueryClient;
 import io.cdap.e2e.utils.PluginPropertyUtils;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.locators.ServiceNowPropertiesPage;
 import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
@@ -50,7 +51,7 @@ public class ServiceNowSinkPropertiesPageActions {
   private static Gson gson = new Gson();
 
   public static void getRecordFromServiceNowTable(String query, String tableName)
-    throws OAuthProblemException, OAuthSystemException, IOException {
+    throws ServiceNowAPIException {
     config = new ServiceNowSourceConfig(
       "", "", "", "", "",
       System.getenv("SERVICE_NOW_CLIENT_ID"),
@@ -65,7 +66,7 @@ public class ServiceNowSinkPropertiesPageActions {
   }
 
   public static void verifyIfRecordCreatedInServiceNowIsCorrect(String query, String tableName)
-    throws IOException, InterruptedException, OAuthProblemException, OAuthSystemException {
+      throws IOException, InterruptedException, ServiceNowAPIException {
 
     getRecordFromServiceNowTable(query, tableName);
     TableResult bigQueryTableData = getBigQueryTableData(TestSetupHooks.bqSourceDataset, TestSetupHooks.bqSourceTable);
@@ -79,7 +80,7 @@ public class ServiceNowSinkPropertiesPageActions {
   }
 
   public static void verifyIfRecordUpdatedInServiceNowIsCorrect(String query, String tableName)
-    throws IOException, InterruptedException, OAuthProblemException, OAuthSystemException {
+    throws IOException, InterruptedException, ServiceNowAPIException {
 
     getRecordFromServiceNowTable(query, tableName);
     TableResult bigQueryTableData = getBigQueryTableData(TestSetupHooks.bqSourceDataset, TestSetupHooks.bqSourceTable);

@@ -19,6 +19,7 @@ package io.cdap.plugin.tests.hooks;
 import com.google.cloud.bigquery.BigQueryException;
 import io.cdap.e2e.utils.BigQueryClient;
 import io.cdap.e2e.utils.PluginPropertyUtils;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
 import io.cdap.plugin.utils.enums.ApplicationInReportingMode;
@@ -62,7 +63,7 @@ public class TestSetupHooks {
   }
 
   @Before(order = 2, value = "@SN_PRODUCT_CATALOG_ITEM")
-  public static void createRecordInProductCatalogItemTable() throws IOException {
+  public static void createRecordInProductCatalogItemTable() throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Product Catalog Item table");
     ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     String uniqueId = "TestProductCatalogItem" + RandomStringUtils.randomAlphanumeric(10);
@@ -72,7 +73,8 @@ public class TestSetupHooks {
   }
 
   @Before(order = 2, value = "@SN_RECEIVING_SLIP_LINE")
-  public static void createRecordInReceivingSlipLineTable() throws IOException {
+  public static void createRecordInReceivingSlipLineTable()
+      throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Receiving Slip Line table");
     ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     String uniqueId = "TestReceivingSlipLine" + RandomStringUtils.randomAlphanumeric(10);
@@ -82,7 +84,8 @@ public class TestSetupHooks {
   }
 
   @Before(order = 2, value = "@SN_UPDATE_AGENT_ASSIST_RECOMMENDATION")
-  public static void updateRecordInAgentAssistRecommendationTable() throws IOException {
+  public static void updateRecordInAgentAssistRecommendationTable()
+      throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Agent Assist Recommendation table");
     ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     String uniqueId = "TestAgentAssist" + RandomStringUtils.randomAlphanumeric(10);
@@ -92,7 +95,8 @@ public class TestSetupHooks {
   }
 
   @Before(order = 2, value = "@SN_UPDATE_VENDOR_CATALOG_ITEM")
-  public static void updateRecordInAgentVendorCatalogItem() throws IOException {
+  public static void updateRecordInAgentVendorCatalogItem()
+      throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Vendor Catalog Item table");
     ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     String uniqueId = "TestVendorCatalog" + RandomStringUtils.randomAlphanumeric(10);
@@ -102,7 +106,7 @@ public class TestSetupHooks {
   }
 
   @Before(order = 2, value = "@SN_UPDATE_SERVICE_OFFERING")
-  public static void updateRecordInServiceOffering() throws IOException {
+  public static void updateRecordInServiceOffering() throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Service Offering table");
     ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
     String uniqueId = "TestServiceOffering" + RandomStringUtils.randomAlphanumeric(10);
