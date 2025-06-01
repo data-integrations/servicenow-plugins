@@ -18,13 +18,13 @@
 @Regression
 Feature: ServiceNow Multi Source - Run time scenarios
 
-  @TS-SN-MULTI-RNTM-01 @BQ_SINK
+  @TS-SN-MULTI-RNTM-01 @BQ_SINK @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE
   Scenario: Verify user should be able to preview the pipeline
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
-      | HARDWARE_CATALOG | RECEIVING_SLIP_LINE |
+      | HARDWARE_CATALOG | DATE_TIME_TABLE |
     And fill Credentials section for pipeline user
     Then Validate "ServiceNow Multi Source" plugin properties
     And Close the Plugin Properties page
@@ -38,13 +38,13 @@ Feature: ServiceNow Multi Source - Run time scenarios
     And Wait till pipeline preview is in running state with a timeout of 500 seconds
     Then Verify the preview of pipeline is "success"
 
-  @TS-SN-MULTI-RNTM-02 @BQ_SINK
+  @TS-SN-MULTI-RNTM-02 @BQ_SINK @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE
   Scenario: Verify user should be able to run the pipeline
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow Multi Source"
     And configure ServiceNow Multi source plugin for below listed tables:
-      | RECEIVING_SLIP_LINE |
+      | DATE_TIME_TABLE |
     And fill Credentials section for pipeline user
     Then Validate "ServiceNow Multi Source" plugin properties
     And Close the Plugin Properties page
@@ -62,7 +62,7 @@ Feature: ServiceNow Multi Source - Run time scenarios
     And Open and capture logs
     And Verify the pipeline status is "Succeeded"
 
-  @TS-SN-MULTI-RNTM-03 @CONNECTION @BQ_SINK
+  @TS-SN-MULTI-RNTM-03 @CONNECTION @BQ_SINK @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE
   Scenario: Verify user should be able to deploy and run the pipeline using connection manager functionality
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
@@ -78,7 +78,7 @@ Feature: ServiceNow Multi Source - Run time scenarios
     Then Click on the Create button
     And Use new connection
     And configure ServiceNow Multi source plugin for below listed tables:
-      | RECEIVING_SLIP_LINE |
+      | DATE_TIME_TABLE |
     Then Validate "ServiceNow Multi Source" plugin properties
     And Close the Plugin Properties page
     And Select Sink plugin: "BigQueryMultiTable" from the plugins list

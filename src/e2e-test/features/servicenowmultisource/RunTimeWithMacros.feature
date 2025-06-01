@@ -18,7 +18,7 @@
 @Regression
 Feature: ServiceNow Multi Source - Run time scenarios (macro)
 
-  @TS-SN-MULTI-RNTM-MACRO-01 @BQ_SINK
+  @TS-SN-MULTI-RNTM-MACRO-01 @BQ_SINK @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE
   Scenario: Verify user should be able to preview the pipeline when the source plugin is configured with macros
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
@@ -39,7 +39,7 @@ Feature: ServiceNow Multi Source - Run time scenarios (macro)
     Then Validate "BigQuery Multi Table" plugin properties
     And Close the Plugin Properties page
     And Preview and run the pipeline
-    And Enter runtime argument value "receiving_slip_line" for key "tableNames"
+    And Enter runtime argument value "date_time_table" for key "tableNames"
     And Enter runtime argument value from environment variable "client.id" for key "clientId"
     And Enter runtime argument value from environment variable "client.secret" for key "clientSecret"
     And Enter runtime argument value from environment variable "rest.api.endpoint" for key "restApiEndpoint"
@@ -48,7 +48,7 @@ Feature: ServiceNow Multi Source - Run time scenarios (macro)
     Then Run the preview of pipeline with runtime arguments
     Then Verify the preview of pipeline is "success"
 
-  @TS-SN-MULTI-RNTM-MACRO-02 @BQ_SINK
+  @TS-SN-MULTI-RNTM-MACRO-02 @BQ_SINK @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE
   Scenario: Verify user should be able to run the pipeline when the source plugin is configured with macros
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow Multi Source" from the plugins list as: "Source"
@@ -72,7 +72,7 @@ Feature: ServiceNow Multi Source - Run time scenarios (macro)
     And Close the Plugin Properties page
     And Save and Deploy Pipeline
     And Run the Pipeline in Runtime
-    And Enter runtime argument value "receiving_slip_line" for key "tableNames"
+    And Enter runtime argument value "date_time_table" for key "tableNames"
     And Enter runtime argument value from environment variable "client.id" for key "clientId"
     And Enter runtime argument value from environment variable "client.secret" for key "clientSecret"
     And Enter runtime argument value from environment variable "rest.api.endpoint" for key "restApiEndpoint"

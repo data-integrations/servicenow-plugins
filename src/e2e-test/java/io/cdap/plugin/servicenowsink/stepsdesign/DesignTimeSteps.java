@@ -42,7 +42,8 @@ public class DesignTimeSteps {
 
     switch (tableValueFromPluginPropertiesFile) {
       case "proc_rec_slip_item":
-        query = "number=" + TestSetupHooks.receivingSlipLineRecordUniqueNumber;
+      case "u_datetimetable":
+        query = "sys_id=" + TestSetupHooks.systemId;
         ServiceNowSinkPropertiesPageActions.verifyIfRecordCreatedInServiceNowIsCorrect(query,
             tableValueFromPluginPropertiesFile);
         break;

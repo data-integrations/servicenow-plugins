@@ -84,6 +84,37 @@ public class TestSetupHooks {
     BeforeActions.scenario.write("New Record in Receiving Slip Line table: " + systemId + " created successfully");
   }
 
+  @Before(order = 2, value = "@SN_DATE_TIME_TABLE")
+  public static void createRecordInDateTimeTable()
+    throws IOException, ServiceNowAPIException {
+    BeforeActions.scenario.write("Create new record in Date time table");
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
+    String recordDetails = "{'u_date': '2025-05-28 15:07'," +
+      "  'u_datetime1': '28.05.2025 03:07:56 PM'," +
+      "  'u_datetime2': '28.05.2025 03.07.56 PM'," +
+      "  'u_datetime3': '2025-05-28 15:07:56'," +
+      "  'u_datetime4': '28.05.2025 15:07:56'," +
+      "  'u_datetime5': '28.05.2025 15.07.56'," +
+      "  'u_datetime6': '28-05-2025 15:07:56'," +
+      "  'u_datetime7': '28-05-2025 15.07.56'," +
+      "  'u_datetime8': '05/28/2025 15:07:56'," +
+      "  'u_datetime9': '28/05/2025 15:07:56'," +
+      "  'u_datetime10': '05-28-2025 15:07:56'," +
+      "  'u_datetime11': '28-05-25 15.07.56'," +
+      "  'u_datetime13': '05-28-2025 15:07'," +
+      "  'u_datetime': '28-05-2025 15.07'}";
+    StringEntity entity = new StringEntity(recordDetails);
+    systemId = tableAPIClient.createRecordInDisplayMode(TablesInTableMode.DATE_TIME_TABLE.value, entity);
+    BeforeActions.scenario.write("New Record in Date time table: " + systemId + " created successfully");
+  }
+
+  @After(order = 2, value = "@SN_DATE_TIME_TABLE")
+  public static void deleteRecord() throws ServiceNowAPIException, IOException {
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
+    tableAPIClient.deleteRecordFromServiceNowTable(TablesInTableMode.DATE_TIME_TABLE.value, TestSetupHooks.systemId);
+    BeforeActions.scenario.write("Record in Date time table: " + systemId + " deleted successfully");
+  }
+
   @Before(order = 2, value = "@SN_UPDATE_AGENT_ASSIST_RECOMMENDATION")
   public static void updateRecordInAgentAssistRecommendationTable()
       throws IOException, ServiceNowAPIException {
@@ -245,7 +276,7 @@ public class TestSetupHooks {
     BeforeActions.scenario.write("New Connection name: " + connectionName);
   }
 
-  @After(order = 1, value = "@BQ_SINK_CLEANUP")
+  @After(order = 1, value = "@BQ_SINK_CLEANUP or @BQ_SINK")
   public static void deleteTempTargetBQTable() throws IOException, InterruptedException {
     try {
       BigQueryClient.dropBqQuery(bqTargetTable);
@@ -258,5 +289,15 @@ public class TestSetupHooks {
         Assert.fail(e.getMessage());
       }
     }
+  }
+
+  @After(order = 1, value = "@BQ_SOURCE_TEST_RECEIVING_SLIP_LINE or @BQ_SOURCE_UPDATE_SERVICE_OFFERING or " +
+    "@BQ_SOURCE_UPDATE_VENDOR_CATALOG_ITEM or @BQ_SOURCE_UPDATE_AGENT_ASSIST_RECOMMENDATION or " +
+    "@BQ_SOURCE_UPDATE_RECEIVING_SLIP_LINE or @BQ_SOURCE_SERVICE_OFFERING or @BQ_SOURCE_VENDOR_CATALOG_ITEM or " +
+    "@BQ_SOURCE_AGENT_ASSIST_RECOMMENDATION")
+  public static void deleteTempSourceBQTable() throws IOException, InterruptedException {
+    BigQueryClient.dropBqQuery(bqSourceTable);
+    PluginPropertyUtils.removePluginProp("bqSourceTable");
+    BeforeActions.scenario.write("BQ source Table " + bqSourceTable + " deleted successfully");
   }
 }
