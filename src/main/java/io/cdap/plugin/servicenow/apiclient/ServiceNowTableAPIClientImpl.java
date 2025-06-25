@@ -126,22 +126,30 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       int offset,
       int limit)
       throws ServiceNowAPIException {
-    ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.conf.getRestApiEndpoint(), tableName, false)
-      .setExcludeReferenceLink(true)
-      .setDisplayValue(valueType)
-      .setLimit(limit);
-
-    if (offset > 0) {
-      requestBuilder.setOffset(offset);
-    }
-
-    applyDateRangeToRequest(requestBuilder, startDate, endDate);
-
+    List<Map<String, String>> combinedResults = new ArrayList<>();
     String accessToken = getAccessToken();
-    requestBuilder.setAuthHeader(accessToken);
-    RestAPIResponse apiResponse = executeGetWithRetries(requestBuilder.build());
-    return parseResponseToResultListOfMap(apiResponse.getResponseBody());
+    int pageSize = limit / 5;
+    LOG.info("pageSize:::: " + pageSize);
+    LOG.info("offset:::: " + offset);
+    for (int i = 0; i < 5; i++) {
+      int currentOffset = offset + (i * pageSize);
+      ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
+        this.conf.getRestApiEndpoint(), tableName, false)
+        .setExcludeReferenceLink(true)
+        .setDisplayValue(valueType)
+        .setLimit(pageSize)
+        .setOffset(currentOffset);
+      LOG.info("currentOffset:::: " +  currentOffset);
+
+      applyDateRangeToRequest(requestBuilder, startDate, endDate);
+
+      requestBuilder.setAuthHeader(accessToken);
+      RestAPIResponse apiResponse = executeGetWithRetries(requestBuilder.build());
+      List<Map<String, String>> batch = parseResponseToResultListOfMap(apiResponse.getResponseBody());
+      combinedResults.addAll(batch);
+    }
+    LOG.info("combinedResults size:::: " + combinedResults.size());
+    return combinedResults;
   }
 
   private void applyDateRangeToRequest(ServiceNowTableAPIRequestBuilder requestBuilder, String startDate,
