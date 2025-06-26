@@ -277,13 +277,12 @@ public class ServiceNowRecordReaderTest {
     response.setColumns(columns);
     response.setResult(results);
     response.setTotalRecordCount(1);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                                         serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.
                                                           getEndDate(), split.getOffset(),
                                                         serviceNowSourceConfig.getPageSize())).thenReturn(results);
-    Mockito.when(restApi.fetchTableSchema(tableName, valueType))
+    Mockito.when(restApi.fetchTableSchema(tableName, valueType, true))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split);
     Assert.assertTrue(serviceNowRecordReader.nextKeyValue());
@@ -331,13 +330,12 @@ public class ServiceNowRecordReaderTest {
     response.setColumns(columns);
     response.setResult(results);
     response.setTotalRecordCount(1);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                                         serviceNowSourceConfig.getStartDate(),
                                                         serviceNowSourceConfig.getEndDate(), split.getOffset(),
                                                         serviceNowSourceConfig.getPageSize())).thenReturn(results);
-    Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType()))
+    Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType(), true))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split);
     Assert.assertTrue(serviceNowRecordReader.nextKeyValue());
@@ -364,15 +362,14 @@ public class ServiceNowRecordReaderTest {
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     List<Map<String, String>> results = new ArrayList<>();
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getValueType(),
                                            serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(),
                                            split.getOffset(),
                                            serviceNowSourceConfig.getPageSize())).thenReturn(results);
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
-    Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType()))
+    Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType(), true))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split);
     Assert.assertFalse(serviceNowRecordReader.nextKeyValue());

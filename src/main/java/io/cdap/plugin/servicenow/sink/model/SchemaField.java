@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Cask Data, Inc.
+ * Copyright © 2025 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,27 +16,28 @@
 
 package io.cdap.plugin.servicenow.sink.model;
 
-import com.google.gson.annotations.SerializedName;
-
 /**
- * Model class for Schema Field from Column Metadata API
+ * Model class for Schema Field from Schema API
  */
-public class ServiceNowSchemaField {
+public class SchemaField {
   private final String label;
-  @SerializedName("internal_type")
+  private final String exampleValue;
   private final String internalType;
   private final String name;
-  private final String type;
 
-  public ServiceNowSchemaField(String label, String internalType, String name, String type) {
+  public SchemaField(String label, String exampleValue, String internalType, String name) {
     this.label = label;
+    this.exampleValue = exampleValue;
     this.internalType = internalType;
     this.name = name;
-    this.type = type;
   }
 
   public String getLabel() {
     return label;
+  }
+
+  public String getExampleValue() {
+    return exampleValue;
   }
 
   public String getInternalType() {
@@ -45,9 +46,5 @@ public class ServiceNowSchemaField {
 
   public String getName() {
     return name;
-  }
-
-  public String getType() {
-    return type;
   }
 }

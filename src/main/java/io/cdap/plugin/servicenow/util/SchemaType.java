@@ -14,23 +14,16 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.sink.model;
-
-import java.util.List;
+package io.cdap.plugin.servicenow.util;
 
 /**
- * Model class for Schema Response from Schema API
+ * This class has all the Schema Types allowed in the plugin. Added for backward compatibility
  */
-public class SchemaResponse {
-
-  private final List<SchemaField> result;
-
-  public SchemaResponse(List<SchemaField> result) {
-    this.result = result;
-  }
-
-  public List<SchemaField> getResult() {
-    return result;
-  }
-
+public enum SchemaType {
+  // All the fields will be of String type as it was in release/1.1.
+  STRING_BASED,
+  // All the fields will be based on Schema API provided by service now, will be used in newer versions for CDAP.
+  SCHEMA_API_BASED,
+  // All the fields will be based on Metadata API provided by service now, will be used only for DTS.
+  METADATA_API_BASED
 }

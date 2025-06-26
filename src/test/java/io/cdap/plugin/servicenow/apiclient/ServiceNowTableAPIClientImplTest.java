@@ -3,6 +3,7 @@ package io.cdap.plugin.servicenow.apiclient;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
+import io.cdap.plugin.servicenow.util.SchemaType;
 import io.cdap.plugin.servicenow.util.SourceValueType;
 
 import org.apache.http.HttpResponse;
@@ -26,7 +27,7 @@ public class ServiceNowTableAPIClientImplTest {
   @Test
   public void testFetchTableRecordsRetryableMode_RetriesAndSucceeds() throws ServiceNowAPIException {
     ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig);
+    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
     ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
     List<Map<String, String>> mockResults = new ArrayList<>();
     mockResults.add(new HashMap<String, String>() {{
@@ -61,7 +62,7 @@ public class ServiceNowTableAPIClientImplTest {
   public void testFetchTableRecordsRetryableMode_nonRetryable()
       throws ServiceNowAPIException {
     ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig);
+    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
     ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
     HttpResponse mockResponse = Mockito.mock(HttpResponse.class);
     Mockito.when(mockResponse.getStatusLine()).thenReturn(Mockito.mock(StatusLine.class));
@@ -85,29 +86,28 @@ public class ServiceNowTableAPIClientImplTest {
   @Test
   public void testFetchTableSchema_ActualValueType() throws Exception {
     ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig);
+    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
     ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
     String jsonResponse = "{\n" +
-      "  \"result\": {\n" +
-      "    \"columns\": {\n" +
-      "      \"active\": {\n" +
-      "        \"label\": \"Active\",\n" +
-      "        \"name\": \"active\",\n" +
-      "        \"type\": \"string\",\n" +
-      "        \"internal_type\": \"boolean\"\n" +
-      "      },\n" +
-      "      \"user_name\": {\n" +
-      "        \"label\": \"Username\",\n" +
-      "        \"name\": \"user_name\",\n" +
-      "        \"type\": \"string\",\n" +
-      "        \"internal_type\": \"string\"\n" +
-      "      }\n" +
+      "  \"result\": [\n" +
+      "    {\n" +
+      "      \"internalType\": \"boolean\",\n" +
+      "      \"label\": \"Active\",\n" +
+      "      \"exampleValue\": \"\",\n" +
+      "      \"name\": \"active\"\n" +
+      "    },\n" +
+      "    {\n" +
+      "      \"internalType\": \"string\",\n" +
+      "      \"label\": \"Username\",\n" +
+      "      \"exampleValue\": \"\",\n" +
+      "      \"name\": \"user_name\"\n" +
       "    }\n" +
-      "  }\n" +
+      "  ]\n" +
       "}";
     RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
-    Schema schema = implSpy.fetchTableSchema("sys_user", "dummy-access-token", SourceValueType.SHOW_ACTUAL_VALUE);
+    Schema schema = implSpy.fetchTableSchema("sys_user", "dummy-access-token",
+                                             SourceValueType.SHOW_ACTUAL_VALUE, SchemaType.SCHEMA_API_BASED);
     Assert.assertNotNull(schema);
     Assert.assertEquals("record", schema.getDisplayName());
     Assert.assertEquals(2, schema.getFields().size());
@@ -120,33 +120,32 @@ public class ServiceNowTableAPIClientImplTest {
   @Test
   public void testFetchTableSchema_DisplayValueType() throws Exception {
     ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig);
+    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
     ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
     String jsonResponse = "{\n" +
-      "  \"result\": {\n" +
-      "    \"columns\": {\n" +
-      "      \"active\": {\n" +
-      "        \"label\": \"Active\",\n" +
-      "        \"name\": \"active\",\n" +
-      "        \"type\": \"string\",\n" +
-      "        \"internal_type\": \"boolean\"\n" +
-      "      },\n" +
-      "      \"user_name\": {\n" +
-      "        \"label\": \"Username\",\n" +
-      "        \"name\": \"user_name\",\n" +
-      "        \"type\": \"string\",\n" +
-      "        \"internal_type\": \"string\"\n" +
-      "      }\n" +
+      "  \"result\": [\n" +
+      "    {\n" +
+      "      \"internalType\": \"boolean\",\n" +
+      "      \"label\": \"Active\",\n" +
+      "      \"exampleValue\": \"\",\n" +
+      "      \"name\": \"active\"\n" +
+      "    },\n" +
+      "    {\n" +
+      "      \"internalType\": \"string\",\n" +
+      "      \"label\": \"Username\",\n" +
+      "      \"exampleValue\": \"\",\n" +
+      "      \"name\": \"user_name\"\n" +
       "    }\n" +
-      "  }\n" +
+      "  ]\n" +
       "}";
     RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
-    Schema schema = implSpy.fetchTableSchema("sys_user", "dummy-access-token", SourceValueType.SHOW_DISPLAY_VALUE);
+    Schema schema = implSpy.fetchTableSchema("sys_user", "dummy-access-token",
+      SourceValueType.SHOW_DISPLAY_VALUE, SchemaType.SCHEMA_API_BASED);
     Assert.assertNotNull(schema);
     Assert.assertEquals("record", schema.getDisplayName());
     Assert.assertEquals(2, schema.getFields().size());
-    Assert.assertEquals(Schema.Type.STRING,
+    Assert.assertEquals(Schema.Type.BOOLEAN,
       schema.getField("active").getSchema().getUnionSchemas().get(0).getType());
     Assert.assertEquals(Schema.Type.STRING,
       schema.getField("user_name").getSchema().getUnionSchemas().get(0).getType());

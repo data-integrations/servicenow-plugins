@@ -50,10 +50,10 @@ import java.util.Map;
  * In this example, the map will contain keys like {@code "state"} and {@code "active"},
  * each pointing to a {@code ServiceNowSchemaField} instance with metadata about that field.
  */
-public class ServiceNowSchemaResult {
+public class MetadataAPISchemaResult {
   private final Map<String, ServiceNowSchemaField> columns;
 
-  public ServiceNowSchemaResult(Map<String, ServiceNowSchemaField> columns) {
+  public MetadataAPISchemaResult(Map<String, ServiceNowSchemaField> columns) {
     this.columns = columns;
   }
 

@@ -18,6 +18,7 @@ package io.cdap.plugin.servicenow.apiclient;
 
 import com.google.common.base.Joiner;
 import io.cdap.plugin.servicenow.restapi.RestAPIRequest;
+import io.cdap.plugin.servicenow.util.SchemaType;
 import io.cdap.plugin.servicenow.util.SourceValueType;
 
 import java.net.URLEncoder;
@@ -48,9 +49,17 @@ public class ServiceNowTableAPIRequestBuilder extends RestAPIRequest.Builder {
    */
   private static final String METADATA_API_URL_TEMPLATE = "%s/api/now/ui/meta/%s";
 
-  public ServiceNowTableAPIRequestBuilder(String instanceBaseUrl, String tableName, boolean isSchemaRequired) {
+  public ServiceNowTableAPIRequestBuilder(String instanceBaseUrl, String tableName, boolean isSchemaRequired,
+                                          SchemaType schemaType) {
     if (isSchemaRequired) {
-      this.setUrl(String.format(METADATA_API_URL_TEMPLATE, instanceBaseUrl, tableName));
+      if (SchemaType.METADATA_API_BASED == schemaType) {
+        this.setUrl(String.format(METADATA_API_URL_TEMPLATE, instanceBaseUrl, tableName));
+      } else if (SchemaType.SCHEMA_API_BASED == schemaType) {
+        this.setUrl(String.format(SCHEMA_API_URL_TEMPLATE, instanceBaseUrl, tableName));
+      } else {
+        this.setUrl(String.format(TABLE_API_URL_TEMPLATE, instanceBaseUrl, tableName));
+        this.setLimit(1);
+      }
     } else {
       this.setUrl(String.format(TABLE_API_URL_TEMPLATE, instanceBaseUrl, tableName));
     }

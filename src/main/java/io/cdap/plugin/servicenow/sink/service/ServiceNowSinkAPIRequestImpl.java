@@ -71,7 +71,7 @@ public class ServiceNowSinkAPIRequestImpl {
 
   public ServiceNowSinkAPIRequestImpl(ServiceNowSinkConfig conf) {
     this.config = conf;
-    restApi = new ServiceNowTableAPIClientImpl(config.getConnection());
+    restApi = new ServiceNowTableAPIClientImpl(config.getConnection(), config.getUseConnection());
   }
 
   public RestRequest getRestRequest(JsonObject jsonObject) {
