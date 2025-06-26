@@ -147,7 +147,8 @@ public class ServiceNowSinkConfig extends ServiceNowBaseConfig {
       || containsMacro(ServiceNowConstants.PROPERTY_OPERATION) || containsMacro(PROPERTY_EXTERNAL_ID_FIELD)) {
       return;
     }
-    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(this.getConnection());
+    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(this.getConnection(),
+                                                                            this.getUseConnection());
     Schema tableSchema = restApi.fetchTableSchema(tableName, collector);
     if (tableSchema == null) {
       throw collector.getOrThrowException();

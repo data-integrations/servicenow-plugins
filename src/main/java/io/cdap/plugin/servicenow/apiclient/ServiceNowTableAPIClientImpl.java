@@ -30,13 +30,16 @@ import com.google.gson.reflect.TypeToken;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
+import io.cdap.plugin.servicenow.model.APIResponse;
+import io.cdap.plugin.servicenow.model.CreateRecordAPIResponse;
+import io.cdap.plugin.servicenow.model.MetadataAPISchemaField;
+import io.cdap.plugin.servicenow.model.MetadataAPISchemaResponse;
+import io.cdap.plugin.servicenow.model.SchemaAPISchemaField;
+import io.cdap.plugin.servicenow.model.SchemaAPISchemaResponse;
 import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
-import io.cdap.plugin.servicenow.sink.model.APIResponse;
-import io.cdap.plugin.servicenow.sink.model.CreateRecordAPIResponse;
-import io.cdap.plugin.servicenow.sink.model.SchemaResponse;
-import io.cdap.plugin.servicenow.sink.model.ServiceNowSchemaField;
 import io.cdap.plugin.servicenow.util.SchemaBuilder;
+import io.cdap.plugin.servicenow.util.SchemaType;
 import io.cdap.plugin.servicenow.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceValueType;
@@ -76,10 +79,12 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   private static final String GLIDE_DATE_TIME_DATATYPE = "glide_date_time";
   private static final Gson GSON = new Gson();
   private final ServiceNowConnectorConfig conf;
+  public final SchemaType schemaType;
   public static JsonArray serviceNowJsonResultArray;
 
-  public ServiceNowTableAPIClientImpl(ServiceNowConnectorConfig conf) {
+  public ServiceNowTableAPIClientImpl(ServiceNowConnectorConfig conf, Boolean useConnection) {
     this.conf = conf;
+    this.schemaType = getSchemaTypeBasedOnUseConnection(useConnection);
   }
 
   public String getAccessToken() throws ServiceNowAPIException {
@@ -133,7 +138,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       int limit)
       throws ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.conf.getRestApiEndpoint(), tableName, false)
+      this.conf.getRestApiEndpoint(), tableName, false, schemaType)
       .setExcludeReferenceLink(true)
       .setDisplayValue(valueType)
       .setLimit(limit);
@@ -181,7 +186,6 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   }
 
   public List<Map<String, String>> parseResponseToResultListOfMap(String responseBody) {
-
 
     JsonObject jo = GSON.fromJson(responseBody, JsonObject.class);
     JsonArray ja = jo.getAsJsonArray(ServiceNowConstants.RESULT);
@@ -271,20 +275,30 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   }
 
   @VisibleForTesting
-  public SchemaResponse parseSchemaResponse(String responseBody) {
-    return GSON.fromJson(responseBody, SchemaResponse.class);
+  public MetadataAPISchemaResponse parseSchemaResponse(String responseBody) {
+    return GSON.fromJson(responseBody, MetadataAPISchemaResponse.class);
   }
 
   /**
    * Fetches the table schema from ServiceNow
    *
    * @param tableName ServiceNow table name for which schema is getting fetched
+   * @param valueType Whether to fetch schema for actual value or display value
    * @return schema for given ServiceNow table
    * @throws ServiceNowAPIException
    */
   public Schema fetchTableSchema(String tableName, SourceValueType valueType)
       throws ServiceNowAPIException {
-      return fetchTableSchema(tableName, getAccessToken(), valueType);
+    return fetchTableSchema(tableName, getAccessToken(), valueType, schemaType);
+  }
+
+  private SchemaType getSchemaTypeBasedOnUseConnection(Boolean useConnection) {
+    // use connection was added in release/1.2, so it will be null for users who are upgrading from release/1.1
+    // This is added to support backward compatibility for 1.1 users.
+    if (useConnection == null) {
+      return SchemaType.STRING_BASED;
+    }
+    return SchemaType.SCHEMA_API_BASED;
   }
 
   /**
@@ -293,25 +307,92 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param tableName ServiceNow table name for which schema is getting fetched
    * @param accessToken Access Token to use
    * @param valueType Type of value (Actual/Display)
+   * @param schemaType Enum to determine which approach to take to fetch schema.
    * @return schema for given ServiceNow table
    */
-  public Schema fetchTableSchema(String tableName, String accessToken, SourceValueType valueType)
+  public Schema fetchTableSchema(String tableName, String accessToken, SourceValueType valueType,
+                                 SchemaType schemaType)
       throws ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.conf.getRestApiEndpoint(), tableName, true)
+      this.conf.getRestApiEndpoint(), tableName, true, schemaType)
       .setExcludeReferenceLink(true);
 
     RestAPIResponse restAPIResponse;
     requestBuilder.setAuthHeader(accessToken);
     restAPIResponse = executeGetWithRetries(requestBuilder.build());
-    SchemaResponse schemaResponse = parseSchemaResponse(restAPIResponse.getResponseBody());
     List<ServiceNowColumn> columns = new ArrayList<>();
 
-    if (schemaResponse.getResult() == null && schemaResponse.getResult().getColumns().isEmpty()) {
-      throw new RuntimeException("Error - Schema Response does not contain any result");
+    if (schemaType == SchemaType.METADATA_API_BASED) {
+      return prepareSchemaWithMetadataAPI(restAPIResponse, columns, tableName, valueType);
+    } else if (schemaType == SchemaType.SCHEMA_API_BASED) {
+      return prepareSchemaWithSchemaAPI(restAPIResponse, columns, tableName);
+    } else {
+      return prepareStringBasedSchema(restAPIResponse, columns, tableName);
+    }
+  }
+
+  /**
+   * Processes a schema response obtained from the ServiceNow Table API (without using Metadata API)
+   * and constructs a {@link Schema} object based on the parsed column definitions.
+   *
+   * <p>This method parses the raw JSON response body into a list of schema fields,
+   * extracts the internal column types, and appends them to the provided column list.
+   * The final schema is constructed using the {@link SchemaBuilder} utility.</p>
+   *
+   * @param restAPIResponse The raw API response received from the ServiceNow Table API.
+   * @param columns         A list to which parsed {@link ServiceNowColumn} objects will be added.
+   * @param tableName       The name of the table for which the schema is being constructed.
+   *
+   * @return A {@link Schema} object representing the table structure as interpreted from the Schema API.
+   *
+   * @throws RuntimeException if the schema response is null or contains no result.
+   */
+  private Schema prepareSchemaWithSchemaAPI(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
+                                            String tableName) throws ServiceNowAPIException {
+    SchemaAPISchemaResponse schemaAPISchemaResponse =
+      GSON.fromJson(restAPIResponse.getResponseBody(), SchemaAPISchemaResponse.class);
+
+    if (schemaAPISchemaResponse.getResult() == null || schemaAPISchemaResponse.getResult().isEmpty()) {
+      throw new ServiceNowAPIException(
+       "Schema Response does not contain any result", null, null, false);
     }
 
-    for (ServiceNowSchemaField field : schemaResponse.getResult().getColumns().values()) {
+    for (SchemaAPISchemaField field : schemaAPISchemaResponse.getResult()) {
+      columns.add(new ServiceNowColumn(field.getName(), field.getInternalType()));
+    }
+    return SchemaBuilder.constructSchema(tableName, columns);
+  }
+
+  /**
+   * Parses a ServiceNow schema response obtained via the Metadata API and constructs a
+   * {@link Schema} object using the extracted field information and value type preferences.
+   *
+   * <p>This method reads the JSON response, extracts the column metadata including field names
+   * and data types, and adds each as a {@link ServiceNowColumn} to the provided list. The choice
+   * between internal values and display values is based on the {@code valueType} parameter.</p>
+   *
+   * @param restAPIResponse The response returned from the ServiceNow Metadata API.
+   * @param columns         A list to which parsed {@link ServiceNowColumn} definitions will be added.
+   * @param tableName       The name of the ServiceNow table for which the schema is being generated.
+   * @param valueType       The value type preference (e.g., {@code SHOW_DISPLAY_VALUE} or {@code USE_INTERNAL_VALUE}).
+   *                        Determines whether to use display types or internal types in the resulting schema.
+   *
+   * @return A {@link Schema} object representing the table structure as interpreted from the Metadata API.
+   *
+   * @throws RuntimeException if the response does not contain valid column information.
+   */
+  private Schema prepareSchemaWithMetadataAPI(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
+                                              String tableName, SourceValueType valueType) throws
+    ServiceNowAPIException {
+    MetadataAPISchemaResponse metadataAPISchemaResponse = parseSchemaResponse(restAPIResponse.getResponseBody());
+
+    if (metadataAPISchemaResponse.getResult() == null || metadataAPISchemaResponse.getResult().getColumns() == null ||
+      metadataAPISchemaResponse.getResult().getColumns().isEmpty()) {
+      throw new ServiceNowAPIException(
+        "Schema Response does not contain any result", null, null, false);
+    }
+
+    for (MetadataAPISchemaField field : metadataAPISchemaResponse.getResult().getColumns().values()) {
       if (valueType.equals(SourceValueType.SHOW_DISPLAY_VALUE) &&
         !Objects.equals(field.getType(), field.getInternalType())) {
         columns.add(new ServiceNowColumn(field.getName(), field.getType()));
@@ -347,7 +428,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    */
   public int getTableRecordCount(String tableName, String accessToken) throws ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.conf.getRestApiEndpoint(), tableName, false)
+      this.conf.getRestApiEndpoint(), tableName, false, schemaType)
       .setExcludeReferenceLink(true)
       .setDisplayValue(SourceValueType.SHOW_DISPLAY_VALUE)
       .setLimit(1);
@@ -367,7 +448,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    */
   public String createRecord(String tableName, HttpEntity entity) throws IOException, ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.conf.getRestApiEndpoint(), tableName, false);
+      this.conf.getRestApiEndpoint(), tableName, false, schemaType);
     String systemID;
     RestAPIResponse apiResponse = null;
     try {
@@ -395,7 +476,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   public String createRecordInDisplayMode(String tableName, HttpEntity entity) throws
     IOException, ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.conf.getRestApiEndpoint(), tableName, false);
+      this.conf.getRestApiEndpoint(), tableName, false, SchemaType.SCHEMA_API_BASED);
     String systemID;
     RestAPIResponse apiResponse = null;
     try {
@@ -431,7 +512,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       throws ServiceNowAPIException {
 
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      this.conf.getRestApiEndpoint(), tableName, false)
+      this.conf.getRestApiEndpoint(), tableName, false, schemaType)
       .setQuery(query);
 
     RestAPIResponse restAPIResponse;
@@ -442,6 +523,31 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     APIResponse apiResponse = GSON.fromJson(restAPIResponse.getResponseBody(), APIResponse.class);
     return apiResponse.getResult().get(0);
   }
+
+  /**
+   * Processes the response obtained from the ServiceNow Table API
+   * and constructs a {@link Schema} object based on the first record.
+   *
+   * @param restAPIResponse The raw API response received from the ServiceNow Table API.
+   * @param columns         A list to which parsed {@link ServiceNowColumn} objects will be added.
+   * @param tableName       The name of the table for which the schema is being constructed.
+   *
+   * @return A {@link Schema} object representing the table structure as interpreted from the Schema API.
+   *
+   * @throws RuntimeException if the schema response is null or contains no result.
+   */
+  private Schema prepareStringBasedSchema(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
+                                          String tableName) {
+    List<Map<String, String>> result = parseResponseToResultListOfMap(restAPIResponse.getResponseBody());
+    if (result != null && !result.isEmpty()) {
+      Map<String, String> firstRecord = result.get(0);
+      for (String key : firstRecord.keySet()) {
+        columns.add(new ServiceNowColumn(key, "string"));
+      }
+    }
+    return SchemaBuilder.constructSchema(tableName, columns);
+  }
+
 
   /**
    * This function is being used in end-to-end (e2e) tests to delete a record from

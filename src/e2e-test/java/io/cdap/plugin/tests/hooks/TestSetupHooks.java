@@ -65,7 +65,7 @@ public class TestSetupHooks {
   @Before(order = 2, value = "@SN_PRODUCT_CATALOG_ITEM")
   public static void createRecordInProductCatalogItemTable() throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Product Catalog Item table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection(), true);
     String uniqueId = "TestProductCatalogItem" + RandomStringUtils.randomAlphanumeric(10);
     String recordDetails = "{'name':'" + uniqueId + "','price':'2500'}";
     StringEntity entity = new StringEntity(recordDetails);
@@ -76,7 +76,7 @@ public class TestSetupHooks {
   public static void createRecordInReceivingSlipLineTable()
       throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Receiving Slip Line table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection(), true);
     String uniqueId = "TestReceivingSlipLine" + RandomStringUtils.randomAlphanumeric(10);
     String recordDetails = "{'number':'" + uniqueId + "'}";
     StringEntity entity = new StringEntity(recordDetails);
@@ -88,7 +88,7 @@ public class TestSetupHooks {
   public static void createRecordInDateTimeTable()
     throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Date time table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection(), false);
     String recordDetails = "{'u_date': '2025-05-28 15:07'," +
       "  'u_datetime1': '28.05.2025 03:07:56 PM'," +
       "  'u_datetime2': '28.05.2025 03.07.56 PM'," +
@@ -110,7 +110,7 @@ public class TestSetupHooks {
 
   @After(order = 2, value = "@SN_DATE_TIME_TABLE")
   public static void deleteRecord() throws ServiceNowAPIException, IOException {
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection(), false);
     tableAPIClient.deleteRecordFromServiceNowTable(TablesInTableMode.DATE_TIME_TABLE.value, TestSetupHooks.systemId);
     BeforeActions.scenario.write("Record in Date time table: " + systemId + " deleted successfully");
   }
@@ -119,7 +119,7 @@ public class TestSetupHooks {
   public static void updateRecordInAgentAssistRecommendationTable()
       throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Agent Assist Recommendation table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection(), true);
     String uniqueId = "TestAgentAssist" + RandomStringUtils.randomAlphanumeric(10);
     String recordDetails = "{'active':'false','name':'" + uniqueId + "'}";
     StringEntity entity = new StringEntity(recordDetails);
@@ -130,7 +130,7 @@ public class TestSetupHooks {
   public static void updateRecordInAgentVendorCatalogItem()
       throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Vendor Catalog Item table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection(), true);
     String uniqueId = "TestVendorCatalog" + RandomStringUtils.randomAlphanumeric(10);
     String recordDetails = "{'out_of_stock':'false','product_id':'" + uniqueId + "'}";
     StringEntity entity = new StringEntity(recordDetails);
@@ -140,7 +140,7 @@ public class TestSetupHooks {
   @Before(order = 2, value = "@SN_UPDATE_SERVICE_OFFERING")
   public static void updateRecordInServiceOffering() throws IOException, ServiceNowAPIException {
     BeforeActions.scenario.write("Create new record in Service Offering table");
-    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection());
+    ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection(), true);
     String uniqueId = "TestServiceOffering" + RandomStringUtils.randomAlphanumeric(10);
     String recordDetails = "{'purchase_date':'2022-05-28','end_date':'2022-06-05 15:00:00'," +
         " 'start_date':'2022-05-25 15:00:00','number':'" + uniqueId + "'}";

@@ -83,7 +83,8 @@ public class ServiceNowSource extends BatchSource<NullWritable, StructuredRecord
                                                                                  conf.getConnection(),
                                                                                  conf.getTableName(),
                                                                                  conf.getApplicationName(),
-                                                                                 conf.getValueType());
+                                                                                 conf.getValueType(),
+                                                                                 conf.getUseConnection());
       stageConfigurer.setOutputSchema(tableInfo.stream().findFirst().get().getSchema());
     } else if (conf.getQueryMode() == SourceQueryMode.REPORTING) {
       stageConfigurer.setOutputSchema(null);

@@ -14,20 +14,18 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.sink.model;
+package io.cdap.plugin.servicenow.model;
 
-import java.util.List;
 import java.util.Map;
 
 /**
- * Model class for API Response from ServiceNow Table APIs
+ * Model class for API Response from ServiceNow Table Create Record APIs
  */
-public class APIResponse {
-  
-  private List<Map<String, String>> result;
+public class CreateRecordAPIResponse {
 
-  public List<Map<String, String>> getResult() {
+  private Map<String, Object> result;
+
+  public Map<String, Object> getResult() {
     return result;
   }
-
 }
