@@ -240,6 +240,12 @@
     <dependency>
       <groupId>org.apache.oltu.oauth2</groupId>
       <artifactId>org.apache.oltu.oauth2.client</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+        </exclusion>
+      </exclusions>
       <version>1.0.2</version>
     </dependency>
     <dependency>
