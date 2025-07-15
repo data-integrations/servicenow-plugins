@@ -119,6 +119,7 @@ public class ServiceNowTableAPIClientImplTest {
 
   @Test
   public void testFetchTableSchema_DisplayValueType() throws Exception {
+
     ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
     ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
     ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
