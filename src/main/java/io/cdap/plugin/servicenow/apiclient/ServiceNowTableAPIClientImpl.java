@@ -42,6 +42,10 @@ import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceValueType;
 import io.cdap.plugin.servicenow.util.Util;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
@@ -381,6 +385,35 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     return systemID;
   }
 
+  /**
+   * Create a new record in the ServiceNow Table using display mode as true
+   *
+   * @param tableName ServiceNow Table name
+   * @param entity    Details of the Record to be created
+   * @description This function is being used in end-to-end (e2e) tests to fetch a record from the ServiceNow Table.
+   */
+  public String createRecordInDisplayMode(String tableName, HttpEntity entity) throws
+    IOException, ServiceNowAPIException {
+    ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
+      this.conf.getRestApiEndpoint(), tableName, false);
+    String systemID;
+    RestAPIResponse apiResponse = null;
+    try {
+      String accessToken = getAccessToken();
+      requestBuilder.setAuthHeader(accessToken);
+      requestBuilder.setAcceptHeader("application/json");
+      requestBuilder.setContentTypeHeader("application/json");
+      requestBuilder.setEntity(entity);
+      requestBuilder.setDisplayValue(SourceValueType.SHOW_DISPLAY_VALUE);
+      apiResponse = executePost(requestBuilder.build());
+
+      systemID = String.valueOf(getSystemId(apiResponse));
+    } catch (IOException e) {
+      throw new ServiceNowAPIException("Error in creating a new record", e, null, false);
+    }
+    return systemID;
+  }
+
   private String getSystemId(RestAPIResponse restAPIResponse) {
     CreateRecordAPIResponse apiResponse = GSON.fromJson(restAPIResponse.getResponseBody(),
                                                            CreateRecordAPIResponse.class);
@@ -408,5 +441,35 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
 
     APIResponse apiResponse = GSON.fromJson(restAPIResponse.getResponseBody(), APIResponse.class);
     return apiResponse.getResult().get(0);
+  }
+
+  /**
+   * This function is being used in end-to-end (e2e) tests to delete a record from
+   * ServiceNow application.
+   *
+   * @param tableName The ServiceNow table name
+   * @param sysId system Id of the record
+   */
+  public void deleteRecordFromServiceNowTable(String tableName, String sysId)
+    throws ServiceNowAPIException, IOException {
+
+    String accessToken = getAccessToken();
+    String endpoint = String.format("%s/api/now/table/%s/%s", this.conf.getRestApiEndpoint(), tableName, sysId);
+
+    HttpDelete deleteRequest = new HttpDelete(endpoint);
+    deleteRequest.setHeader("Authorization", "Bearer " + accessToken);
+    deleteRequest.setHeader("Accept", "application/json");
+
+    try (CloseableHttpClient httpClient = HttpClients.createDefault();
+         CloseableHttpResponse response = httpClient.execute(deleteRequest)) {
+
+      int statusCode = response.getStatusLine().getStatusCode();
+
+      if (statusCode != 204) {
+        throw new ServiceNowAPIException(
+          String.format("Failed to delete record. Status: %d", statusCode), null, null, false);
+      }
+      LOG.info("Record deleted successfully. sys_id: " + sysId);
+    }
   }
 }

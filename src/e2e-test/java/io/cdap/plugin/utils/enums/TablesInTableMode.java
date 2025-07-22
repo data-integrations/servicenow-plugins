@@ -35,6 +35,7 @@ public enum TablesInTableMode {
   RECEIVING_SLIP_LINE("proc_rec_slip_item"),
   AGENT_ASSIST_RECOMMENDATION("agent_assist_recommendation"),
   SERVICE_OFFERING("service_offering"),
+  DATE_TIME_TABLE("u_datetimetable"),
   INVALID_TABLE("blahblah");
   public final String value;
 

@@ -18,7 +18,7 @@
 @Regression
 Feature: ServiceNow Source - Run time scenarios (macro)
 
-  @TS-SN-RNTM-MACRO-01 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-RNTM-MACRO-01 @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE @BQ_SINK
   Scenario: Verify user should be able to preview a pipeline when ServiceNow plugin is configured with macros
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
@@ -42,7 +42,7 @@ Feature: ServiceNow Source - Run time scenarios (macro)
     Then Validate "BigQuery" plugin properties
     And Close the Plugin Properties page
     And Preview and run the pipeline
-    And Enter runtime argument value "receiving_slip_line" for key "tableName"
+    And Enter runtime argument value "date_time_table" for key "tableName"
     And Enter runtime argument value from environment variable "client.id" for key "clientId"
     And Enter runtime argument value from environment variable "client.secret" for key "clientSecret"
     And Enter runtime argument value from environment variable "rest.api.endpoint" for key "restApiEndpoint"
@@ -51,7 +51,7 @@ Feature: ServiceNow Source - Run time scenarios (macro)
     And Run the preview of pipeline with runtime arguments
     Then Verify the preview of pipeline is "success"
 
-  @TS-SN-RNTM-MACRO-02 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-RNTM-MACRO-02 @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE @BQ_SINK
   Scenario: Verify user should be able to run a pipeline when ServiceNow plugin is configured with macros
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
@@ -76,7 +76,7 @@ Feature: ServiceNow Source - Run time scenarios (macro)
     And Close the Plugin Properties page
     And Save and Deploy Pipeline
     And Run the Pipeline in Runtime
-    And Enter runtime argument value "receiving_slip_line" for key "tableName"
+    And Enter runtime argument value "date_time_table" for key "tableName"
     And Enter runtime argument value from environment variable "client.id" for key "clientId"
     And Enter runtime argument value from environment variable "client.secret" for key "clientSecret"
     And Enter runtime argument value from environment variable "rest.api.endpoint" for key "restApiEndpoint"
@@ -87,7 +87,7 @@ Feature: ServiceNow Source - Run time scenarios (macro)
     And Open and capture logs
     Then Verify the pipeline status is "Succeeded"
 
-  @TS-SN-RNTM-MACRO-03 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-RNTM-MACRO-03 @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE @BQ_SINK
   Scenario: Verify pipeline failure message in logs when user provides an invalid Table Name with Macros
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
@@ -116,14 +116,14 @@ Feature: ServiceNow Source - Run time scenarios (macro)
     | Level | Message                              |
     | ERROR | invalid.tablename.logsmessage        |
 
-  @TS-SN-RNTM-MACRO-04 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-RNTM-MACRO-04 @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE @BQ_SINK
   Scenario: Verify pipeline failure message in logs when user provides invalid Credentials with Macros
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow"
     And Fill Reference Name
     And Select mode as: "TABLE"
-    And Enter input plugin property: "tableName" with value: "receiving_slip_line"
+    And Enter input plugin property: "tableName" with value: "date_time_table"
     And Click on the Macro button of Property: "clientId" and set the value to: "clientId"
     And Click on the Macro button of Property: "clientSecret" and set the value to: "clientSecret"
     And Click on the Macro button of Property: "restApiEndpoint" and set the value to: "restApiEndpoint"
@@ -153,7 +153,7 @@ Feature: ServiceNow Source - Run time scenarios (macro)
       | Level | Message                                |
       | ERROR | invalid.credentials.logsmessage        |
 
-  @TS-SN-RNTM-MACRO-05 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-RNTM-MACRO-05 @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE @BQ_SINK
   Scenario: Verify pipeline failure message in logs when user provides invalid Advanced Properties with Macros
     When Open Datafusion Project to configure pipeline
     When Open Datafusion Project to configure pipeline
@@ -161,7 +161,7 @@ Feature: ServiceNow Source - Run time scenarios (macro)
     And Navigate to the properties page of plugin: "ServiceNow"
     And Fill Reference Name
     And Select mode as: "TABLE"
-    And Enter input plugin property: "tableName" with value: "receiving_slip_line"
+    And Enter input plugin property: "tableName" with value: "date_time_table"
     And fill Credentials section for pipeline user
     And Click on the Macro button of Property: "startDate" and set the value to: "startDate"
     And Click on the Macro button of Property: "endDate" and set the value to: "endDate"

@@ -44,12 +44,12 @@ Feature: ServiceNow Source - Run time scenarios
     And Click on the Preview Data link on the Sink plugin node: "BigQuery"
     Then Verify sink plugin's Preview Data for Input Records table and the Input Schema matches the Output Schema of Source plugin
 
-  @TS-SN-RNTM-2 @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-RNTM-2 @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE @BQ_SINK
   Scenario: Verify user should be able to deploy and run the pipeline where ServiceNow source is configured for Table mode
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
     And Navigate to the properties page of plugin: "ServiceNow"
-    And configure ServiceNow source plugin for table: "RECEIVING_SLIP_LINE" in the Table mode
+    And configure ServiceNow source plugin for table: "DATE_TIME_TABLE" in the Table mode
     And fill Credentials section for pipeline user
     And Enter input plugin property: "startDate" with value: "start.date"
     And Enter input plugin property: "endDate" with value: "end.date"
@@ -70,7 +70,7 @@ Feature: ServiceNow Source - Run time scenarios
     And Verify the pipeline status is "Succeeded"
     And Verify count of no of records transferred to the target BigQuery Table
 
-  @TS-SN-RNTM-03 @CONNECTION @SN_SOURCE_CONFIG @SN_RECEIVING_SLIP_LINE @BQ_SINK
+  @TS-SN-RNTM-03 @CONNECTION @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE @BQ_SINK
   Scenario: Verify user should be able to deploy and run the pipeline using connection manager functionality
     When Open Datafusion Project to configure pipeline
     And Select plugin: "ServiceNow" from the plugins list as: "Source"
@@ -85,7 +85,7 @@ Feature: ServiceNow Source - Run time scenarios
     And Verify the test connection is successful
     Then Click on the Create button
     And Use new connection
-    And configure ServiceNow source plugin for table: "RECEIVING_SLIP_LINE" in the Table mode
+    And configure ServiceNow source plugin for table: "DATE_TIME_TABLE" in the Table mode
     Then Validate "ServiceNow" plugin properties
     And Close the Plugin Properties page
     And Select Sink plugin: "BigQueryTable" from the plugins list
@@ -102,3 +102,54 @@ Feature: ServiceNow Source - Run time scenarios
     And Open and capture logs
     And Verify the pipeline status is "Succeeded"
     Then Verify count of no of records transferred to the target BigQuery Table
+
+  @TS-SN-RNTM-4 @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE @BQ_SINK
+  Scenario: Verify user should be able to deploy and run the pipeline with dateTime table with value type display
+    When Open Datafusion Project to configure pipeline
+    And Select plugin: "ServiceNow" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And configure ServiceNow source plugin for table: "DATE_TIME_TABLE" in the Table mode
+    And fill Credentials section for pipeline user
+    And Select dropdown plugin property: "valueType" with option value: "Display"
+    Then Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Select Sink plugin: "BigQueryTable" from the plugins list
+    And Connect source as "ServiceNow" and sink as "BigQueryTable" to establish connection
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Replace input plugin property: "project" with value: "projectId"
+    And Enter input plugin property: "datasetProject" with value: "datasetprojectId"
+    And Configure BigQuery sink plugin for Dataset and Table
+    Then Validate "BigQuery" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    And Verify the pipeline status is "Succeeded"
+    And Verify count of no of records transferred to the target BigQuery Table
+    Then Verify If new record created in ServiceNow application for table "date_time_table" is correct
+
+  @TS-SN-RNTM-5 @SN_SOURCE_CONFIG @SN_DATE_TIME_TABLE @BQ_SINK
+  Scenario: Verify user should be able to deploy and run the pipeline with dateTime table with value type Actual
+    When Open Datafusion Project to configure pipeline
+    And Select plugin: "ServiceNow" from the plugins list as: "Source"
+    And Navigate to the properties page of plugin: "ServiceNow"
+    And configure ServiceNow source plugin for table: "DATE_TIME_TABLE" in the Table mode
+    And fill Credentials section for pipeline user
+    Then Validate "ServiceNow" plugin properties
+    And Close the Plugin Properties page
+    And Select Sink plugin: "BigQueryTable" from the plugins list
+    And Connect source as "ServiceNow" and sink as "BigQueryTable" to establish connection
+    And Navigate to the properties page of plugin: "BigQuery"
+    And Replace input plugin property: "project" with value: "projectId"
+    And Enter input plugin property: "datasetProject" with value: "datasetprojectId"
+    And Configure BigQuery sink plugin for Dataset and Table
+    Then Validate "BigQuery" plugin properties
+    And Close the Plugin Properties page
+    And Save and Deploy Pipeline
+    And Run the Pipeline in Runtime
+    And Wait till pipeline is in running state
+    And Open and capture logs
+    And Verify the pipeline status is "Succeeded"
+    And Verify count of no of records transferred to the target BigQuery Table
+    Then Verify If new record created in ServiceNow application for table "date_time_table" is correct
