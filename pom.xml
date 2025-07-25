@@ -68,6 +68,7 @@
     <junit.version>4.12</junit.version>
     <slf4j.version>1.7.5</slf4j.version>
     <powermock.version>2.0.2</powermock.version>
+    <json.version>20231013</json.version>
     <testSourceLocation>${project.basedir}/src/test/java/</testSourceLocation>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -218,6 +219,12 @@
     <dependency>
       <groupId>org.apache.oltu.oauth2</groupId>
       <artifactId>org.apache.oltu.oauth2.client</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+        </exclusion>
+      </exclusions>
       <version>1.0.2</version>
     </dependency>
     <dependency>
@@ -247,6 +254,11 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>1.2.8</version>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>${json.version}</version>
     </dependency>
   </dependencies>
 
