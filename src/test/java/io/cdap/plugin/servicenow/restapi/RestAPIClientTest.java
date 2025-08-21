@@ -48,7 +48,7 @@ public class RestAPIClientTest {
     RestAPIRequest request = builder.build();
 
     ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config);
+    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
     RestAPIResponse actualResponse = client.executeGet(request);
     Assert.assertNotNull(actualResponse.getException());
     Assert.assertTrue(actualResponse.getException().isErrorRetryable());
@@ -72,7 +72,7 @@ public class RestAPIClientTest {
     RestAPIRequest request = builder.build();
 
     ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config);
+    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
     RestAPIResponse actualResponse = client.executeGet(request);
     Assert.assertNotNull(actualResponse.getException());
     Assert.assertFalse(actualResponse.getException().isErrorRetryable());
@@ -99,7 +99,7 @@ public class RestAPIClientTest {
     RestAPIRequest request = builder.build();
 
     ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config);
+    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
     client.executeGet(request);
   }
 }

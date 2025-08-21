@@ -28,13 +28,10 @@ import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIRequestBuilder;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
+import io.cdap.plugin.servicenow.util.SchemaType;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceValueType;
-import org.apache.http.HttpStatus;
-import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
-import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 
-import java.io.IOException;
 import javax.annotation.Nullable;
 
 /**
@@ -56,6 +53,11 @@ public class ServiceNowBaseConfig extends PluginConfig {
   public ServiceNowBaseConfig(String clientId, String clientSecret, String restApiEndpoint,
                               String user, String password) {
     this.connection = new ServiceNowConnectorConfig(clientId, clientSecret, restApiEndpoint, user, password);
+  }
+
+  @Nullable
+  public Boolean getUseConnection() {
+    return useConnection;
   }
 
   @Nullable
@@ -83,7 +85,7 @@ public class ServiceNowBaseConfig extends PluginConfig {
   @VisibleForTesting
   public void validateServiceNowConnection(FailureCollector collector) {
     try {
-      ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(connection);
+      ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(connection, useConnection);
       restApi.getAccessToken();
     } catch (Exception e) {
       collector.addFailure("Unable to connect to ServiceNow Instance.",
@@ -123,13 +125,13 @@ public class ServiceNowBaseConfig extends PluginConfig {
                             String tableField) {
     // Call API to fetch first record from the table
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
-      connection.getRestApiEndpoint(), tableName, false)
+      connection.getRestApiEndpoint(), tableName, false, SchemaType.SCHEMA_API_BASED)
       .setExcludeReferenceLink(true)
       .setDisplayValue(valueType)
       .setLimit(1);
 
     RestAPIResponse apiResponse = null;
-    ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(connection);
+    ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(connection, useConnection);
     try {
       String accessToken = serviceNowTableAPIClient.getAccessToken();
       requestBuilder.setAuthHeader(accessToken);

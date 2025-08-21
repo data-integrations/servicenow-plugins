@@ -14,7 +14,7 @@
  * the License.
  */
 
-package io.cdap.plugin.servicenow.sink.model;
+package io.cdap.plugin.servicenow.model;
 
 import java.util.Map;
 
@@ -23,7 +23,7 @@ import java.util.Map;
  *
  * <p>The {@code columns} map contains metadata for each column in the ServiceNow table.
  * The key of the map is the column's internal name (as used in the table schema),
- * and the value is a {@link ServiceNowSchemaField} object containing the details for that column.
+ * and the value is a {@link MetadataAPISchemaField} object containing the details for that column.
  *
  * <p>Example JSON from ServiceNow:
  * <pre>
@@ -50,14 +50,14 @@ import java.util.Map;
  * In this example, the map will contain keys like {@code "state"} and {@code "active"},
  * each pointing to a {@code ServiceNowSchemaField} instance with metadata about that field.
  */
-public class ServiceNowSchemaResult {
-  private final Map<String, ServiceNowSchemaField> columns;
+public class MetadataAPISchemaResult {
+  private final Map<String, MetadataAPISchemaField> columns;
 
-  public ServiceNowSchemaResult(Map<String, ServiceNowSchemaField> columns) {
+  public MetadataAPISchemaResult(Map<String, MetadataAPISchemaField> columns) {
     this.columns = columns;
   }
 
-  public Map<String, ServiceNowSchemaField> getColumns() {
+  public Map<String, MetadataAPISchemaField> getColumns() {
     return columns;
   }
 }

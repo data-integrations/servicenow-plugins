@@ -17,8 +17,8 @@ package io.cdap.plugin.servicenow.sink.transform;
 
 import com.github.rholder.retry.RetryException;
 import com.google.gson.JsonObject;
+import io.cdap.plugin.servicenow.model.RestRequest;
 import io.cdap.plugin.servicenow.sink.ServiceNowSinkConfig;
-import io.cdap.plugin.servicenow.sink.model.RestRequest;
 import io.cdap.plugin.servicenow.sink.service.ServiceNowSinkAPIRequestImpl;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.hadoop.io.NullWritable;

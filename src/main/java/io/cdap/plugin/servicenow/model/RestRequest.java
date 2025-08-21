@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package io.cdap.plugin.servicenow.sink.model;
+package io.cdap.plugin.servicenow.model;
 
 import com.google.gson.annotations.SerializedName;
 import org.apache.http.Header;

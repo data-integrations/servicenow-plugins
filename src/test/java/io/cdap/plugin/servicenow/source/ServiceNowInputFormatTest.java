@@ -70,8 +70,7 @@ public class ServiceNowInputFormatTest {
   public void testFetchTableInfo() throws Exception {
     SourceQueryMode mode = SourceQueryMode.TABLE;
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     List<Map<String, String>> result = new ArrayList<>();
     Map<String, String> map = new HashMap<>();
     map.put("key", "value");
@@ -163,15 +162,14 @@ public class ServiceNowInputFormatTest {
     SourceApplication application = SourceApplication.PROCUREMENT;
     SourceValueType valueType = SourceValueType.SHOW_ACTUAL_VALUE;
     Assert.assertEquals(1, ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
-                                                                application, valueType).size());
+                                                                application, valueType, true).size());
   }
 
   @Test
   public void testFetchTableInfoReportingMode() throws Exception {
     SourceQueryMode mode = SourceQueryMode.REPORTING;
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     List<Map<String, String>> result = new ArrayList<>();
     Map<String, String> map = new HashMap<>();
     map.put("key", "value");
@@ -263,15 +261,14 @@ public class ServiceNowInputFormatTest {
     SourceApplication application = SourceApplication.PROCUREMENT;
     SourceValueType valueType = SourceValueType.SHOW_ACTUAL_VALUE;
     Assert.assertEquals(4, ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
-                                                                application, valueType).size());
+                                                                application, valueType, true).size());
   }
 
   @Test
   public void testFetchTableInfoWithEmptyTableName() throws Exception {
     SourceQueryMode mode = SourceQueryMode.TABLE;
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     List<Map<String, String>> result = new ArrayList<>();
     Map<String, String> map = new HashMap<>();
     map.put("key", "value");
@@ -305,6 +302,6 @@ public class ServiceNowInputFormatTest {
     SourceApplication application = SourceApplication.PROCUREMENT;
     SourceValueType valueType = SourceValueType.SHOW_ACTUAL_VALUE;
     Assert.assertTrue(ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
-                                                           application, valueType).isEmpty());
+                                                           application, valueType, true).isEmpty());
   }
 }

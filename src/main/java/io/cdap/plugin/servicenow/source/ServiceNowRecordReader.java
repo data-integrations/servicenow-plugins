@@ -116,7 +116,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
   protected void initialize(InputSplit split) {
     this.split = (ServiceNowInputSplit) split;
     this.pos = 0;
-    restApi = new ServiceNowTableAPIClientImpl(pluginConf.getConnection());
+    restApi = new ServiceNowTableAPIClientImpl(pluginConf.getConnection(), pluginConf.getUseConnection());
     tableName = ((ServiceNowInputSplit) split).getTableName();
     tableNameField = pluginConf.getTableNameField();
   }
