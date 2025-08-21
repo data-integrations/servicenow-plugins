@@ -29,15 +29,13 @@ import io.cdap.cdap.api.retry.RetryableException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIRequestBuilder;
-import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
+import io.cdap.plugin.servicenow.model.RestRequest;
+import io.cdap.plugin.servicenow.model.ServiceNowBatchRequest;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.sink.ServiceNowSinkConfig;
-import io.cdap.plugin.servicenow.sink.model.RestRequest;
-import io.cdap.plugin.servicenow.sink.model.ServiceNowBatchRequest;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
@@ -71,7 +69,7 @@ public class ServiceNowSinkAPIRequestImpl {
 
   public ServiceNowSinkAPIRequestImpl(ServiceNowSinkConfig conf) {
     this.config = conf;
-    restApi = new ServiceNowTableAPIClientImpl(config.getConnection());
+    restApi = new ServiceNowTableAPIClientImpl(config.getConnection(), config.getUseConnection());
   }
 
   public RestRequest getRestRequest(JsonObject jsonObject) {

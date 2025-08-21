@@ -92,8 +92,7 @@ public class ServiceNowRecordWriterTest {
     JsonObject jsonObject = new JsonObject();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Map<String, String> map = new HashMap<>();
     List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
@@ -104,8 +103,7 @@ public class ServiceNowRecordWriterTest {
     Mockito.when(restApi.executePost(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
-    PowerMockito.whenNew(OAuthClient.class).
-      withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     OAuthJSONAccessTokenResponse accessTokenResponse = Mockito.mock(OAuthJSONAccessTokenResponse.class);
     Mockito.when(oAuthClient.accessToken(Mockito.any(), Mockito.anyString(), Mockito.any(Class.class))).
       thenReturn(accessTokenResponse);
@@ -136,8 +134,7 @@ public class ServiceNowRecordWriterTest {
     JsonObject jsonObject = new JsonObject();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     ServiceNowSinkAPIRequestImpl serviceNowSinkAPIRequest = Mockito.mock(ServiceNowSinkAPIRequestImpl.class);
     PowerMockito.whenNew(ServiceNowSinkAPIRequestImpl.class).withParameterTypes(ServiceNowSinkConfig.class)
       .withArguments(Mockito.any(ServiceNowSinkConfig.class)).thenReturn(serviceNowSinkAPIRequest);
@@ -185,8 +182,7 @@ public class ServiceNowRecordWriterTest {
     JsonObject jsonObject = new JsonObject();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     ServiceNowSinkAPIRequestImpl serviceNowSinkAPIRequest = Mockito.mock(ServiceNowSinkAPIRequestImpl.class);
     PowerMockito.whenNew(ServiceNowSinkAPIRequestImpl.class).withParameterTypes(ServiceNowSinkConfig.class)
       .withArguments(Mockito.any(ServiceNowSinkConfig.class)).thenReturn(serviceNowSinkAPIRequest);

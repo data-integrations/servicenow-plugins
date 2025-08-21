@@ -277,8 +277,7 @@ public class ServiceNowRecordReaderTest {
     response.setColumns(columns);
     response.setResult(results);
     response.setTotalRecordCount(1);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                                         serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.
                                                           getEndDate(), split.getOffset(),
@@ -331,8 +330,7 @@ public class ServiceNowRecordReaderTest {
     response.setColumns(columns);
     response.setResult(results);
     response.setTotalRecordCount(1);
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                                         serviceNowSourceConfig.getStartDate(),
                                                         serviceNowSourceConfig.getEndDate(), split.getOffset(),
@@ -364,8 +362,7 @@ public class ServiceNowRecordReaderTest {
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     List<Map<String, String>> results = new ArrayList<>();
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getValueType(),
                                            serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(),
                                            split.getOffset(),

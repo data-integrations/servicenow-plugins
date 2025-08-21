@@ -15,7 +15,7 @@
  */
 package io.cdap.plugin.servicenow.sink;
 
-import io.cdap.plugin.servicenow.sink.model.RestRequest;
+import io.cdap.plugin.servicenow.model.RestRequest;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.junit.Assert;

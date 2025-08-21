@@ -97,8 +97,7 @@ public class ServiceNowConnectorTest {
     ConnectorContext context = new MockConnectorContext(new MockConnectorConfigurer());
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     ServiceNowConnector serviceNowConnector = new ServiceNowConnector(serviceNowSourceConfig.getConnection());
     serviceNowConnector.test(context);
     Assert.assertEquals(0, collector.getValidationFailures().size());
@@ -116,8 +115,7 @@ public class ServiceNowConnectorTest {
   public void testGenerateSpec() throws Exception {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Map<String, String> map = new HashMap<>();
     List<Map<String, String>> result = new ArrayList<>();
     map.put("key", "value");
@@ -137,8 +135,7 @@ public class ServiceNowConnectorTest {
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
-    PowerMockito.whenNew(OAuthClient.class).
-      withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     OAuthJSONAccessTokenResponse accessTokenResponse = Mockito.mock(OAuthJSONAccessTokenResponse.class);
     Mockito.when(oAuthClient.accessToken(Mockito.any(), Mockito.anyString(), Mockito.any(Class.class))).
       thenReturn(accessTokenResponse);
@@ -163,7 +160,7 @@ public class ServiceNowConnectorTest {
     SourceValueType valueType = SourceValueType.SHOW_DISPLAY_VALUE;
     Mockito.when(ServiceNowInputFormat.fetchTableInfo(mode, serviceNowSourceConfig.getConnection(),
                                                       serviceNowSourceConfig.getTableName(),
-                                                      null, valueType)).thenReturn(list);
+                                                      null, valueType, true)).thenReturn(list);
 
     ConnectorSpec connectorSpec = serviceNowConnector.generateSpec(new MockConnectorContext
                                                                      (new MockConnectorConfigurer()),

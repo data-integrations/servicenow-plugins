@@ -22,13 +22,8 @@ import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
-import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
-import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,7 +46,8 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
   public void initialize(InputSplit split, TaskAttemptContext context) {
     this.split = (ServiceNowInputSplit) split;
     this.pos = 0;
-    restApi = new ServiceNowTableAPIClientImpl(multiSourcePluginConf.getConnection());
+    restApi = new ServiceNowTableAPIClientImpl(multiSourcePluginConf.getConnection(),
+                                               multiSourcePluginConf.getUseConnection());
     tableName = ((ServiceNowInputSplit) split).getTableName();
     tableNameField = multiSourcePluginConf.getTableNameField();
     fetchSchema(restApi);
