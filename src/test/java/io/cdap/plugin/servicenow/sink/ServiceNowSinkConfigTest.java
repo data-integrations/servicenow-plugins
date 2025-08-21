@@ -23,13 +23,12 @@ import io.cdap.cdap.etl.api.validation.ValidationFailure;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
-import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
+import io.cdap.plugin.servicenow.model.MetadataAPISchemaField;
+import io.cdap.plugin.servicenow.model.MetadataAPISchemaResponse;
+import io.cdap.plugin.servicenow.model.MetadataAPISchemaResult;
 import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIRequest;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
-import io.cdap.plugin.servicenow.sink.model.SchemaResponse;
-import io.cdap.plugin.servicenow.sink.model.ServiceNowSchemaField;
-import io.cdap.plugin.servicenow.sink.model.ServiceNowSchemaResult;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -58,7 +57,7 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({RestAPIClient.class, HttpClientBuilder.class, RestAPIResponse.class,
-  ServiceNowTableAPIClientImpl.class})
+  ServiceNowTableAPIClientImpl.class, ServiceNowSinkConfig.class})
 public class ServiceNowSinkConfigTest {
 
   @Rule
@@ -276,8 +275,7 @@ public class ServiceNowSinkConfigTest {
                                                                              .build(), collector));
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withArguments(Mockito.any(ServiceNowSinkConfig.class))
-      .thenReturn(restApi);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Schema schema = Schema.recordOf("record",
                                     Schema.Field.of("id", Schema.of(Schema.Type.LONG)),
                                     Schema.Field.of("price", Schema.of(Schema.Type.DOUBLE)));
@@ -298,12 +296,12 @@ public class ServiceNowSinkConfigTest {
       "        }\n" +
       "    ]\n" +
       "}";
-    ServiceNowSchemaField schemaField = new ServiceNowSchemaField("Class", "sys_class_name",
-                                                                  "sys_class_name", "sys_class_name");
-    Map<String, ServiceNowSchemaField> columns = new HashMap<>();
+    MetadataAPISchemaField schemaField = new MetadataAPISchemaField("Class", "sys_class_name",
+                                                                    "sys_class_name", "sys_class_name");
+    Map<String, MetadataAPISchemaField> columns = new HashMap<>();
     columns.put("sys_class_name", schemaField);
-    ServiceNowSchemaResult schemaResult = new ServiceNowSchemaResult(columns);
-    SchemaResponse schemaResponse = new SchemaResponse(schemaResult);
+    MetadataAPISchemaResult schemaResult = new MetadataAPISchemaResult(columns);
+    MetadataAPISchemaResponse metadataAPISchemaResponse = new MetadataAPISchemaResponse(schemaResult);
     HttpResponse mockResponse = Mockito.mock(HttpResponse.class);
     Mockito.when(mockResponse.getStatusLine()).thenReturn(Mockito.mock(StatusLine.class));
     Mockito.when(mockResponse.getStatusLine().getStatusCode()).thenReturn(httpStatus);
@@ -329,7 +327,7 @@ public class ServiceNowSinkConfigTest {
     Mockito.when(restApi.executeGetWithRetries(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
     Mockito.when(restApi.fetchTableSchema(Mockito.anyString(), Mockito.any(FailureCollector.class))).thenReturn(schema);
     Mockito.when(restApi.parseSchemaResponse(restAPIResponse.getResponseBody()))
-      .thenReturn(schemaResponse);
+      .thenReturn(metadataAPISchemaResponse);
     try {
       config.validateSchema(schema, collector);
       collector.getOrThrowException();
@@ -349,8 +347,7 @@ public class ServiceNowSinkConfigTest {
                                                                              .build(), collector));
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
-    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withParameterTypes(ServiceNowConnectorConfig.class)
-      .withArguments(Mockito.any(ServiceNowConnectorConfig.class)).thenReturn(restApi);
+
     Schema schema = Schema.recordOf("record",
                                     Schema.Field.of("sys_class_name", Schema.of(Schema.Type.STRING)));
     List<Map<String, Object>> result = new ArrayList<>();
@@ -359,16 +356,11 @@ public class ServiceNowSinkConfigTest {
     result.add(map);
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
-      "  \"result\": {\n" +
-      "    \"columns\": {\n" +
-      "      \"sys_class_name\": {\n" +
-      "        \"label\": \"Class\",\n" +
-      "        \"internal_type\": \"sys_class_name\",\n" +
-      "        \"name\": \"sys_class_name\",\n" +
-      "        \"type\": \"sys_class_name\"\n" +
-      "      }\n" +
+      "  \"result\": [\n" +
+      "    {\n" +
+      "      \"sys_class_name\": \"class\"\n" +
       "    }\n" +
-      "  }\n" +
+      "  ]\n" +
       "}";
     RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);

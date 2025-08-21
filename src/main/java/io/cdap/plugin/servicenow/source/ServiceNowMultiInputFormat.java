@@ -67,20 +67,22 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
 
     // Depending on conf value fetch the list of fields for each table and create schema object
     // return the schema object for each table as ServiceNowTableInfo
-    Set<ServiceNowTableInfo> tableInfos = fetchTablesInfo(conf.getConnection(), conf.getTableNames());
+    Set<ServiceNowTableInfo> tableInfos = fetchTablesInfo(conf.getConnection(), conf.getTableNames(),
+                                                          conf.getUseConnection());
 
     jobConf.setTableInfos(tableInfos.stream().collect(Collectors.toList()));
 
     return tableInfos;
   }
 
-  static Set<ServiceNowTableInfo> fetchTablesInfo(ServiceNowConnectorConfig conf, String tableNames) {
+  static Set<ServiceNowTableInfo> fetchTablesInfo(ServiceNowConnectorConfig conf, String tableNames,
+                                                  Boolean useConnection) {
 
     Set<ServiceNowTableInfo> tablesInfos = new LinkedHashSet<>();
 
     Set<String> tableNameSet = getList(tableNames);
     for (String table : tableNameSet) {
-      ServiceNowTableInfo tableInfo = getTableMetaData(table, conf);
+      ServiceNowTableInfo tableInfo = getTableMetaData(table, conf, useConnection);
       if (tableInfo == null) {
         continue;
       }
@@ -90,9 +92,10 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     return tablesInfos;
   }
 
-  private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowConnectorConfig conf) {
+  private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowConnectorConfig conf,
+                                                      Boolean useConnection) {
     // Call API to fetch first record from the table
-    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(conf);
+    ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(conf, useConnection);
 
     Schema schema;
     int recordCount;

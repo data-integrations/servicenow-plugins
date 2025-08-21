@@ -15,8 +15,8 @@
  */
 package io.cdap.plugin.servicenow.sink;
 
-import io.cdap.plugin.servicenow.sink.model.RestRequest;
-import io.cdap.plugin.servicenow.sink.model.ServiceNowBatchRequest;
+import io.cdap.plugin.servicenow.model.RestRequest;
+import io.cdap.plugin.servicenow.model.ServiceNowBatchRequest;
 import org.junit.Assert;
 import org.junit.Test;
 import java.util.ArrayList;

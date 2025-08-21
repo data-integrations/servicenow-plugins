@@ -124,7 +124,7 @@ public class ServiceNowConnectorConfig extends PluginConfig {
 
   public void validateConnection(FailureCollector collector) {
     try {
-      ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(this);
+      ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(this, true);
       restApi.getAccessToken();
     } catch (Exception e) {
       collector.addFailure("Unable to connect to ServiceNow Instance.",
