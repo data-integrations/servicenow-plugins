@@ -105,6 +105,9 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
     // Fetch the schema
     try {
       Schema tempSchema = restApi.fetchTableSchema(tableName, multiSourcePluginConf.getValueType());
+      if (tempSchema == null) {
+        return;
+      }
       tableFields = tempSchema.getFields();
       List<Schema.Field> schemaFields = new ArrayList<>(tableFields);
       schemaFields.add(Schema.Field.of(tableNameField, Schema.of(Schema.Type.STRING)));

@@ -17,13 +17,13 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.util.SourceApplication;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
 import io.cdap.plugin.servicenow.util.SourceValueType;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -138,9 +138,14 @@ public class ServiceNowInputFormatTest {
       "        }\n" +
       "    ]\n" +
       "}";
+    String schemaString = "{\"type\":\"record\",\"name\":\"ServiceNowColumnMetaData\",\"fields\":[{\"name\":" +
+      "\"backgroundElementId\",\"type\":\"long\"},{\"name\":\"bgOrderPos\",\"type\":\"long\"},{\"name\":" +
+      "\"description\",\"type\":[\"string\",\"null\"]},{\"name\":\"userId\",\"type\":\"string\"}]}";
+    Schema schema = Schema.parseJson(schemaString);
     RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
+    Mockito.when(restApi.fetchTableSchema("table", SourceValueType.SHOW_ACTUAL_VALUE)).thenReturn(schema);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
@@ -237,9 +242,18 @@ public class ServiceNowInputFormatTest {
       "        }\n" +
       "    ]\n" +
       "}";
+    String schemaString = "{\"type\":\"record\",\"name\":\"ServiceNowColumnMetaData\",\"fields\":[{\"name\":" +
+      "\"backgroundElementId\",\"type\":\"long\"},{\"name\":\"bgOrderPos\",\"type\":\"long\"},{\"name\":" +
+      "\"description\",\"type\":[\"string\",\"null\"]},{\"name\":\"userId\",\"type\":\"string\"}]}";
+    Schema schema = Schema.parseJson(schemaString);
     RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
+    Mockito.when(restApi.fetchTableSchema("proc_po", SourceValueType.SHOW_ACTUAL_VALUE)).thenReturn(schema);
+    Mockito.when(restApi.fetchTableSchema("proc_po_item",
+                                          SourceValueType.SHOW_ACTUAL_VALUE)).thenReturn(schema);
+    Mockito.when(restApi.fetchTableSchema("proc_rec_slip",
+                                          SourceValueType.SHOW_ACTUAL_VALUE)).thenReturn(schema);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
@@ -260,7 +274,7 @@ public class ServiceNowInputFormatTest {
       thenReturn(response);
     SourceApplication application = SourceApplication.PROCUREMENT;
     SourceValueType valueType = SourceValueType.SHOW_ACTUAL_VALUE;
-    Assert.assertEquals(4, ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
+    Assert.assertEquals(3, ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
                                                                 application, valueType, true).size());
   }
 
