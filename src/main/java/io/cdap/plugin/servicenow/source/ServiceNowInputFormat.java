@@ -108,6 +108,9 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
     int recordCount = 0;
     try {
       schema = restApi.fetchTableSchema(tableName, valueType);
+      if (schema == null) {
+        return null;
+      }
       recordCount = restApi.getTableRecordCount(tableName);
     } catch (ServiceNowAPIException e) {
       throw new RuntimeException(String.format("Error in fetching table metadata due to reason: %s", e.getMessage()),
