@@ -533,6 +533,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param tableName       The name of the table for which the schema is being constructed.
    *
    * @return A {@link Schema} object representing the table structure as interpreted from the Schema API.
+   * Return null if table has no  records
    *
    * @throws RuntimeException if the schema response is null or contains no result.
    */
@@ -544,8 +545,9 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       for (String key : firstRecord.keySet()) {
         columns.add(new ServiceNowColumn(key, "string"));
       }
+      return SchemaBuilder.constructSchema(tableName, columns);
     }
-    return SchemaBuilder.constructSchema(tableName, columns);
+    return null;
   }
 
 

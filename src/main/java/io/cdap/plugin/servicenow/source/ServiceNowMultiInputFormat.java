@@ -104,6 +104,9 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
       // This is used for ServiceNowMultiSource and provides structure of the table and being dependent on
       // connector config, makes it a read only function
       schema = restApi.fetchTableSchema(tableName, SourceValueType.SHOW_ACTUAL_VALUE);
+      if (schema == null) {
+        return null;
+      }
       recordCount = restApi.getTableRecordCount(tableName);
     } catch (ServiceNowAPIException e) {
       throw new RuntimeException(e);
