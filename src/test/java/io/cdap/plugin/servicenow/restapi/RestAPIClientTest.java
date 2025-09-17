@@ -6,6 +6,7 @@ import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicStatusLine;
@@ -19,6 +20,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
+import java.net.SocketException;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
@@ -101,5 +103,50 @@ public class RestAPIClientTest {
     ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
     ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
     client.executeGet(request);
+  }
+
+  @Test
+  public void testExecuteGet_throwConnectTimeoutException_markAsRetryable() throws IOException {
+    CloseableHttpClient httpClient = Mockito.mock(CloseableHttpClient.class);
+    HttpClientBuilder httpClientBuilder = Mockito.mock(HttpClientBuilder.class);
+    PowerMockito.mockStatic(HttpClientBuilder.class);
+    PowerMockito.when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
+    Mockito.when(httpClientBuilder.build()).thenReturn(httpClient);
+    Mockito.when(httpClient.execute(Mockito.any()))
+      .thenThrow(new ConnectTimeoutException("Connection timed out"));
+
+    ServiceNowTableAPIRequestBuilder builder = new ServiceNowTableAPIRequestBuilder("url");
+    RestAPIRequest request = builder.build();
+
+    ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
+    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
+    RestAPIResponse actualResponse = client.executeGet(request);
+    Assert.assertNotNull(actualResponse.getException());
+    Assert.assertTrue(actualResponse.getException().isErrorRetryable());
+    Throwable ex = actualResponse.getException().getCause();
+    Assert.assertTrue("Expected ConnectTimeoutException or similar, got: " + ex,
+      ex instanceof ConnectTimeoutException || ex.getMessage().toLowerCase().contains("Connection timed out"));
+  }
+
+  @Test
+  public void testExecuteGet_throwSocketException_markAsRetryable() throws IOException {
+    CloseableHttpClient httpClient = Mockito.mock(CloseableHttpClient.class);
+    HttpClientBuilder httpClientBuilder = Mockito.mock(HttpClientBuilder.class);
+    PowerMockito.mockStatic(HttpClientBuilder.class);
+    PowerMockito.when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
+    Mockito.when(httpClientBuilder.build()).thenReturn(httpClient);
+    Mockito.when(httpClient.execute(Mockito.any()))
+      .thenThrow(new SocketException());
+
+    ServiceNowTableAPIRequestBuilder builder = new ServiceNowTableAPIRequestBuilder("url");
+    RestAPIRequest request = builder.build();
+
+    ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
+    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
+    RestAPIResponse actualResponse = client.executeGet(request);
+    Assert.assertNotNull(actualResponse.getException());
+    Assert.assertTrue(actualResponse.getException().isErrorRetryable());
+    Throwable ex = actualResponse.getException().getCause();
+    Assert.assertTrue("Expected SocketException or similar, got: " + ex, ex instanceof SocketException);
   }
 }

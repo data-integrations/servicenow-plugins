@@ -24,9 +24,11 @@ import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.oltu.oauth2.client.OAuthClient;
@@ -41,6 +43,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.SocketException;
+import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +54,17 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class RestAPIClient {
   private static final Logger LOG = LoggerFactory.getLogger(RestAPIClient.class);
+  
+  /* Connect Timout in ms for establishing the conenction with the server */
+  private static final int DEFAULT_CONNECT_TIMEOUT_MS = 120000;
+
+  /* Read Timeout in ms for waiting for data after the connection is established */
+  private static final int DEFAULT_READ_TIMEOUT_MS = 300000;
+
+  private static final RequestConfig requestConfig = RequestConfig.custom()
+    .setConnectTimeout(DEFAULT_CONNECT_TIMEOUT_MS)
+    .setSocketTimeout(DEFAULT_READ_TIMEOUT_MS)
+    .build();
 
   /**
    * Executes the Rest API request and returns the response.
@@ -61,10 +76,13 @@ public abstract class RestAPIClient {
     HttpGet httpGet = new HttpGet(request.getUrl());
     request.getHeaders().entrySet().forEach(e -> httpGet.addHeader(e.getKey(), e.getValue()));
 
-    try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+    try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build()) {
       try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
         return RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
       }
+    } catch (ConnectTimeoutException | SocketException e) {
+      ServiceNowAPIException exception = new ServiceNowAPIException(e, null);
+      return new RestAPIResponse(Collections.emptyMap(), null, exception);
     }
   }
 
@@ -136,7 +154,7 @@ public abstract class RestAPIClient {
     // We're retrying all transport exceptions while executing the HTTP POST method and the generic transport
     // exceptions in HttpClient are represented by the standard java.io.IOException class
     // https://hc.apache.org/httpclient-legacy/exception-handling.html
-    try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+    try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build()) {
       try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
         return RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
       }
