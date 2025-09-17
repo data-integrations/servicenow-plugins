@@ -281,4 +281,9 @@ public interface ServiceNowConstants {
    * Default Precision supported by ServiceNow Rest API
    */
   int DEFAULT_PRECISION = 20;
+
+  /**
+   * Suffix for ServiceNow fields that store elapsed time in seconds (e.g., calendar_stc, business_stc).
+   */
+  String STC_FIELD_SUFFIX = "_stc";
 }

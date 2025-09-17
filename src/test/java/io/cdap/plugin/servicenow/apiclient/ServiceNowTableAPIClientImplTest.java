@@ -187,4 +187,41 @@ public class ServiceNowTableAPIClientImplTest {
     Assert.assertEquals(Schema.Type.STRING,
       schema.getField("user_name").getSchema().getUnionSchemas().get(0).getType());
   }
+
+  @Test
+  public void testFetchTableSchema_StcFieldsWithDisplayValueType_ParseAsString() throws Exception {
+
+    ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
+    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
+    ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
+    String jsonResponse = "{\n" +
+      "  \"result\": {\n" +
+      "    \"columns\": {\n" +
+      "      \"calendar_stc\": {\n" +
+      "        \"label\": \"Resolve time\",\n" +
+      "        \"type\": \"integer\",\n" +
+      "        \"name\": \"calendar_stc\",\n" +
+      "        \"internal_type\": \"integer\"\n" +
+      "      },\n" +
+      "      \"business_stc\": {\n" +
+      "        \"label\": \"Business resolve time\",\n" +
+      "        \"type\": \"integer\",\n" +
+      "        \"name\": \"business_stc\",\n" +
+      "        \"internal_type\": \"integer\"\n" +
+      "      }\n" +
+      "    }\n" +
+      "  }\n" +
+      "}";
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
+    Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
+    Schema schema = implSpy.fetchTableSchema("incident", "dummy-access-token",
+                                             SourceValueType.SHOW_DISPLAY_VALUE, SchemaType.METADATA_API_BASED);
+    Assert.assertNotNull(schema);
+    Assert.assertEquals("record", schema.getDisplayName());
+    Assert.assertEquals(2, schema.getFields().size());
+    Assert.assertEquals(Schema.Type.STRING,
+                        schema.getField("business_stc").getSchema().getUnionSchemas().get(0).getType());
+    Assert.assertEquals(Schema.Type.STRING,
+                        schema.getField("calendar_stc").getSchema().getUnionSchemas().get(0).getType());
+  }
 }
