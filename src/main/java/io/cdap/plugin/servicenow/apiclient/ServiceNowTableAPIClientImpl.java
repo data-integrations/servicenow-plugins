@@ -65,6 +65,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
+import static io.cdap.plugin.servicenow.util.ServiceNowConstants.STC_FIELD_SUFFIX;
+
 /**
  * Implementation class for ServiceNow Table API.
  */
@@ -393,9 +395,14 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     }
 
     for (MetadataAPISchemaField field : metadataAPISchemaResponse.getResult().getColumns().values()) {
-      if (valueType.equals(SourceValueType.SHOW_DISPLAY_VALUE) &&
-        !Objects.equals(field.getType(), field.getInternalType())) {
-        columns.add(new ServiceNowColumn(field.getName(), field.getType()));
+      if (valueType.equals(SourceValueType.SHOW_DISPLAY_VALUE)) {
+        if (!Objects.equals(field.getType(), field.getInternalType())) {
+          columns.add(new ServiceNowColumn(field.getName(), field.getType()));
+        } else if (field.getName().endsWith(STC_FIELD_SUFFIX) && field.getType().equals("integer")) {
+          columns.add(new ServiceNowColumn(field.getName(), Schema.Type.STRING.name()));
+        } else {
+          columns.add(new ServiceNowColumn(field.getName(), field.getInternalType()));
+        }
       } else if (valueType.equals(SourceValueType.SHOW_ACTUAL_VALUE) &&
         GLIDE_TIME_DATATYPE.equalsIgnoreCase(field.getInternalType())) {
         columns.add(new ServiceNowColumn(field.getName(), GLIDE_DATE_TIME_DATATYPE));
