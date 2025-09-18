@@ -4,8 +4,10 @@ import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 
+import java.net.SocketException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -65,6 +67,8 @@ public class ServiceNowAPIException extends Exception {
     }
     Throwable t = this.getCause();
     return t instanceof OAuthSystemException
+        || t instanceof ConnectTimeoutException
+        || t instanceof SocketException
         || (this.getMessage() != null
         && this.getMessage().contains(ServiceNowConstants.MAXIMUM_EXECUTION_TIME_EXCEEDED))
         || RETRYABLE_CODES.contains(getStatusCode());
