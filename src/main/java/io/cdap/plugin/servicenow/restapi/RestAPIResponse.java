@@ -17,21 +17,28 @@
 package io.cdap.plugin.servicenow.restapi;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -46,8 +53,13 @@ public class RestAPIResponse {
   private static final Set<Integer> SUCCESS_CODES = new HashSet<>(Arrays.asList(HttpStatus.SC_CREATED,
                                                                                 HttpStatus.SC_OK));
   private final Map<String, String> headers;
-  private final String responseBody;
+  // Deprecated: storing full body as String can cause OOM
+  @Deprecated
+  private String responseBody;
   @Nullable private final ServiceNowAPIException exception;
+
+  // New: store InputStream for streaming consumption
+  private InputStream inputStream;
 
   public RestAPIResponse(
       Map<String, String> headers,
@@ -55,6 +67,15 @@ public class RestAPIResponse {
       @Nullable ServiceNowAPIException exception) {
     this.headers = headers;
     this.responseBody = responseBody;
+    this.exception = exception;
+  }
+
+  public RestAPIResponse(
+    Map<String, String> headers,
+    InputStream inputStream,
+    @Nullable ServiceNowAPIException exception) {
+    this.headers = headers;
+    this.inputStream = inputStream;
     this.exception = exception;
   }
 
@@ -80,17 +101,27 @@ public class RestAPIResponse {
 
     ServiceNowAPIException serviceNowAPIException = validateHttpResponse(httpResponse);
     if (serviceNowAPIException != null) {
-      return new RestAPIResponse(headers, null, serviceNowAPIException);
+      return new RestAPIResponse(headers, (InputStream) null, serviceNowAPIException);
     }
 
     String responseBody = null;
     try {
       responseBody = EntityUtils.toString(httpResponse.getEntity());
     } catch (IOException e) {
-      return new RestAPIResponse(headers, null, new ServiceNowAPIException(e, httpResponse));
+      return new RestAPIResponse(headers, (String) null, new ServiceNowAPIException(e, httpResponse));
+    }
+    // Instead of reading the entire entity, store the stream
+    HttpEntity httpEntity = httpResponse.getEntity();
+    InputStream responseStream;
+    try {
+      responseStream = (httpEntity != null) ? httpEntity.getContent() : null;
+    } catch (IOException e) {
+      return new RestAPIResponse(headers, (InputStream) null, new ServiceNowAPIException(e, httpResponse));
     }
     serviceNowAPIException = validateRestApiResponse(httpResponse, responseBody);
-    return new RestAPIResponse(headers, responseBody, serviceNowAPIException);
+    // return new RestAPIResponse(headers, responseBody, serviceNowAPIException);
+    return new RestAPIResponse(headers, responseStream, serviceNowAPIException);
+
   }
 
   public static RestAPIResponse parse(HttpResponse httpResponse) throws IOException {
@@ -129,6 +160,10 @@ public class RestAPIResponse {
   @Nullable
   public String getResponseBody() {
     return responseBody;
+  }
+
+  public InputStream getInputStream() {
+    return inputStream;
   }
 
   @Nullable

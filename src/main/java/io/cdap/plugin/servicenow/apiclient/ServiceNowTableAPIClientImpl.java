@@ -25,8 +25,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
@@ -55,8 +58,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -154,7 +161,9 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     String accessToken = getAccessToken();
     requestBuilder.setAuthHeader(accessToken);
     RestAPIResponse apiResponse = executeGetWithRetries(requestBuilder.build());
-    return parseResponseToResultListOfMap(apiResponse.getResponseBody());
+    //return parseResponseToResultListOfMap(apiResponse.getResponseBody());
+    return parseResponseStreamToResultListOfMap(apiResponse.getInputStream());
+
   }
 
   private void applyDateRangeToRequest(ServiceNowTableAPIRequestBuilder requestBuilder, String startDate,
@@ -195,6 +204,43 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     Type type = new TypeToken<List<Map<String, Object>>>() {
     }.getType();
     return GSON.fromJson(ja, type);
+  }
+
+  public List<Map<String, String>> parseResponseStreamToResultListOfMap(InputStream in) throws ServiceNowAPIException {
+    List<Map<String, String>> records = new ArrayList<>();
+    // InputStream in = httpResponse.getEntity().getContent();
+    try (InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
+         JsonReader jsonReader = new JsonReader(reader)) {
+      jsonReader.setLenient(true);
+      jsonReader.beginObject();
+      while (jsonReader.hasNext()) {
+        String name = jsonReader.nextName();
+        if (ServiceNowConstants.RESULT.equals(name) && jsonReader.peek() == JsonToken.BEGIN_ARRAY) {
+          jsonReader.beginArray();
+          while (jsonReader.hasNext()) {
+            jsonReader.beginObject();
+            Map<String, String> record = new HashMap<>();
+            while (jsonReader.hasNext()) {
+              String field = jsonReader.nextName();
+              JsonToken token = jsonReader.peek();
+              // JsonElement resultElement = GSON.fromJson(jsonReader, JsonElement.class);
+              // responseBody = resultElement.toString();
+              record.put(field, token == JsonToken.NULL ? null : jsonReader.nextString());
+            }
+            jsonReader.endObject();
+            records.add(record);
+          }
+          jsonReader.endArray();
+        } else {
+          // skip other fields (e.g., metadata like result_count)
+          jsonReader.skipValue();
+        }
+      }
+      jsonReader.endObject();
+      return records;
+    } catch (IOException e) {
+      throw new ServiceNowAPIException(e, null);
+    }
   }
 
   private String getErrorMessage(String responseBody) {
