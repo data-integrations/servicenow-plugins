@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.gson.JsonObject;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.format.UnexpectedFormatException;
 import io.cdap.cdap.api.data.schema.Schema;
@@ -25,10 +26,16 @@ import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
+import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
 import io.cdap.plugin.servicenow.util.SourceValueType;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.message.BasicHttpResponse;
+import org.apache.http.message.BasicStatusLine;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -39,11 +46,17 @@ import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +64,6 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServiceNowTableAPIClientImpl.class, ServiceNowSourceConfig.class, ServiceNowRecordReader.class})
 public class ServiceNowRecordReaderTest {
-
   private static final String CLIENT_ID = "client_id";
   private static final String CLIENT_SECRET = "client_secret";
   private static final String REST_API_ENDPOINT = "https://ven05127.service-now.com";
@@ -130,10 +142,10 @@ public class ServiceNowRecordReaderTest {
     Schema fieldSchema = Schema.recordOf("record", Schema.Field.of("TimeField",
                                                                    Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)));
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(fieldSchema);
-    Map<String, String> map = new HashMap<>();
-    map.put("TimeField", "value");
+    JsonObject jsonObject = new JsonObject();
+    jsonObject.addProperty("TimeField", "value");
     thrown.expect(IllegalStateException.class);
-    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, map, recordBuilder, false);
+    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, jsonObject, recordBuilder, false);
   }
 
   @Test
@@ -156,12 +168,12 @@ public class ServiceNowRecordReaderTest {
     );
 
     for (String value : dateTimeValues) {
-      Map<String, String> inputMap = new HashMap<>();
-      inputMap.put("DateTimeField", value);
+      JsonObject jsonObject = new JsonObject();
+      jsonObject.addProperty("DateTimeField", value);
 
       StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
       try {
-        ServiceNowRecordConverter.convertToValue("DateTimeField", fieldSchema, inputMap, recordBuilder, false);
+        ServiceNowRecordConverter.convertToValue("DateTimeField", fieldSchema, jsonObject, recordBuilder, false);
         StructuredRecord record = recordBuilder.build();
         Assert.assertNotNull("Parsed datetime should not be null for input: " + value,
             record.get("DateTimeField"));
@@ -187,12 +199,12 @@ public class ServiceNowRecordReaderTest {
     );
 
     for (String value : dateValues) {
-      Map<String, String> inputMap = new HashMap<>();
-      inputMap.put("DateField", value);
+      JsonObject jsonObject = new JsonObject();
+      jsonObject.addProperty("DateField", value);
 
       StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
       try {
-        ServiceNowRecordConverter.convertToValue("DateField", fieldSchema, inputMap, recordBuilder, false);
+        ServiceNowRecordConverter.convertToValue("DateField", fieldSchema, jsonObject, recordBuilder, false);
         StructuredRecord record = recordBuilder.build();
         Assert.assertNotNull("Parsed date should not be null for input: " + value,
             record.get("DateField"));
@@ -216,12 +228,12 @@ public class ServiceNowRecordReaderTest {
     );
 
     for (String value : timeValues) {
-      Map<String, String> inputMap = new HashMap<>();
-      inputMap.put("TimeField", value);
+      JsonObject jsonObject = new JsonObject();
+      jsonObject.addProperty("TimeField", value);
 
       StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
       try {
-        ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, inputMap, recordBuilder, false);
+        ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, jsonObject, recordBuilder, false);
         StructuredRecord record = recordBuilder.build();
         Assert.assertNotNull("Parsed date should not be null for input: " + value,
             record.get("TimeField"));
@@ -238,12 +250,12 @@ public class ServiceNowRecordReaderTest {
       Schema.Field.of("ArrayField", Schema.arrayOf(Schema.of(Schema.Type.STRING))
     ));
     Schema fieldSchema = recordSchema.getField("ArrayField").getSchema();
-    Map<String, String> inputMap = new HashMap<>();
-    inputMap.put("ArrayField", "\"service_sys_id_1_1\",\"service_sys_id_2_1\"");
+    JsonObject jsonObject = new JsonObject();
+    jsonObject.addProperty("ArrayField", "\"service_sys_id_1_1\",\"service_sys_id_2_1\"");
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
-    ServiceNowRecordConverter.convertToValue("ArrayField", fieldSchema, inputMap, recordBuilder, true);
+    ServiceNowRecordConverter.convertToValue("ArrayField", fieldSchema, jsonObject, recordBuilder, true);
     StructuredRecord record = recordBuilder.build();
-    Assert.assertEquals(inputMap.get("ArrayField"), record.get("ArrayField"));
+    Assert.assertEquals(jsonObject.get("ArrayField").getAsString(), record.get("ArrayField"));
   }
 
   @Test
@@ -253,12 +265,13 @@ public class ServiceNowRecordReaderTest {
       Schema.Field.of("ArrayField", Schema.arrayOf(Schema.of(Schema.Type.STRING))
       ));
     Schema fieldSchema = recordSchema.getField("ArrayField").getSchema();
-    Map<String, String> inputMap = new HashMap<>();
-    inputMap.put("ArrayField", "\"service_sys_id_1_1\",\"service_sys_id_2_1\"");
+    JsonObject jsonObject = new JsonObject();
+    jsonObject.addProperty("ArrayField", "\"service_sys_id_1_1\",\"service_sys_id_2_1\"");
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
-    ServiceNowRecordConverter.convertToValue("ArrayField", fieldSchema, inputMap, recordBuilder, false);
+    ServiceNowRecordConverter.convertToValue("ArrayField", fieldSchema, jsonObject, recordBuilder, false);
     StructuredRecord record = recordBuilder.build();
-    Assert.assertEquals(Arrays.asList(inputMap.get("ArrayField").split(",")), record.get("ArrayField"));
+    Assert.assertEquals(Arrays.asList(jsonObject.get("ArrayField").getAsString().split(",")),
+      record.get("ArrayField"));
   }
 
   @Test
@@ -289,30 +302,58 @@ public class ServiceNowRecordReaderTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1, null);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
-    List<Map<String, String>> results = new ArrayList<>();
-    Map<String, String> map = new HashMap<>();
-    map.put("calendar_integration", "1");
-    map.put("country", "India");
-    map.put("sys_updated_on", "2019-04-05 21:54:45");
-    map.put("web_service_access_only", "false");
-    map.put("notification", "2");
-    map.put("enable_multifactor_authn", "false");
-    map.put("sys_updated_by", "system");
-    map.put("sys_created_on", "2019-04-05 21:09:12");
-    results.add(map);
-    ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
-    ServiceNowColumn column1 = new ServiceNowColumn("calendar_integration", "integer");
-    ServiceNowColumn column2 = new ServiceNowColumn("vip", "boolean");
-    List<ServiceNowColumn> columns = new ArrayList<>();
-    columns.add(column1);
-    columns.add(column2);
-    response.setColumns(columns);
-    response.setResult(results);
-    response.setTotalRecordCount(1);
+    RestAPIResponse mockResponse = Mockito.mock(RestAPIResponse.class);
+    String responseBody = "{\n" +
+      "  \"result\": [\n" +
+      "    {\n" +
+      "      \"bill_to\": \"\",\n" +
+      "      \"init_request\": \"\",\n" +
+      "      \"short_description\": \"\",\n" +
+      "      \"total_cost\": \"0\",\n" +
+      "      \"due_by\": \"\",\n" +
+      "      \"description\": \"\",\n" +
+      "      \"requested_for\": \"\",\n" +
+      "      \"sys_updated_on\": \"2022-06-16 18:56:23\",\n" +
+      "      \"budget_number\": \"\",\n" +
+      "      \"number\": \"RCS397871\",\n" +
+      "      \"sys_id\": \"00000b7287405910827733373cbb35d5\",\n" +
+      "      \"sys_updated_by\": \"pipeline.user.1\",\n" +
+      "      \"shipping\": \"\",\n" +
+      "      \"terms\": \"\",\n" +
+      "      \"sys_created_on\": \"2022-06-16 18:56:23\",\n" +
+      "      \"vendor\": \"\",\n" +
+      "      \"sys_domain\": \"global\",\n" +
+      "      \"department\": \"\",\n" +
+      "      \"sys_created_by\": \"pipeline.user.1\",\n" +
+      "      \"assigned_to\": \"\",\n" +
+      "      \"ordered\": \"\",\n" +
+      "      \"po_date\": \"2022-06-16 18:56:23\",\n" +
+      "      \"vendor_contract\": \"\",\n" +
+      "      \"contract\": \"\",\n" +
+      "      \"expected_delivery\": \"\",\n" +
+      "      \"sys_mod_count\": \"0\",\n" +
+      "      \"received\": \"2158-05-10 17:14:20\",\n" +
+      "      \"asset_operation\": \"\",\n" +
+      "      \"sys_tags\": \"\",\n" +
+      "      \"requested\": \"2022-06-16 18:56:23\",\n" +
+      "      \"requested_by\": \"\",\n" +
+      "      \"ship_rate\": \"0\",\n" +
+      "      \"location\": \"\",\n" +
+      "      \"vendor_account\": \"\",\n" +
+      "      \"ship_to\": \"\",\n" +
+      "      \"status\": \"requested\"\n" +
+      "    }\n" +
+      "  ]\n" +
+      "}";
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    HttpResponse httpResponse = new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200,
+      "OK"));
+    httpResponse.setEntity(new InputStreamEntity(inputStream, body.length));
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), httpResponse, null);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
-            split.getFilterQuery(), split.getOffset(),
-                                                        serviceNowSourceConfig.getPageSize())).thenReturn(results);
+      split.getFilterQuery(), split.getOffset(), serviceNowSourceConfig.getPageSize())).thenReturn(restAPIResponse);
     Mockito.when(restApi.fetchTableSchema(tableName, valueType))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split);
@@ -341,30 +382,58 @@ public class ServiceNowRecordReaderTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1, null);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
-    List<Map<String, String>> results = new ArrayList<>();
-    Map<String, String> map = new HashMap<>();
-    map.put("calendar_integration", "1");
-    map.put("country", "India");
-    map.put("sys_updated_on", "2019-04-05 21:54:45");
-    map.put("web_service_access_only", "false");
-    map.put("notification", "2");
-    map.put("enable_multifactor_authn", "false");
-    map.put("sys_updated_by", "system");
-    map.put("sys_created_on", "2019-04-05 21:09:12");
-    results.add(map);
-    ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
-    ServiceNowColumn column1 = new ServiceNowColumn("calendar_integration", "integer");
-    ServiceNowColumn column2 = new ServiceNowColumn("vip", "boolean");
-    List<ServiceNowColumn> columns = new ArrayList<>();
-    columns.add(column1);
-    columns.add(column2);
-    response.setColumns(columns);
-    response.setResult(results);
-    response.setTotalRecordCount(1);
+    String responseBody = "{\n" +
+      "  \"result\": [\n" +
+      "    {\n" +
+      "      \"bill_to\": \"\",\n" +
+      "      \"init_request\": \"\",\n" +
+      "      \"short_description\": \"\",\n" +
+      "      \"total_cost\": \"0\",\n" +
+      "      \"due_by\": \"\",\n" +
+      "      \"description\": \"\",\n" +
+      "      \"requested_for\": \"\",\n" +
+      "      \"sys_updated_on\": \"2022-06-16 18:56:23\",\n" +
+      "      \"budget_number\": \"\",\n" +
+      "      \"number\": \"RCS397871\",\n" +
+      "      \"sys_id\": \"00000b7287405910827733373cbb35d5\",\n" +
+      "      \"sys_updated_by\": \"pipeline.user.1\",\n" +
+      "      \"shipping\": \"\",\n" +
+      "      \"terms\": \"\",\n" +
+      "      \"sys_created_on\": \"2022-06-16 18:56:23\",\n" +
+      "      \"vendor\": \"\",\n" +
+      "      \"sys_domain\": \"global\",\n" +
+      "      \"department\": \"\",\n" +
+      "      \"sys_created_by\": \"pipeline.user.1\",\n" +
+      "      \"assigned_to\": \"\",\n" +
+      "      \"ordered\": \"\",\n" +
+      "      \"po_date\": \"2022-06-16 18:56:23\",\n" +
+      "      \"vendor_contract\": \"\",\n" +
+      "      \"contract\": \"\",\n" +
+      "      \"expected_delivery\": \"\",\n" +
+      "      \"sys_mod_count\": \"0\",\n" +
+      "      \"received\": \"2158-05-10 17:14:20\",\n" +
+      "      \"asset_operation\": \"\",\n" +
+      "      \"sys_tags\": \"\",\n" +
+      "      \"requested\": \"2022-06-16 18:56:23\",\n" +
+      "      \"requested_by\": \"\",\n" +
+      "      \"ship_rate\": \"0\",\n" +
+      "      \"location\": \"\",\n" +
+      "      \"vendor_account\": \"\",\n" +
+      "      \"ship_to\": \"\",\n" +
+      "      \"status\": \"requested\"\n" +
+      "    }\n" +
+      "  ]\n" +
+      "}";
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    HttpResponse httpResponse = new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200,
+      "OK"));
+    httpResponse.setEntity(new InputStreamEntity(inputStream, body.length));
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), httpResponse, null);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                                         split.getFilterQuery(), split.getOffset(),
-                                                        serviceNowSourceConfig.getPageSize())).thenReturn(results);
+        serviceNowSourceConfig.getPageSize())).thenReturn(restAPIResponse);
     Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType()))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split);
@@ -380,7 +449,7 @@ public class ServiceNowRecordReaderTest {
       .setPassword(PASSWORD)
       .setClientId(CLIENT_ID)
       .setClientSecret(CLIENT_SECRET)
-      .setTableName("")
+      .setTableName("abc")
       .setValueType("Actual")
       .setStartDate("2021-01-01")
       .setEndDate("2022-02-18")
@@ -392,11 +461,25 @@ public class ServiceNowRecordReaderTest {
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1, null);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     List<Map<String, String>> results = new ArrayList<>();
+    String responseBody = "{\n    " +
+      "\"error\": " +
+      "{\n        " +
+      "\"message\": \"Invalid table abc\",\n" +
+      "        \"detail\": null\n    " +
+      "},\n    " +
+      "\"status\": \"failure\"\n" +
+      "}";
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    HttpResponse httpResponse = new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200,
+      "OK"));
+    httpResponse.setEntity(new InputStreamEntity(inputStream, body.length));
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), httpResponse, null);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getValueType(),
-                                           split.getFilterQuery(),
+    Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
+                                                        split.getFilterQuery(),
                                            split.getOffset(),
-                                           serviceNowSourceConfig.getPageSize())).thenReturn(results);
+                                           serviceNowSourceConfig.getPageSize())).thenReturn(restAPIResponse);
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
     Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType()))

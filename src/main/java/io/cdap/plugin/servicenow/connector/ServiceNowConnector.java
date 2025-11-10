@@ -16,6 +16,8 @@
 package io.cdap.plugin.servicenow.connector;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.annotation.Plugin;
@@ -55,6 +57,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -103,7 +108,7 @@ public class ServiceNowConnector implements DirectConnector {
    * Browse Details for the given AccessToken.
    */
   public BrowseDetail browse(ConnectorContext connectorContext,
-                             String accessToken) throws ServiceNowAPIException {
+                             String accessToken) throws ServiceNowAPIException, IOException {
     int count = 0;
     FailureCollector collector = connectorContext.getFailureCollector();
     config.validateCredentialsFields(collector);
@@ -126,7 +131,7 @@ public class ServiceNowConnector implements DirectConnector {
   /**
    * @return the list of tables.
    */
-  private TableList listTables(String accessToken) throws ServiceNowAPIException {
+  private TableList listTables(String accessToken) throws ServiceNowAPIException, IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       config.getRestApiEndpoint(), OBJECT_TABLE_LIST, false, SchemaType.SCHEMA_API_BASED);
     requestBuilder.setAuthHeader(accessToken);
@@ -135,7 +140,7 @@ public class ServiceNowConnector implements DirectConnector {
     ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(config, true);
     RestAPIResponse apiResponse =
         serviceNowTableAPIClient.executeGetWithRetries(requestBuilder.build());
-    return GSON.fromJson(apiResponse.getResponseBody(), TableList.class);
+    return GSON.fromJson(serviceNowTableAPIClient.createJsonReader(apiResponse.getResponseStream()), TableList.class);
   }
 
   public ConnectorSpec generateSpec(ConnectorContext connectorContext, ConnectorSpecRequest connectorSpecRequest) {
@@ -172,7 +177,7 @@ public class ServiceNowConnector implements DirectConnector {
   }
 
   private List<StructuredRecord> getTableData(String tableName, int limit)
-      throws OAuthProblemException, OAuthSystemException, ServiceNowAPIException {
+    throws OAuthProblemException, OAuthSystemException, ServiceNowAPIException, IOException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       config.getRestApiEndpoint(), tableName, false, SchemaType.SCHEMA_API_BASED)
       .setExcludeReferenceLink(true)
@@ -183,22 +188,40 @@ public class ServiceNowConnector implements DirectConnector {
     requestBuilder.setAuthHeader(accessToken);
     requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
     RestAPIResponse apiResponse = serviceNowTableAPIClient.executeGetWithRetries(requestBuilder.build());
-    List<Map<String, String>> result = serviceNowTableAPIClient.parseResponseToResultListOfMap
-      (apiResponse.getResponseBody());
+    InputStream in = apiResponse.getResponseStream();
+    JsonReader reader = new JsonReader(new InputStreamReader(in, StandardCharsets.UTF_8));
     List<StructuredRecord> recordList = new ArrayList<>();
     Schema schema = getSchema(tableName);
     if (schema != null) {
       List<Schema.Field> tableFields = schema.getFields();
-      for (int i = 0; i < result.size(); i++) {
-        StructuredRecord.Builder recordBuilder = StructuredRecord.builder(schema);
-        for (Schema.Field field : tableFields) {
-          String fieldName = field.getName();
-          ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), result.get(i), recordBuilder, false);
+      try {
+        reader.beginObject();
+        while (reader.hasNext()) {
+          String name = reader.nextName();
+          if (name.equals(ServiceNowConstants.RESULT)) {
+            reader.beginArray();
+            while (reader.hasNext()) {
+              JsonObject jsonObject = GSON.fromJson(reader, JsonObject.class);
+              StructuredRecord.Builder recordBuilder = StructuredRecord.builder(schema);
+              for (Schema.Field field : tableFields) {
+                String fieldName = field.getName();
+                ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), jsonObject, recordBuilder,
+                  false);
+              }
+              StructuredRecord structuredRecord = recordBuilder.build();
+              recordList.add(structuredRecord);
+            }
+            reader.endArray();
+          } else {
+            reader.skipValue();
+          }
         }
-        StructuredRecord structuredRecord = recordBuilder.build();
-        recordList.add(structuredRecord);
+        reader.endObject();
+      } catch (IOException e) {
+        throw new RuntimeException("Error reading JSON response for table " + tableName, e);
       }
     }
+    apiResponse.close();
     return recordList;
 
   }

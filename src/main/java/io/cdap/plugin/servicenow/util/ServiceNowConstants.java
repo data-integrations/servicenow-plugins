@@ -199,7 +199,7 @@ public interface ServiceNowConstants {
   /**
    * The wait time for API retry in milliseconds.
    */
-  int WAIT_TIME = 120000;
+  int WAIT_TIME = 300000;
   
   /**
    * The maximum number of retry attempts.

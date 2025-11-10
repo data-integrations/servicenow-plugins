@@ -25,6 +25,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 import io.cdap.cdap.api.retry.RetryableException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
@@ -43,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -121,7 +123,8 @@ public class ServiceNowSinkAPIRequestImpl {
       requestBuilder.setEntity(stringEntity);
       apiResponse = restApi.executePost(requestBuilder.build());
 
-      JsonObject responseJSON = jsonParser.parse(apiResponse.getResponseBody()).getAsJsonObject();
+      JsonObject responseJSON = jsonParser.parse(getJsonReader(apiResponse))
+          .getAsJsonObject().getAsJsonObject();
       JsonArray servicedRequestsArray = responseJSON.get(ServiceNowConstants.SERVICED_REQUESTS).getAsJsonArray();
       JsonElement failedRequestId = null;
       for (int i = 0; i < servicedRequestsArray.size(); i++) {
@@ -166,6 +169,14 @@ public class ServiceNowSinkAPIRequestImpl {
       LOG.error("Error while connecting to ServiceNow", e.getMessage());
       throw new ServiceNowAPIException("Error while connecting to ServiceNow", e, null, true);
     }
+  }
+
+  private JsonReader getJsonReader(RestAPIResponse apiResponse) throws IOException {
+    InputStreamReader inputStreamReader = new InputStreamReader(apiResponse.getResponseStream(),
+      StandardCharsets.UTF_8);
+    JsonReader jsonReader = new JsonReader(inputStreamReader);
+    jsonReader.setLenient(true);
+    return jsonReader;
   }
 
   private ServiceNowBatchRequest getPayloadRequest(Map<String, RestRequest> restRequests) {

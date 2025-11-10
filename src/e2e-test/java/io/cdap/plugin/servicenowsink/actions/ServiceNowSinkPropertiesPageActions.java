@@ -48,11 +48,11 @@ import java.util.Map;
 
 public class ServiceNowSinkPropertiesPageActions {
   public static ServiceNowSourceConfig config;
-  private static Map<String, String> responseFromServiceNowTable;
+  private static JsonObject responseFromServiceNowTable;
   private static Gson gson = new Gson();
 
   public static void getRecordFromServiceNowTable(String query, String tableName)
-      throws ServiceNowAPIException {
+      throws ServiceNowAPIException, IOException {
     config = new ServiceNowSourceConfig(
         "", "", "", "", "",
         System.getenv("SERVICE_NOW_CLIENT_ID"),
@@ -71,10 +71,8 @@ public class ServiceNowSinkPropertiesPageActions {
     String bqTable = TestSetupHooks.bqTargetTable;
     getRecordFromServiceNowTable(query, tableName);
 
-    JsonObject jsonObject = new JsonObject();
-    responseFromServiceNowTable.forEach(jsonObject::addProperty);
     List<JsonObject> serviceNowResponse = new ArrayList<>();
-    serviceNowResponse.add(jsonObject);
+    serviceNowResponse.add(responseFromServiceNowTable);
 
     List<JsonObject> bigQueryResponse = new ArrayList<>();
     List<Object> bigQueryRows = new ArrayList<>();

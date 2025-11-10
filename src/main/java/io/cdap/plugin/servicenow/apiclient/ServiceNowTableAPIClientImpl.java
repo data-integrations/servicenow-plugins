@@ -27,7 +27,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import com.google.gson.stream.JsonReader;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
@@ -56,7 +56,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +89,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   public static JsonArray serviceNowJsonResultArray;
 
   public ServiceNowTableAPIClientImpl(ServiceNowConnectorConfig conf, Boolean useConnection) {
+    super();
     this.conf = conf;
     this.schemaType = getSchemaTypeBasedOnUseConnection(useConnection);
   }
@@ -135,7 +139,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @return A list of maps, where each map represents a record from the table.
    * @throws ServiceNowAPIException If an error occurs while fetching the records.
    */
-  public List<Map<String, String>> fetchTableRecords(
+  public RestAPIResponse fetchTableRecords(
     String tableName,
     SourceValueType valueType,
     String filterQuery,
@@ -148,6 +152,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       .setDisplayValue(valueType)
       .setLimit(limit);
 
+    requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
+
     if (offset > 0) {
       requestBuilder.setOffset(offset);
     }
@@ -159,7 +165,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     String accessToken = getAccessToken();
     requestBuilder.setAuthHeader(accessToken);
     RestAPIResponse apiResponse = executeGetWithRetries(requestBuilder.build());
-    return parseResponseToResultListOfMap(apiResponse.getResponseBody());
+    return apiResponse;
   }
 
   private int getRecordCountFromHeader(RestAPIResponse apiResponse) {
@@ -209,30 +215,24 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param limit     The number of records to be fetched
    * @return The list of Map; each Map representing a table row
    */
-  public List<Map<String, String>> fetchTableRecordsRetryableMode(String tableName, SourceValueType valueType,
+  public RestAPIResponse fetchTableRecordsRetryableMode(String tableName, SourceValueType valueType,
                                                                   String filterQuery, int offset,
                                                                   int limit) throws ServiceNowAPIException {
-    final List<Map<String, String>> results = new ArrayList<>();
-    Callable<Boolean> fetchRecords = () -> {
-      results.addAll(fetchTableRecords(tableName, valueType, filterQuery, offset, limit));
-      return true;
-    };
+    Callable<RestAPIResponse> fetchRecords = () -> fetchTableRecords(tableName, valueType, filterQuery, offset, limit);
 
-    Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+    Retryer<RestAPIResponse> retryer = RetryerBuilder.<RestAPIResponse>newBuilder()
       .retryIfException(this::isExceptionRetryable)
       .withWaitStrategy(WaitStrategies.exponentialWait(ServiceNowConstants.WAIT_TIME, TimeUnit.MILLISECONDS))
       .withStopStrategy(StopStrategies.stopAfterAttempt(ServiceNowConstants.MAX_NUMBER_OF_RETRY_ATTEMPTS))
       .build();
 
     try {
-      retryer.call(fetchRecords);
+      return retryer.call(fetchRecords);
     } catch (RetryException | ExecutionException e) {
       throw new ServiceNowAPIException(
           String.format("Data Recovery failed for batch %s to %s.", offset, (offset + limit)),
           e, null, false);
     }
-
-    return results;
   }
 
   /**
@@ -255,8 +255,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   }
 
   @VisibleForTesting
-  public MetadataAPISchemaResponse parseSchemaResponse(String responseBody) {
-    return GSON.fromJson(responseBody, MetadataAPISchemaResponse.class);
+  public MetadataAPISchemaResponse parseSchemaResponse(InputStream responseStream) {
+    return GSON.fromJson(createJsonReader(responseStream), MetadataAPISchemaResponse.class);
   }
 
   /**
@@ -268,8 +268,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @throws ServiceNowAPIException
    */
   public Schema fetchTableSchema(String tableName, SourceValueType valueType)
-      throws ServiceNowAPIException {
-    return fetchTableSchema(tableName, getAccessToken(), valueType, schemaType, false);
+    throws ServiceNowAPIException {
+    return fetchTableSchema(tableName, getAccessToken(), valueType, schemaType, true);
   }
 
   private SchemaType getSchemaTypeBasedOnUseConnection(Boolean useConnection) {
@@ -293,7 +293,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    */
   public Schema fetchTableSchema(String tableName, String accessToken, SourceValueType valueType,
                                  SchemaType schemaType, Boolean legacyMapping)
-      throws ServiceNowAPIException {
+    throws ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, true, schemaType)
       .setExcludeReferenceLink(true);
@@ -303,12 +303,16 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     restAPIResponse = executeGetWithRetries(requestBuilder.build());
     List<ServiceNowColumn> columns = new ArrayList<>();
 
-    if (schemaType == SchemaType.METADATA_API_BASED) {
-      return prepareSchemaWithMetadataAPI(restAPIResponse, columns, tableName, valueType, legacyMapping);
-    } else if (schemaType == SchemaType.SCHEMA_API_BASED) {
-      return prepareSchemaWithSchemaAPI(restAPIResponse, columns, tableName);
-    } else {
-      return prepareStringBasedSchema(restAPIResponse, columns, tableName);
+    try {
+      if (schemaType == SchemaType.METADATA_API_BASED) {
+        return prepareSchemaWithMetadataAPI(restAPIResponse, columns, tableName, valueType, legacyMapping);
+      } else if (schemaType == SchemaType.SCHEMA_API_BASED) {
+        return prepareSchemaWithSchemaAPI(restAPIResponse, columns, tableName, legacyMapping);
+      } else {
+        return prepareStringBasedSchema(restAPIResponse, columns, tableName, legacyMapping);
+      }
+    } catch (IOException exception) {
+      throw new RuntimeException("Error in fetching schema for table " + tableName, exception);
     }
   }
 
@@ -329,9 +333,9 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @throws RuntimeException if the schema response is null or contains no result.
    */
   private Schema prepareSchemaWithSchemaAPI(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
-                                            String tableName) throws ServiceNowAPIException {
+    String tableName, Boolean legacyMapping) throws ServiceNowAPIException, IOException {
     SchemaAPISchemaResponse schemaAPISchemaResponse =
-      GSON.fromJson(restAPIResponse.getResponseBody(), SchemaAPISchemaResponse.class);
+      GSON.fromJson(createJsonReader(restAPIResponse.getResponseStream()), SchemaAPISchemaResponse.class);
 
     if (schemaAPISchemaResponse.getResult() == null || schemaAPISchemaResponse.getResult().isEmpty()) {
       throw new ServiceNowAPIException(
@@ -341,7 +345,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     for (SchemaAPISchemaField field : schemaAPISchemaResponse.getResult()) {
       columns.add(new ServiceNowColumn(field.getName(), field.getInternalType()));
     }
-    return SchemaBuilder.constructSchema(tableName, columns, false);
+    return SchemaBuilder.constructSchema(tableName, columns, legacyMapping);
   }
 
   /**
@@ -363,8 +367,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @throws RuntimeException if the response does not contain valid column information.
    */
   private Schema prepareSchemaWithMetadataAPI(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
-    String tableName, SourceValueType valueType, Boolean legacyMapping) throws ServiceNowAPIException {
-    MetadataAPISchemaResponse metadataAPISchemaResponse = parseSchemaResponse(restAPIResponse.getResponseBody());
+    String tableName, SourceValueType valueType, Boolean legacyMapping) throws ServiceNowAPIException, IOException {
+    MetadataAPISchemaResponse metadataAPISchemaResponse = parseSchemaResponse(restAPIResponse.getResponseStream());
 
     if (metadataAPISchemaResponse.getResult() == null || metadataAPISchemaResponse.getResult().getColumns() == null ||
       metadataAPISchemaResponse.getResult().getColumns().isEmpty()) {
@@ -389,6 +393,11 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       }
     }
     return SchemaBuilder.constructSchema(tableName, columns, legacyMapping);
+  }
+
+  public JsonReader createJsonReader(InputStream inputStream) {
+    Objects.requireNonNull(inputStream, "InputStream must not be null");
+    return new JsonReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
   }
 
   /**
@@ -451,8 +460,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       requestBuilder.setContentTypeHeader("application/json");
       requestBuilder.setEntity(entity);
       apiResponse = executePost(requestBuilder.build());
-
       systemID = String.valueOf(getSystemId(apiResponse));
+      apiResponse.close();
     } catch (IOException e) {
       throw new ServiceNowAPIException("Error in creating a new record", e, null, false);
     }
@@ -482,15 +491,17 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       apiResponse = executePost(requestBuilder.build());
 
       systemID = String.valueOf(getSystemId(apiResponse));
+      apiResponse.close();
     } catch (IOException e) {
       throw new ServiceNowAPIException("Error in creating a new record", e, null, false);
     }
     return systemID;
   }
 
-  private String getSystemId(RestAPIResponse restAPIResponse) {
-    CreateRecordAPIResponse apiResponse = GSON.fromJson(restAPIResponse.getResponseBody(),
-                                                           CreateRecordAPIResponse.class);
+  private String getSystemId(RestAPIResponse restAPIResponse) throws IOException {
+    CreateRecordAPIResponse apiResponse = GSON.fromJson(
+      new InputStreamReader(restAPIResponse.getResponseStream(), StandardCharsets.UTF_8),
+        CreateRecordAPIResponse.class);
     return apiResponse.getResult().get(ServiceNowConstants.SYSTEM_ID).toString();
   }
 
@@ -501,8 +512,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param tableName The ServiceNow table name
    * @param query The query
    */
-  public Map<String, String> getRecordFromServiceNowTable(String tableName, String query)
-      throws ServiceNowAPIException {
+  public JsonObject getRecordFromServiceNowTable(String tableName, String query)
+    throws ServiceNowAPIException, IOException {
 
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, false, schemaType)
@@ -513,7 +524,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     requestBuilder.setAuthHeader(accessToken);
     restAPIResponse = executeGetWithRetries(requestBuilder.build());
 
-    APIResponse apiResponse = GSON.fromJson(restAPIResponse.getResponseBody(), APIResponse.class);
+    APIResponse apiResponse = GSON.fromJson(
+      new InputStreamReader(restAPIResponse.getResponseStream(), StandardCharsets.UTF_8), APIResponse.class);
     return apiResponse.getResult().get(0);
   }
 
@@ -530,16 +542,42 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    *
    * @throws RuntimeException if the schema response is null or contains no result.
    */
-  private Schema prepareStringBasedSchema(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
-                                          String tableName) {
-    List<Map<String, String>> result = parseResponseToResultListOfMap(restAPIResponse.getResponseBody());
-    if (result != null && !result.isEmpty()) {
-      Map<String, String> firstRecord = result.get(0);
-      for (String key : firstRecord.keySet()) {
-        columns.add(new ServiceNowColumn(key, "string"));
+    private Schema prepareStringBasedSchema(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
+                                          String tableName, Boolean legacyMapping) throws IOException {
+      InputStream in = restAPIResponse.getResponseStream();
+      JsonReader reader = new JsonReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+      JsonObject firstRecord;
+      try {
+        firstRecord = getFirstRecord(reader);
+        restAPIResponse.close();
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to parse schema for table: " + tableName, e);
       }
-      return SchemaBuilder.constructSchema(tableName, columns, false);
+      if (firstRecord != null) {
+      firstRecord.entrySet().forEach(entry ->
+        columns.add(new ServiceNowColumn(entry.getKey(), "string"))
+      );
+      return SchemaBuilder.constructSchema(tableName, columns, legacyMapping);
     }
+    return null;
+  }
+
+  public JsonObject getFirstRecord(JsonReader reader) throws IOException {
+    reader.beginObject();
+    while (reader.hasNext()) {
+      String name = reader.nextName();
+      if (name.equals(ServiceNowConstants.RESULT)) {
+        reader.beginArray();
+        if (reader.hasNext()) {
+          // ONLY parse the first object into memory
+          return GSON.fromJson(reader, JsonObject.class);
+        }
+        reader.endArray();
+      } else {
+        reader.skipValue();
+      }
+    }
+    reader.endObject();
     return null;
   }
 
