@@ -306,7 +306,7 @@ public class ServiceNowSinkConfigTest {
     Mockito.when(mockResponse.getStatusLine()).thenReturn(Mockito.mock(StatusLine.class));
     Mockito.when(mockResponse.getStatusLine().getStatusCode()).thenReturn(httpStatus);
     RestAPIResponse restAPIResponse = new RestAPIResponse(
-        headers, responseBody, new ServiceNowAPIException("", mockResponse));
+        headers, responseBody, null, new ServiceNowAPIException("", mockResponse));
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
@@ -362,7 +362,7 @@ public class ServiceNowSinkConfigTest {
       "    }\n" +
       "  ]\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);

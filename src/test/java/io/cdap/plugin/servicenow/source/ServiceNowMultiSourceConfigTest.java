@@ -174,7 +174,7 @@ public class ServiceNowMultiSourceConfigTest {
       "        }\n" +
       "    ]\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     serviceNowMultiSourceConfig.validate(mockFailureCollector);
@@ -207,7 +207,7 @@ public class ServiceNowMultiSourceConfigTest {
     String responseBody = "{\n" +
       "    \"result\": []\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     serviceNowMultiSourceConfig.validate(mockFailureCollector);
     Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());
@@ -301,7 +301,7 @@ public class ServiceNowMultiSourceConfigTest {
       "        }\n" +
       "    ]\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     try {
@@ -402,7 +402,7 @@ public class ServiceNowMultiSourceConfigTest {
       "        }\n" +
       "    ]\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     serviceNowMultiSourceConfig.validate(mockFailureCollector);

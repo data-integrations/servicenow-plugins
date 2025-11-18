@@ -142,7 +142,7 @@ public class ServiceNowInputFormatTest {
       "\"backgroundElementId\",\"type\":\"long\"},{\"name\":\"bgOrderPos\",\"type\":\"long\"},{\"name\":" +
       "\"description\",\"type\":[\"string\",\"null\"]},{\"name\":\"userId\",\"type\":\"string\"}]}";
     Schema schema = Schema.parseJson(schemaString);
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     Mockito.when(restApi.fetchTableSchema("table", SourceValueType.SHOW_ACTUAL_VALUE)).thenReturn(schema);
@@ -246,7 +246,7 @@ public class ServiceNowInputFormatTest {
       "\"backgroundElementId\",\"type\":\"long\"},{\"name\":\"bgOrderPos\",\"type\":\"long\"},{\"name\":" +
       "\"description\",\"type\":[\"string\",\"null\"]},{\"name\":\"userId\",\"type\":\"string\"}]}";
     Schema schema = Schema.parseJson(schemaString);
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     Mockito.when(restApi.fetchTableSchema("proc_po", SourceValueType.SHOW_ACTUAL_VALUE)).thenReturn(schema);
@@ -291,7 +291,7 @@ public class ServiceNowInputFormatTest {
     String responseBody = "{\n" +
       "    \"result\": []\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);

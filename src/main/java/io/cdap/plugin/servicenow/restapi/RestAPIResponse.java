@@ -64,9 +64,11 @@ public class RestAPIResponse {
   public RestAPIResponse(
       Map<String, String> headers,
       @Nullable String responseBody,
+      InputStream inputStream,
       @Nullable ServiceNowAPIException exception) {
     this.headers = headers;
     this.responseBody = responseBody;
+    this.inputStream = inputStream;
     this.exception = exception;
   }
 
@@ -101,14 +103,14 @@ public class RestAPIResponse {
 
     ServiceNowAPIException serviceNowAPIException = validateHttpResponse(httpResponse);
     if (serviceNowAPIException != null) {
-      return new RestAPIResponse(headers, (InputStream) null, serviceNowAPIException);
+      return new RestAPIResponse(headers, null, null, serviceNowAPIException);
     }
 
     String responseBody = null;
     try {
       responseBody = EntityUtils.toString(httpResponse.getEntity());
     } catch (IOException e) {
-      return new RestAPIResponse(headers, (String) null, new ServiceNowAPIException(e, httpResponse));
+      return new RestAPIResponse(headers, null, null, new ServiceNowAPIException(e, httpResponse));
     }
     // Instead of reading the entire entity, store the stream
     HttpEntity httpEntity = httpResponse.getEntity();
@@ -116,11 +118,11 @@ public class RestAPIResponse {
     try {
       responseStream = (httpEntity != null) ? httpEntity.getContent() : null;
     } catch (IOException e) {
-      return new RestAPIResponse(headers, (InputStream) null, new ServiceNowAPIException(e, httpResponse));
+      return new RestAPIResponse(headers, null, null, new ServiceNowAPIException(e, httpResponse));
     }
     serviceNowAPIException = validateRestApiResponse(httpResponse, responseBody);
     // return new RestAPIResponse(headers, responseBody, serviceNowAPIException);
-    return new RestAPIResponse(headers, responseStream, serviceNowAPIException);
+    return new RestAPIResponse(headers, responseBody, responseStream, serviceNowAPIException);
 
   }
 

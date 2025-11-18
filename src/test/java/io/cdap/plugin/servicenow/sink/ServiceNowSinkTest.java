@@ -93,7 +93,7 @@ public class ServiceNowSinkTest {
       "    \"result\": []\n" +
       "}";
     MockFailureCollector collector = new MockFailureCollector();
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     serviceNowSink.configurePipeline(mockPipelineConfigurer);
@@ -130,7 +130,7 @@ public class ServiceNowSinkTest {
                                     Schema.Field.of("price", Schema.of(Schema.Type.DOUBLE)));
     Emitter<KeyValue<NullWritable, JsonObject>> emitter = Mockito.mock(Emitter.class);
     Mockito.when(context.getInputSchema()).thenReturn(schema);
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);

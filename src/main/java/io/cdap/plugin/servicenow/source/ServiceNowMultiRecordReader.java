@@ -22,6 +22,7 @@ import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
+import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
@@ -91,14 +92,14 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
   }
 
   @VisibleForTesting
-  void fetchData() throws ServiceNowAPIException {
+  RestAPIResponse fetchData() throws ServiceNowAPIException {
     // Get the table data
-    results = restApi.fetchTableRecordsRetryableMode(tableName, multiSourcePluginConf.getValueType(),
-                                                     multiSourcePluginConf.getStartDate(),
-                                                     multiSourcePluginConf.getEndDate(), split.getOffset(),
-                                                     multiSourcePluginConf.getPageSize());
+    RestAPIResponse restAPIResponse = restApi.fetchTableRecordsRetryableMode(tableName,
+      multiSourcePluginConf.getValueType(), multiSourcePluginConf.getStartDate(), multiSourcePluginConf.getEndDate(),
+        split.getOffset(), multiSourcePluginConf.getPageSize());
 
-    iterator = results.iterator();
+    // iterator = results.iterator();
+    return restAPIResponse;
   }
 
   private void fetchSchema(ServiceNowTableAPIClientImpl restApi) {

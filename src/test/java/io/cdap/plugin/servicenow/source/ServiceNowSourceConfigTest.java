@@ -624,7 +624,7 @@ public class ServiceNowSourceConfigTest {
     String responseBody = "{\n" +
       "    \"result\": []\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     config.validate(mockFailureCollector);
     Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());

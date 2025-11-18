@@ -16,11 +16,17 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
+import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -28,8 +34,14 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Record reader that reads the entire contents of a ServiceNow table.
@@ -38,6 +50,9 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowRecordReader.class);
   private final ServiceNowSourceConfig pluginConf;
   private ServiceNowTableAPIClientImpl restApi;
+  private final Gson gson = new Gson();
+  private final Type mapType = new TypeToken<Map<String, String>>() { }.getType();
+  private JsonReader jsonReader = null;
 
   public ServiceNowRecordReader(ServiceNowSourceConfig pluginConf) {
     super();
@@ -62,25 +77,111 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     initializeSchema(tableName, schema);
   }
 
+  /**
+   * The refactored nextKeyValue() — uses Gson JsonReader to stream one record at a time.
+   * Returns true when it assigned `row` to the next Map<String,String> record.
+   * Returns false only when there are no more pages/records (i.e., openNextPage() fails).
+   */
   @Override
   public boolean nextKeyValue() throws IOException {
-    try {
-      if (results == null) {
-        fetchData();
+    while (true) {
+      // Ensure we have an active page/jsonReader
+      if (jsonReader == null) {
+        // Need to open the next page
+        boolean pageOpened;
+        try {
+          pageOpened = openNextPage();
+        } catch (ServiceNowAPIException e) {
+          throw new IOException("Exception in nextKeyValue" + tableName, e);
+        }
+        if (!pageOpened) {
+          // No more pages
+          return false;
+        }
       }
 
-      if (!iterator.hasNext()) {
-        return false;
+      // At this point jsonReader is positioned inside the "result" array.
+      JsonToken token = jsonReader.peek();
+
+      if (token == JsonToken.END_ARRAY) {
+        // Current page exhausted. Close current page and try to open the next page.
+        closeCurrentPage();
+
+        // Attempt to open next page; if none, we must return false (end of data)
+        boolean openedNext;
+        try {
+          openedNext = openNextPage();
+        } catch (ServiceNowAPIException e) {
+          throw new IOException("Exception in nextKeyValue " + tableName, e);
+        }
+        if (!openedNext) {
+          // No more pages
+          return false;
+        }
+        // continue loop to attempt to read from newly opened page
       }
 
-      row = iterator.next();
+      if (token == JsonToken.BEGIN_OBJECT) {
+        // Read exactly one object from the stream into a Map<String,String>
+        Map<String, String> recordMap = gson.fromJson(jsonReader, mapType);
+        this.row = recordMap; // assign row — getCurrentValue() will expose it
+        pos++;
+        return true;
+      }
 
-      pos++;
+      if (token == JsonToken.NULL) {
+        // skip nulls if any and continue
+        jsonReader.nextNull();
+        continue;
+      }
+
+      // Skip any unexpected or non-object token and loop
+      jsonReader.skipValue();
+
+      /*// read the next record from the current page
+      try {
+        if (jsonreader.hasnext()) {
+          // there is another record in the current page
+          map<string, string> recordmap = new hashmap<>();
+          jsonreader.beginobject();
+          while (jsonreader.hasnext()) {
+            string name = jsonreader.nextname();
+            jsontoken token = jsonreader.peek();
+            string value = null;
+            if (token == jsontoken.null) {
+              jsonreader.nextnull();
+            } else {
+              value = jsonreader.nextstring();
+            }
+            recordmap.put(name, value);
+          }
+          jsonreader.endobject();
+          row = recordmap;
+          pos++;
+          return true;
+        } else {
+          // end of current page
+          closecurrentpage();
+        }
+      } catch (ioexception e) {
+        // cleanup on parse error
+        closecurrentpage();
+        log.error("error parsing json response from table " + tablename, e);
+        throw e;
+      }*/
+    }
+
+    /*try {
+        InputStream inputStream = fetchData();
+        do {
+          row = restApi.parseResponseStreamToRecord(inputStream);
+          pos++;
+          return true;
+        } while (inputStream.available() > 0);
     } catch (Exception e) {
       LOG.error("Error in nextKeyValue", e);
       throw new IOException("Exception in nextKeyValue", e);
-    }
-    return true;
+    }*/
   }
 
   @Override
@@ -103,14 +204,74 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     return recordBuilder.build();
   }
 
-  private void fetchData() throws ServiceNowAPIException {
+  private RestAPIResponse fetchData() throws ServiceNowAPIException {
     // Get the table data
-    results = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(), pluginConf.getStartDate(),
-                                                     pluginConf.getEndDate(), split.getOffset(),
-                                                     pluginConf.getPageSize());
-    LOG.debug("Results size={}", results.size());
+    RestAPIResponse restAPIResponse = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(),
+     pluginConf.getStartDate(), pluginConf.getEndDate(), split.getOffset(), pluginConf.getPageSize());
+    
 
-    iterator = results.iterator();
+    // LOG.debug("Results size={}", results.size());
+    return restAPIResponse;
+
+    // iterator = results.iterator();
+    // iterator =  record;
+  }
+
+  private boolean openNextPage() throws IOException, ServiceNowAPIException {
+    closeCurrentPage();
+    RestAPIResponse resp = fetchData();
+    InputStream in = resp.getInputStream();
+    if (in == null) {
+      return false;
+    }
+    this.jsonReader = new JsonReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+    this.jsonReader.setLenient(true);
+
+    // Position the reader to the "result" array: { "result": [ ... ], ... }
+    try {
+      JsonToken top = jsonReader.peek();
+      if (top == JsonToken.BEGIN_OBJECT) {
+        jsonReader.beginObject();
+        while (jsonReader.hasNext()) {
+          String name = jsonReader.nextName();
+          if (name.equals(ServiceNowConstants.RESULT)) {
+            if (jsonReader.peek() == JsonToken.BEGIN_ARRAY) {
+              jsonReader.beginArray();
+              return true;
+            } else {
+              jsonReader.skipValue();
+              break;
+            }
+          } else {
+            jsonReader.skipValue();
+          }
+        } // if we fall through, "result" not found as array
+      } else if (top == JsonToken.BEGIN_ARRAY) {
+        // Just in case response is an array (very unlikely for ServiceNow), handle it.
+        jsonReader.beginArray();
+        return true;
+      }
+    } catch (IOException e) {
+        // cleanup on parse error
+        closeCurrentPage();
+        throw e;
+    }
+
+    // No "result" array not found, close the current page and return false
+    closeCurrentPage();
+    return false;
+  }
+
+  public void closeCurrentPage() {
+    if (this.jsonReader != null) {
+      try {
+        this.jsonReader.close();
+      } catch (IOException e) {
+        LOG.warn("Error closing JSON reader", e);
+      } finally {
+        this.jsonReader = null;
+      }
+    }
   }
 
   protected void initialize(InputSplit split) {

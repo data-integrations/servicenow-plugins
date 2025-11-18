@@ -25,6 +25,7 @@ import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
+import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.util.ServiceNowColumn;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
@@ -277,11 +278,12 @@ public class ServiceNowRecordReaderTest {
     response.setColumns(columns);
     response.setResult(results);
     response.setTotalRecordCount(1);
+    RestAPIResponse mockResponse = Mockito.mock(RestAPIResponse.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                                         serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.
                                                           getEndDate(), split.getOffset(),
-                                                        serviceNowSourceConfig.getPageSize())).thenReturn(results);
+                                                        serviceNowSourceConfig.getPageSize())).thenReturn(mockResponse);
     Mockito.when(restApi.fetchTableSchema(tableName, valueType))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split);
@@ -330,11 +332,12 @@ public class ServiceNowRecordReaderTest {
     response.setColumns(columns);
     response.setResult(results);
     response.setTotalRecordCount(1);
+    RestAPIResponse mockResponse = Mockito.mock(RestAPIResponse.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                                         serviceNowSourceConfig.getStartDate(),
                                                         serviceNowSourceConfig.getEndDate(), split.getOffset(),
-                                                        serviceNowSourceConfig.getPageSize())).thenReturn(results);
+                                                        serviceNowSourceConfig.getPageSize())).thenReturn(mockResponse);
     Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType()))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split);
@@ -362,11 +365,12 @@ public class ServiceNowRecordReaderTest {
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     List<Map<String, String>> results = new ArrayList<>();
+    RestAPIResponse mockResponse = Mockito.mock(RestAPIResponse.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getValueType(),
                                            serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(),
                                            split.getOffset(),
-                                           serviceNowSourceConfig.getPageSize())).thenReturn(results);
+                                           serviceNowSourceConfig.getPageSize())).thenReturn(mockResponse);
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
     Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType()))

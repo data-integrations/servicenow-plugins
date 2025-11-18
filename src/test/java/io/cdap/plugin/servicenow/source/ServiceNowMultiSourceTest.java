@@ -156,7 +156,7 @@ public class ServiceNowMultiSourceTest {
       "        }\n" +
       "    ]\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     serviceNowMultiSource.configurePipeline(mockPipelineConfigurer);
@@ -176,7 +176,7 @@ public class ServiceNowMultiSourceTest {
     String responseBody = "{\n" +
       "    \"result\": []\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     try {
@@ -280,7 +280,7 @@ public class ServiceNowMultiSourceTest {
       "}";
     PowerMockito.mockStatic(ServiceNowMultiInputFormat.class);
     Mockito.when(ServiceNowMultiInputFormat.setInput(Mockito.any(), Mockito.any())).thenReturn((tableInfo));
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);

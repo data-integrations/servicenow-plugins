@@ -29,6 +29,8 @@ public class ServiceNowTableAPIClientImplTest {
     ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
     ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
     ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
+    RestAPIResponse mockApiResponse = new RestAPIResponse(
+        Collections.emptyMap(), "", null, null);
     List<Map<String, String>> mockResults = new ArrayList<>();
     mockResults.add(new HashMap<String, String>() {{
       put("keyTest", "valueTest");
@@ -45,7 +47,7 @@ public class ServiceNowTableAPIClientImplTest {
             Mockito.anyString(),
             Mockito.anyInt(),
             Mockito.anyInt());
-    List<Map<String, String>> receivedResults =
+    RestAPIResponse restAPIResponse =
         implSpy.fetchTableRecordsRetryableMode(
             "test", SourceValueType.SHOW_DISPLAY_VALUE, "", "", 0, 0);
     Mockito.verify(implSpy, Mockito.times(2)).fetchTableRecords(
@@ -55,7 +57,7 @@ public class ServiceNowTableAPIClientImplTest {
         Mockito.anyString(),
         Mockito.anyInt(),
         Mockito.anyInt());
-    Assert.assertEquals(receivedResults, mockResults);
+    Assert.assertEquals(restAPIResponse, mockApiResponse);
   }
 
   @Test
@@ -104,7 +106,8 @@ public class ServiceNowTableAPIClientImplTest {
       "    }\n" +
       "  ]\n" +
       "}";
-    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null,
+      null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
     Schema schema = implSpy.fetchTableSchema("sys_user", "dummy-access-token",
                                              SourceValueType.SHOW_ACTUAL_VALUE, SchemaType.SCHEMA_API_BASED);
@@ -136,7 +139,7 @@ public class ServiceNowTableAPIClientImplTest {
       "  }\n" +
       "}";
 
-    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
 
     Schema schema = implSpy.fetchTableSchema("u_custom_table",
@@ -175,7 +178,7 @@ public class ServiceNowTableAPIClientImplTest {
       "    }\n" +
       "  ]\n" +
       "}";
-    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
     Schema schema = implSpy.fetchTableSchema("sys_user", "dummy-access-token",
       SourceValueType.SHOW_DISPLAY_VALUE, SchemaType.SCHEMA_API_BASED);
@@ -212,7 +215,7 @@ public class ServiceNowTableAPIClientImplTest {
       "    }\n" +
       "  }\n" +
       "}";
-    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
     Schema schema = implSpy.fetchTableSchema("incident", "dummy-access-token",
                                              SourceValueType.SHOW_DISPLAY_VALUE, SchemaType.METADATA_API_BASED);

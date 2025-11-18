@@ -99,7 +99,7 @@ public class ServiceNowRecordWriterTest {
     result.add(map);
     Map<String, String> headers = new HashMap<>();
     RestAPIResponse restAPIResponse = new RestAPIResponse(
-        headers, responseBody, null);
+        headers, responseBody, null, null);
     Mockito.when(restApi.executePost(Mockito.any())).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
@@ -143,7 +143,7 @@ public class ServiceNowRecordWriterTest {
     map.put("key", "value");
     result.add(map);
     Map<String, String> headers = new HashMap<>();
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executePost(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
@@ -191,7 +191,7 @@ public class ServiceNowRecordWriterTest {
     map.put("key", "value");
     result.add(map);
     Map<String, String> headers = new HashMap<>();
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
     Mockito.when(restApi.executePost(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
     Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);

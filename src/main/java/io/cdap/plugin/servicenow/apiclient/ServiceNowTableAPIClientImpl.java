@@ -138,7 +138,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param limit     The number of records to be fetched
    * @return The list of Map; each Map representing a table row
    */
-  public List<Map<String, String>> fetchTableRecords(
+  public RestAPIResponse fetchTableRecords(
       String tableName,
       SourceValueType valueType,
       String startDate,
@@ -161,8 +161,9 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     String accessToken = getAccessToken();
     requestBuilder.setAuthHeader(accessToken);
     RestAPIResponse apiResponse = executeGetWithRetries(requestBuilder.build());
+    return apiResponse;
     //return parseResponseToResultListOfMap(apiResponse.getResponseBody());
-    return parseResponseStreamToResultListOfMap(apiResponse.getInputStream());
+    // return parseResponseStreamToRecord(apiResponse.getInputStream());
 
   }
 
@@ -206,20 +207,20 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     return GSON.fromJson(ja, type);
   }
 
-  public List<Map<String, String>> parseResponseStreamToResultListOfMap(InputStream in) throws ServiceNowAPIException {
-    List<Map<String, String>> records = new ArrayList<>();
+  public Map<String, String> parseResponseStreamToRecord(InputStream in) throws ServiceNowAPIException {
+    // List<Map<String, String>> records = new ArrayList<>();
     // InputStream in = httpResponse.getEntity().getContent();
     try (InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
          JsonReader jsonReader = new JsonReader(reader)) {
       jsonReader.setLenient(true);
       jsonReader.beginObject();
+      Map<String, String> record = new HashMap<>();
       while (jsonReader.hasNext()) {
         String name = jsonReader.nextName();
         if (ServiceNowConstants.RESULT.equals(name) && jsonReader.peek() == JsonToken.BEGIN_ARRAY) {
           jsonReader.beginArray();
           while (jsonReader.hasNext()) {
             jsonReader.beginObject();
-            Map<String, String> record = new HashMap<>();
             while (jsonReader.hasNext()) {
               String field = jsonReader.nextName();
               JsonToken token = jsonReader.peek();
@@ -228,7 +229,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
               record.put(field, token == JsonToken.NULL ? null : jsonReader.nextString());
             }
             jsonReader.endObject();
-            records.add(record);
+            // records.add(record);
           }
           jsonReader.endArray();
         } else {
@@ -237,7 +238,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
         }
       }
       jsonReader.endObject();
-      return records;
+      return record;
     } catch (IOException e) {
       throw new ServiceNowAPIException(e, null);
     }
@@ -277,12 +278,14 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param limit     The number of records to be fetched
    * @return The list of Map; each Map representing a table row
    */
-  public List<Map<String, String>> fetchTableRecordsRetryableMode(String tableName, SourceValueType valueType,
+  public RestAPIResponse fetchTableRecordsRetryableMode(String tableName, SourceValueType valueType,
                                                                   String startDate, String endDate, int offset,
                                                                   int limit) throws ServiceNowAPIException {
-    final List<Map<String, String>> results = new ArrayList<>();
+    //final List<Map<String, String>> results = new ArrayList<>();
+    final RestAPIResponse[] restAPIResponse = new RestAPIResponse[1];
     Callable<Boolean> fetchRecords = () -> {
-      results.addAll(fetchTableRecords(tableName, valueType, startDate, endDate, offset, limit));
+      // results.addAll(fetchTableRecords(tableName, valueType, startDate, endDate, offset, limit));
+      restAPIResponse[0] = fetchTableRecords(tableName, valueType, startDate, endDate, offset, limit);
       return true;
     };
 
@@ -300,7 +303,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
           e, null, false);
     }
 
-    return results;
+    return restAPIResponse[0];
   }
 
   /**
