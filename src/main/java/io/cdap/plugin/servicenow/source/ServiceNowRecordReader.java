@@ -102,7 +102,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     // At this point jsonReader is positioned inside the "result" array.
     JsonToken token = jsonReader.peek();
 
-    if (token == JsonToken.END_ARRAY) {
+    /*if (token == JsonToken.END_ARRAY) {
       // Current page exhausted. Close current page and try to open the next page.
       closeCurrentPage();
 
@@ -119,7 +119,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
         return false;
       }
       // continue loop to attempt to read from newly opened page
-    }
+    }*/
 
     if (token == JsonToken.BEGIN_OBJECT) {
       LOG.info("Reading record object for table {} at position {}", tableName, pos);
@@ -129,61 +129,8 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
       pos++;
       return true;
     }
+    closeCurrentPage();
     return false;
-
-    /*if (token == JsonToken.NULL) {
-      // skip nulls if any and continue
-      jsonReader.nextNull();
-      continue;
-    }*/
-
-      // Skip any unexpected or non-object token and loop
-      //jsonReader.skipValue();
-
-    /*********************----------------**********************/
-      /*// read the next record from the current page
-      try {
-        if (jsonreader.hasnext()) {
-          // there is another record in the current page
-          map<string, string> recordmap = new hashmap<>();
-          jsonreader.beginobject();
-          while (jsonreader.hasnext()) {
-            string name = jsonreader.nextname();
-            jsontoken token = jsonreader.peek();
-            string value = null;
-            if (token == jsontoken.null) {
-              jsonreader.nextnull();
-            } else {
-              value = jsonreader.nextstring();
-            }
-            recordmap.put(name, value);
-          }
-          jsonreader.endobject();
-          row = recordmap;
-          pos++;
-          return true;
-        } else {
-          // end of current page
-          closecurrentpage();
-        }
-      } catch (ioexception e) {
-        // cleanup on parse error
-        closecurrentpage();
-        log.error("error parsing json response from table " + tablename, e);
-        throw e;
-      }*/
-
-    /*try {
-        InputStream inputStream = fetchData();
-        do {
-          row = restApi.parseResponseStreamToRecord(inputStream);
-          pos++;
-          return true;
-        } while (inputStream.available() > 0);
-    } catch (Exception e) {
-      LOG.error("Error in nextKeyValue", e);
-      throw new IOException("Exception in nextKeyValue", e);
-    }*/
   }
 
   @Override
