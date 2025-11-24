@@ -17,20 +17,18 @@
 package io.cdap.plugin.servicenow.restapi;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.util.EntityUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,7 +36,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -105,25 +102,42 @@ public class RestAPIResponse {
     if (serviceNowAPIException != null) {
       return new RestAPIResponse(headers, null, null, serviceNowAPIException);
     }
-
-    String responseBody = null;
-    try {
+    /*try {
       responseBody = EntityUtils.toString(httpResponse.getEntity());
     } catch (IOException e) {
       return new RestAPIResponse(headers, null, null, new ServiceNowAPIException(e, httpResponse));
-    }
-    // Instead of reading the entire entity, store the stream
-    HttpEntity httpEntity = httpResponse.getEntity();
-    InputStream responseStream;
+    }*/
     try {
-      responseStream = (httpEntity != null) ? httpEntity.getContent() : null;
+      return prepareResponseWithBodyAndStream(httpResponse, headers, serviceNowAPIException);
     } catch (IOException e) {
       return new RestAPIResponse(headers, null, null, new ServiceNowAPIException(e, httpResponse));
     }
-    serviceNowAPIException = validateRestApiResponse(httpResponse, responseBody);
-    // return new RestAPIResponse(headers, responseBody, serviceNowAPIException);
-    return new RestAPIResponse(headers, responseBody, responseStream, serviceNowAPIException);
+  }
 
+  public static RestAPIResponse prepareResponseWithBodyAndStream(HttpResponse httpResponse, Map<String, String> headers,
+      ServiceNowAPIException serviceNowAPIException) throws IOException {
+    HttpEntity httpEntity = httpResponse.getEntity();
+    if (httpEntity != null) {
+      try (InputStream inputStream = httpEntity.getContent();
+           ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+
+        // Copy the InputStream into the ByteArrayOutputStream
+        byte[] data = new byte[8192];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(data)) != -1) {
+          buffer.write(data, 0, bytesRead);
+        }
+        // Convert the buffer to a String for the responseBody
+        String responseBody = buffer.toString(String.valueOf(StandardCharsets.UTF_8));
+        serviceNowAPIException = validateRestApiResponse(httpResponse, responseBody);
+        // Create a new InputStream from the buffer for further processing
+        InputStream reusableStream = new ByteArrayInputStream(buffer.toByteArray());
+        // return new RestAPIResponse(headers, responseBody, serviceNowAPIException);
+        return new RestAPIResponse(headers, responseBody, reusableStream, serviceNowAPIException);
+      }
+    } else {
+      return new RestAPIResponse(headers, null, null, serviceNowAPIException);
+    }
   }
 
   public static RestAPIResponse parse(HttpResponse httpResponse) throws IOException {
