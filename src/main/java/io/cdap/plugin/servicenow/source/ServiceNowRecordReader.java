@@ -39,7 +39,6 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -101,25 +100,6 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
 
     // At this point jsonReader is positioned inside the "result" array.
     JsonToken token = jsonReader.peek();
-
-    /*if (token == JsonToken.END_ARRAY) {
-      // Current page exhausted. Close current page and try to open the next page.
-      closeCurrentPage();
-
-      // Attempt to open next page; if none, we must return false (end of data)
-      boolean openedNext;
-      try {
-        openedNext = openNextPage();
-        LOG.info("Opened next page for table {} at offset {}: {}", tableName, split.getOffset(), openedNext);
-      } catch (ServiceNowAPIException e) {
-        throw new IOException("Exception in nextKeyValue " + tableName, e);
-      }
-      if (!openedNext) {
-        // No more pages
-        return false;
-      }
-      // continue loop to attempt to read from newly opened page
-    }*/
 
     if (token == JsonToken.BEGIN_OBJECT) {
       LOG.info("Reading record object for table {} at position {}", tableName, pos);
