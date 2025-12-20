@@ -31,6 +31,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -174,9 +177,11 @@ public class ServiceNowMultiSourceConfigTest {
       "        }\n" +
       "    ]\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, body, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
     serviceNowMultiSourceConfig.validate(mockFailureCollector);
     Assert.assertEquals(0, mockFailureCollector.getValidationFailures().size());
 
@@ -207,7 +212,9 @@ public class ServiceNowMultiSourceConfigTest {
     String responseBody = "{\n" +
       "    \"result\": []\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, body, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
     serviceNowMultiSourceConfig.validate(mockFailureCollector);
     Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());
@@ -301,9 +308,11 @@ public class ServiceNowMultiSourceConfigTest {
       "        }\n" +
       "    ]\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, body, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
     try {
       serviceNowMultiSourceConfig.validate(mockFailureCollector);
       Assert.fail("Exception is not thrown with valid reference name");
@@ -402,9 +411,11 @@ public class ServiceNowMultiSourceConfigTest {
       "        }\n" +
       "    ]\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, body, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
     serviceNowMultiSourceConfig.validate(mockFailureCollector);
     Assert.assertEquals(1, mockFailureCollector.getValidationFailures().size());
     Assert.assertEquals("Table name field must be specified.",

@@ -43,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -121,7 +122,8 @@ public class ServiceNowSinkAPIRequestImpl {
       requestBuilder.setEntity(stringEntity);
       apiResponse = restApi.executePost(requestBuilder.build());
 
-      JsonObject responseJSON = jsonParser.parse(apiResponse.getResponseBody()).getAsJsonObject();
+      JsonObject responseJSON = jsonParser.parse(
+        new InputStreamReader(apiResponse.getBodyAsStream(), StandardCharsets.UTF_8)).getAsJsonObject();
       JsonArray servicedRequestsArray = responseJSON.get(ServiceNowConstants.SERVICED_REQUESTS).getAsJsonArray();
       JsonElement failedRequestId = null;
       for (int i = 0; i < servicedRequestsArray.size(); i++) {

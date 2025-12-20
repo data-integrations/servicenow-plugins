@@ -83,7 +83,7 @@ public abstract class RestAPIClient {
       }
     } catch (ConnectTimeoutException | SocketException e) {
       ServiceNowAPIException exception = new ServiceNowAPIException(e, null);
-      return new RestAPIResponse(Collections.emptyMap(), (InputStream) null, exception);
+      return new RestAPIResponse(Collections.emptyMap(), null, exception);
     }
   }
 

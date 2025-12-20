@@ -20,13 +20,16 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -44,42 +47,33 @@ import javax.annotation.Nullable;
  * Pojo class to capture the API response.
  */
 public class RestAPIResponse {
+  private static final Logger LOG = LoggerFactory.getLogger(RestAPIResponse.class);
   private static final Gson GSON = new Gson();
   private static final String HTTP_ERROR_MESSAGE = "Http call to ServiceNow instance returned status code %d.";
   private static final String REST_ERROR_MESSAGE = "Rest Api response has errors. Error message: %s.";
   private static final Set<Integer> SUCCESS_CODES = new HashSet<>(Arrays.asList(HttpStatus.SC_CREATED,
                                                                                 HttpStatus.SC_OK));
+  private static final long MAX_PAGE_BYTES = 50L * 1024 * 1024; // 50 MB (Upper Bound)
   private final Map<String, String> headers;
-  // Deprecated: storing full body as String can cause OOM
-  @Deprecated
-  private String responseBody;
   @Nullable private final ServiceNowAPIException exception;
 
-  // New: store InputStream for streaming consumption
-  private InputStream inputStream;
-
-  public RestAPIResponse(
-      Map<String, String> headers,
-      @Nullable String responseBody,
-      InputStream inputStream,
-      @Nullable ServiceNowAPIException exception) {
-    this.headers = headers;
-    this.responseBody = responseBody;
-    this.inputStream = inputStream;
-    this.exception = exception;
-  }
+  // New: store byte array
+  private byte[] responseBody;
 
   public RestAPIResponse(
     Map<String, String> headers,
-    InputStream inputStream,
+    byte[] responseBody,
     @Nullable ServiceNowAPIException exception) {
     this.headers = headers;
-    this.inputStream = inputStream;
+    this.responseBody = responseBody;
     this.exception = exception;
   }
 
   /**
    * Parses HttpResponse into RestAPIResponse object when no errors occur.
+   * The RESTAPIResponse contains the HTTP response body as a stream. This stream is:
+   * single-use, forward-only and owned by the caller. Caller is responsible for consuming and closing it.
+   *
    * Throws a {@link ServiceNowAPIException}.
    *
    * @param httpResponse The HttpResponse object to parse
@@ -100,43 +94,33 @@ public class RestAPIResponse {
 
     ServiceNowAPIException serviceNowAPIException = validateHttpResponse(httpResponse);
     if (serviceNowAPIException != null) {
-      return new RestAPIResponse(headers, null, null, serviceNowAPIException);
+      return new RestAPIResponse(headers, null, serviceNowAPIException);
     }
-    /*try {
-      responseBody = EntityUtils.toString(httpResponse.getEntity());
-    } catch (IOException e) {
-      return new RestAPIResponse(headers, null, null, new ServiceNowAPIException(e, httpResponse));
-    }*/
     try {
-      return prepareResponseWithBodyAndStream(httpResponse, headers, serviceNowAPIException);
+      return prepareResponseStream(httpResponse, headers, serviceNowAPIException);
     } catch (IOException e) {
-      return new RestAPIResponse(headers, null, null, new ServiceNowAPIException(e, httpResponse));
+      return new RestAPIResponse(headers, null, new ServiceNowAPIException(e, httpResponse));
     }
   }
 
-  public static RestAPIResponse prepareResponseWithBodyAndStream(HttpResponse httpResponse, Map<String, String> headers,
+  public static RestAPIResponse prepareResponseStream(HttpResponse httpResponse, Map<String, String> headers,
       ServiceNowAPIException serviceNowAPIException) throws IOException {
     HttpEntity httpEntity = httpResponse.getEntity();
+    byte[] responseBody = new byte[0];
+    InputStream inputStream;
     if (httpEntity != null) {
-      try (InputStream inputStream = httpEntity.getContent();
-           ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
-
-        // Copy the InputStream into the ByteArrayOutputStream
-        byte[] data = new byte[8192];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(data)) != -1) {
-          buffer.write(data, 0, bytesRead);
-        }
-        // Convert the buffer to a String for the responseBody
-        String responseBody = buffer.toString(String.valueOf(StandardCharsets.UTF_8));
-        serviceNowAPIException = validateRestApiResponse(httpResponse, responseBody);
-        // Create a new InputStream from the buffer for further processing
-        InputStream reusableStream = new ByteArrayInputStream(buffer.toByteArray());
-        // return new RestAPIResponse(headers, responseBody, serviceNowAPIException);
-        return new RestAPIResponse(headers, responseBody, reusableStream, serviceNowAPIException);
+      inputStream = httpEntity.getContent();
+      BoundedInputStream boundedInputStream = new BoundedInputStream(
+        inputStream, MAX_PAGE_BYTES + 1); // +1 to detect overflow
+      responseBody = IOUtils.toByteArray(boundedInputStream);
+      LOG.info("RAW JSON: {}", new String(responseBody, StandardCharsets.UTF_8));
+      if (responseBody.length > MAX_PAGE_BYTES) {
+        throw new IOException(
+          "ServiceNow page exceeded max allowed size: " + MAX_PAGE_BYTES);
       }
+      return new RestAPIResponse(headers, responseBody, serviceNowAPIException);
     } else {
-      return new RestAPIResponse(headers, null, null, serviceNowAPIException);
+      return new RestAPIResponse(headers, responseBody, serviceNowAPIException);
     }
   }
 
@@ -174,12 +158,16 @@ public class RestAPIResponse {
   }
 
   @Nullable
-  public String getResponseBody() {
+  public byte[] getResponseBody() {
     return responseBody;
   }
 
-  public InputStream getInputStream() {
-    return inputStream;
+  /**
+   * Returns a fresh InputStream for the response body. Caller must close the stream.
+   * @return InputStream
+   */
+  public InputStream getBodyAsStream() {
+    return responseBody == null ? null : new ByteArrayInputStream(responseBody);
   }
 
   @Nullable

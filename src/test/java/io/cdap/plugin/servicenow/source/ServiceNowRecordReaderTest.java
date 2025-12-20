@@ -40,11 +40,15 @@ import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +56,6 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServiceNowTableAPIClientImpl.class, ServiceNowSourceConfig.class, ServiceNowRecordReader.class})
 public class ServiceNowRecordReaderTest {
-
   private static final String CLIENT_ID = "client_id";
   private static final String CLIENT_SECRET = "client_secret";
   private static final String REST_API_ENDPOINT = "https://ven05127.service-now.com";
@@ -258,32 +261,55 @@ public class ServiceNowRecordReaderTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
-    List<Map<String, String>> results = new ArrayList<>();
-    Map<String, String> map = new HashMap<>();
-    map.put("calendar_integration", "1");
-    map.put("country", "India");
-    map.put("sys_updated_on", "2019-04-05 21:54:45");
-    map.put("web_service_access_only", "false");
-    map.put("notification", "2");
-    map.put("enable_multifactor_authn", "false");
-    map.put("sys_updated_by", "system");
-    map.put("sys_created_on", "2019-04-05 21:09:12");
-    results.add(map);
-    ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
-    ServiceNowColumn column1 = new ServiceNowColumn("calendar_integration", "integer");
-    ServiceNowColumn column2 = new ServiceNowColumn("vip", "boolean");
-    List<ServiceNowColumn> columns = new ArrayList<>();
-    columns.add(column1);
-    columns.add(column2);
-    response.setColumns(columns);
-    response.setResult(results);
-    response.setTotalRecordCount(1);
     RestAPIResponse mockResponse = Mockito.mock(RestAPIResponse.class);
+    String responseBody = "{\n" +
+      "  \"result\": [\n" +
+      "    {\n" +
+      "      \"bill_to\": \"\",\n" +
+      "      \"init_request\": \"\",\n" +
+      "      \"short_description\": \"\",\n" +
+      "      \"total_cost\": \"0\",\n" +
+      "      \"due_by\": \"\",\n" +
+      "      \"description\": \"\",\n" +
+      "      \"requested_for\": \"\",\n" +
+      "      \"sys_updated_on\": \"2022-06-16 18:56:23\",\n" +
+      "      \"budget_number\": \"\",\n" +
+      "      \"number\": \"RCS397871\",\n" +
+      "      \"sys_id\": \"00000b7287405910827733373cbb35d5\",\n" +
+      "      \"sys_updated_by\": \"pipeline.user.1\",\n" +
+      "      \"shipping\": \"\",\n" +
+      "      \"terms\": \"\",\n" +
+      "      \"sys_created_on\": \"2022-06-16 18:56:23\",\n" +
+      "      \"vendor\": \"\",\n" +
+      "      \"sys_domain\": \"global\",\n" +
+      "      \"department\": \"\",\n" +
+      "      \"sys_created_by\": \"pipeline.user.1\",\n" +
+      "      \"assigned_to\": \"\",\n" +
+      "      \"ordered\": \"\",\n" +
+      "      \"po_date\": \"2022-06-16 18:56:23\",\n" +
+      "      \"vendor_contract\": \"\",\n" +
+      "      \"contract\": \"\",\n" +
+      "      \"expected_delivery\": \"\",\n" +
+      "      \"sys_mod_count\": \"0\",\n" +
+      "      \"received\": \"2158-05-10 17:14:20\",\n" +
+      "      \"asset_operation\": \"\",\n" +
+      "      \"sys_tags\": \"\",\n" +
+      "      \"requested\": \"2022-06-16 18:56:23\",\n" +
+      "      \"requested_by\": \"\",\n" +
+      "      \"ship_rate\": \"0\",\n" +
+      "      \"location\": \"\",\n" +
+      "      \"vendor_account\": \"\",\n" +
+      "      \"ship_to\": \"\",\n" +
+      "      \"status\": \"requested\"\n" +
+      "    }\n" +
+      "  ]\n" +
+      "}";
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
-                                                        serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.
-                                                          getEndDate(), split.getOffset(),
-                                                        serviceNowSourceConfig.getPageSize())).thenReturn(mockResponse);
+      serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(), split.getOffset(),
+        serviceNowSourceConfig.getPageSize())).thenReturn(restAPIResponse);
     Mockito.when(restApi.fetchTableSchema(tableName, valueType))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split);
@@ -312,32 +338,54 @@ public class ServiceNowRecordReaderTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
-    List<Map<String, String>> results = new ArrayList<>();
-    Map<String, String> map = new HashMap<>();
-    map.put("calendar_integration", "1");
-    map.put("country", "India");
-    map.put("sys_updated_on", "2019-04-05 21:54:45");
-    map.put("web_service_access_only", "false");
-    map.put("notification", "2");
-    map.put("enable_multifactor_authn", "false");
-    map.put("sys_updated_by", "system");
-    map.put("sys_created_on", "2019-04-05 21:09:12");
-    results.add(map);
-    ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
-    ServiceNowColumn column1 = new ServiceNowColumn("calendar_integration", "integer");
-    ServiceNowColumn column2 = new ServiceNowColumn("vip", "boolean");
-    List<ServiceNowColumn> columns = new ArrayList<>();
-    columns.add(column1);
-    columns.add(column2);
-    response.setColumns(columns);
-    response.setResult(results);
-    response.setTotalRecordCount(1);
-    RestAPIResponse mockResponse = Mockito.mock(RestAPIResponse.class);
+    String responseBody = "{\n" +
+      "  \"result\": [\n" +
+      "    {\n" +
+      "      \"bill_to\": \"\",\n" +
+      "      \"init_request\": \"\",\n" +
+      "      \"short_description\": \"\",\n" +
+      "      \"total_cost\": \"0\",\n" +
+      "      \"due_by\": \"\",\n" +
+      "      \"description\": \"\",\n" +
+      "      \"requested_for\": \"\",\n" +
+      "      \"sys_updated_on\": \"2022-06-16 18:56:23\",\n" +
+      "      \"budget_number\": \"\",\n" +
+      "      \"number\": \"RCS397871\",\n" +
+      "      \"sys_id\": \"00000b7287405910827733373cbb35d5\",\n" +
+      "      \"sys_updated_by\": \"pipeline.user.1\",\n" +
+      "      \"shipping\": \"\",\n" +
+      "      \"terms\": \"\",\n" +
+      "      \"sys_created_on\": \"2022-06-16 18:56:23\",\n" +
+      "      \"vendor\": \"\",\n" +
+      "      \"sys_domain\": \"global\",\n" +
+      "      \"department\": \"\",\n" +
+      "      \"sys_created_by\": \"pipeline.user.1\",\n" +
+      "      \"assigned_to\": \"\",\n" +
+      "      \"ordered\": \"\",\n" +
+      "      \"po_date\": \"2022-06-16 18:56:23\",\n" +
+      "      \"vendor_contract\": \"\",\n" +
+      "      \"contract\": \"\",\n" +
+      "      \"expected_delivery\": \"\",\n" +
+      "      \"sys_mod_count\": \"0\",\n" +
+      "      \"received\": \"2158-05-10 17:14:20\",\n" +
+      "      \"asset_operation\": \"\",\n" +
+      "      \"sys_tags\": \"\",\n" +
+      "      \"requested\": \"2022-06-16 18:56:23\",\n" +
+      "      \"requested_by\": \"\",\n" +
+      "      \"ship_rate\": \"0\",\n" +
+      "      \"location\": \"\",\n" +
+      "      \"vendor_account\": \"\",\n" +
+      "      \"ship_to\": \"\",\n" +
+      "      \"status\": \"requested\"\n" +
+      "    }\n" +
+      "  ]\n" +
+      "}";
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
-                                                        serviceNowSourceConfig.getStartDate(),
-                                                        serviceNowSourceConfig.getEndDate(), split.getOffset(),
-                                                        serviceNowSourceConfig.getPageSize())).thenReturn(mockResponse);
+      serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(), split.getOffset(),
+        serviceNowSourceConfig.getPageSize())).thenReturn(restAPIResponse);
     Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType()))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
     serviceNowRecordReader.initialize(split);
@@ -353,7 +401,7 @@ public class ServiceNowRecordReaderTest {
       .setPassword(PASSWORD)
       .setClientId(CLIENT_ID)
       .setClientSecret(CLIENT_SECRET)
-      .setTableName("")
+      .setTableName("abc")
       .setValueType("Actual")
       .setStartDate("2021-01-01")
       .setEndDate("2022-02-18")
@@ -365,12 +413,21 @@ public class ServiceNowRecordReaderTest {
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     List<Map<String, String>> results = new ArrayList<>();
-    RestAPIResponse mockResponse = Mockito.mock(RestAPIResponse.class);
+    String responseBody = "{\n    " +
+      "\"error\": " +
+      "{\n        " +
+      "\"message\": \"Invalid table abc\",\n" +
+      "        \"detail\": null\n    " +
+      "},\n    " +
+      "\"status\": \"failure\"\n" +
+      "}";
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getValueType(),
+    Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                            serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(),
                                            split.getOffset(),
-                                           serviceNowSourceConfig.getPageSize())).thenReturn(mockResponse);
+                                           serviceNowSourceConfig.getPageSize())).thenReturn(restAPIResponse);
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
     response.setResult(results);
     Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType()))

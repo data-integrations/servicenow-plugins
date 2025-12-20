@@ -23,10 +23,8 @@ import io.cdap.cdap.etl.mock.common.MockArguments;
 import io.cdap.cdap.etl.mock.common.MockPipelineConfigurer;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
-import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -43,6 +41,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -156,9 +157,11 @@ public class ServiceNowMultiSourceTest {
       "        }\n" +
       "    ]\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, body, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
     serviceNowMultiSource.configurePipeline(mockPipelineConfigurer);
     Assert.assertNull(mockPipelineConfigurer.getOutputSchema());
     Assert.assertEquals(0, mockFailureCollector.getValidationFailures().size());
@@ -176,9 +179,11 @@ public class ServiceNowMultiSourceTest {
     String responseBody = "{\n" +
       "    \"result\": []\n" +
       "}";
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, body, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
     try {
       serviceNowMultiSource.configurePipeline(mockPipelineConfigurer);
       Assert.fail("Exception is not thrown for Non-Empty Tables");
@@ -278,11 +283,13 @@ public class ServiceNowMultiSourceTest {
       "        }\n" +
       "    ]\n" +
       "}";
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    InputStream inputStream = new ByteArrayInputStream(body);
     PowerMockito.mockStatic(ServiceNowMultiInputFormat.class);
     Mockito.when(ServiceNowMultiInputFormat.setInput(Mockito.any(), Mockito.any())).thenReturn((tableInfo));
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, body, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);

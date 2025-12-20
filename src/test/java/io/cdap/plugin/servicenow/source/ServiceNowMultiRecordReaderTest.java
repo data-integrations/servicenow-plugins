@@ -24,7 +24,7 @@ import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
-import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.junit.Assert;
@@ -32,9 +32,14 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +47,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ServiceNowTableAPIClientImpl.class, ServiceNowMultiSourceConfig.class,
+  ServiceNowMultiRecordReader.class})
 public class ServiceNowMultiRecordReaderTest {
 
   private static final String CLIENT_ID = "clientId";
@@ -121,25 +129,60 @@ public class ServiceNowMultiRecordReaderTest {
   }
 
   @Test
-  public void testFetchData() throws ServiceNowAPIException, IOException {
+  public void testFetchData() throws Exception {
     String tableName = serviceNowMultiSourceConfig.getTableNames();
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
-
-    List<Map<String, String>> results = new ArrayList<>();
-    Map<String, String> map = new HashMap<>();
-    map.put("calendar_integration", "1");
-    map.put("country", "India");
-    map.put("sys_updated_on", "2019-04-05 21:54:45");
-    map.put("web_service_access_only", "false");
-    map.put("notification", "2");
-    map.put("enable_multifactor_authn", "false");
-    map.put("sys_updated_by", "system");
-    map.put("sys_created_on", "2019-04-05 21:09:12");
-    results.add(map);
-
-    ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();
-    response.setResult(results);
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
+    ServiceNowMultiRecordReader serviceNowMultiRecordReader =
+      new ServiceNowMultiRecordReader(serviceNowMultiSourceConfig);
+    String responseBody = "{\n" +
+      "  \"result\": [\n" +
+      "    {\n" +
+      "      \"bill_to\": \"\",\n" +
+      "      \"init_request\": \"\",\n" +
+      "      \"short_description\": \"\",\n" +
+      "      \"total_cost\": \"0\",\n" +
+      "      \"due_by\": \"\",\n" +
+      "      \"description\": \"\",\n" +
+      "      \"requested_for\": \"\",\n" +
+      "      \"sys_updated_on\": \"2022-06-16 18:56:23\",\n" +
+      "      \"budget_number\": \"\",\n" +
+      "      \"number\": \"RCS397871\",\n" +
+      "      \"sys_id\": \"00000b7287405910827733373cbb35d5\",\n" +
+      "      \"sys_updated_by\": \"pipeline.user.1\",\n" +
+      "      \"shipping\": \"\",\n" +
+      "      \"terms\": \"\",\n" +
+      "      \"sys_created_on\": \"2022-06-16 18:56:23\",\n" +
+      "      \"vendor\": \"\",\n" +
+      "      \"sys_domain\": \"global\",\n" +
+      "      \"department\": \"\",\n" +
+      "      \"sys_created_by\": \"pipeline.user.1\",\n" +
+      "      \"assigned_to\": \"\",\n" +
+      "      \"ordered\": \"\",\n" +
+      "      \"po_date\": \"2022-06-16 18:56:23\",\n" +
+      "      \"vendor_contract\": \"\",\n" +
+      "      \"contract\": \"\",\n" +
+      "      \"expected_delivery\": \"\",\n" +
+      "      \"sys_mod_count\": \"0\",\n" +
+      "      \"received\": \"2158-05-10 17:14:20\",\n" +
+      "      \"asset_operation\": \"\",\n" +
+      "      \"sys_tags\": \"\",\n" +
+      "      \"requested\": \"2022-06-16 18:56:23\",\n" +
+      "      \"requested_by\": \"\",\n" +
+      "      \"ship_rate\": \"0\",\n" +
+      "      \"location\": \"\",\n" +
+      "      \"vendor_account\": \"\",\n" +
+      "      \"ship_to\": \"\",\n" +
+      "      \"status\": \"requested\"\n" +
+      "    }\n" +
+      "  ]\n" +
+      "}";
+    byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
+    PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
+    Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowMultiSourceConfig.getValueType(),
+      serviceNowMultiSourceConfig.getStartDate(), serviceNowMultiSourceConfig.getEndDate(), split.getOffset(),
+        serviceNowMultiSourceConfig.getPageSize())).thenReturn(restAPIResponse);
     try {
       Mockito.when(restApi.fetchTableSchema(tableName, serviceNowMultiSourceConfig.getValueType()))
         .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
@@ -148,10 +191,6 @@ public class ServiceNowMultiRecordReaderTest {
              | ServiceNowAPIException e) {
       Assert.assertTrue(e instanceof RuntimeException);
     }
-    Mockito.doNothing().when(serviceNowMultiRecordReader).fetchData();
-    Collections.singletonList(new Object());
-    serviceNowMultiRecordReader.iterator = Collections.singletonList(Collections.singletonMap("key", new String())).
-      iterator();
     Assert.assertTrue(serviceNowMultiRecordReader.nextKeyValue());
   }
 

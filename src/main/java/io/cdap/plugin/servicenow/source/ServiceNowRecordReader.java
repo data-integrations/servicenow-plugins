@@ -78,7 +78,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
 
   /**
    * The refactored nextKeyValue() — uses Gson JsonReader to stream one record at a time.
-   * Returns true when it assigned `row` to the next Map<String,String> record.
+   * Returns true when it assigned `row` to the next record.
    * Returns false only when there are no more pages/records (i.e., openNextPage() returns false).
    */
   @Override
@@ -102,10 +102,8 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     JsonToken token = jsonReader.peek();
 
     if (token == JsonToken.BEGIN_OBJECT) {
-      LOG.info("Reading record object for table {} at position {}", tableName, pos);
-      // Read exactly one object from the stream into a Map<String,String>
-      Map<String, String> recordMap = gson.fromJson(jsonReader, mapType);
-      this.row = recordMap; // assign row
+      LOG.debug("Reading record object for table {} at position {}", tableName, pos);
+      this.row = gson.fromJson(jsonReader, mapType); // assign row
       pos++;
       return true;
     }
@@ -137,22 +135,17 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     // Get the table data
     RestAPIResponse restAPIResponse = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(),
      pluginConf.getStartDate(), pluginConf.getEndDate(), split.getOffset(), pluginConf.getPageSize());
-    
 
-    // LOG.debug("Results size={}", results.size());
     return restAPIResponse;
-
-    // iterator = results.iterator();
-    // iterator =  record;
   }
 
   private boolean openNextPage() throws IOException, ServiceNowAPIException {
-    LOG.info("Opening next page for table {} at offset {}", tableName, split.getOffset());
+    LOG.debug("Opening next page for table {} at offset {}", tableName, split.getOffset());
     closeCurrentPage();
-    LOG.info("Fetching data for table {} at offset {}", tableName, split.getOffset());
+    LOG.debug("Fetching data for table {} at offset {}", tableName, split.getOffset());
     RestAPIResponse resp = fetchData();
-    LOG.info("Fetched data for table {} at offset {}", tableName, split.getOffset());
-    InputStream in = resp.getInputStream();
+    LOG.debug("Fetched data for table {} at offset {}", tableName, split.getOffset());
+    InputStream in = resp.getBodyAsStream();
     if (in == null) {
       return false;
     }
@@ -191,8 +184,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
         return true;
       } else if (jsonReader.peek() == JsonToken.END_ARRAY) {
         // empty result array — treat as no-more-data for this split/page
-        LOG.info("openNextPage: found empty result array (no records). Closing and returning false.");
-        // consume the END_ARRAY token to leave stream consistent (optional)
+        LOG.debug("openNextPage: found empty result array (no records). Closing and returning false.");
         jsonReader.endArray();
         // cleanup
         closeCurrentPage();

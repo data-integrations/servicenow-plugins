@@ -17,12 +17,14 @@
 package io.cdap.plugin.servicenow;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.stream.JsonReader;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.common.ConfigUtil;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIRequestBuilder;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
@@ -31,7 +33,13 @@ import io.cdap.plugin.servicenow.source.ServiceNowSourceConfig;
 import io.cdap.plugin.servicenow.util.SchemaType;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceValueType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 
 /**
@@ -39,6 +47,7 @@ import javax.annotation.Nullable;
  */
 public class ServiceNowBaseConfig extends PluginConfig {
 
+  private static final Logger log = LoggerFactory.getLogger(ServiceNowBaseConfig.class);
   @Name(ConfigUtil.NAME_USE_CONNECTION)
   @Nullable
   @Description("Whether to use an existing connection.")
@@ -140,7 +149,7 @@ public class ServiceNowBaseConfig extends PluginConfig {
       requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
 
       apiResponse = serviceNowTableAPIClient.executeGetWithRetries(requestBuilder.build());
-      if (serviceNowTableAPIClient.parseResponseToResultListOfMap(apiResponse.getResponseBody()).isEmpty()) {
+      if (isResultEmpty(apiResponse)) {
         // Removed config property as in case of MultiSource, only first table error was populating.
         collector.addFailure("Table: " + tableName + " is empty.", "");
       }
@@ -150,6 +159,28 @@ public class ServiceNowBaseConfig extends PluginConfig {
                            "Ensure specified table exists in the datasource. ")
         .withConfigProperty(ServiceNowConstants.PROPERTY_TABLE_NAME);
     }
+  }
+
+  /**
+   * Check whether the result is empty or not.
+   * @param restAPIResponse
+   * @return true if result is empty
+   * @throws IOException
+   */
+  public boolean isResultEmpty(RestAPIResponse restAPIResponse) throws IOException {
+    JsonReader reader = new JsonReader(new InputStreamReader(restAPIResponse.getBodyAsStream(),
+      StandardCharsets.UTF_8));
+    reader.beginObject();
+    while (reader.hasNext()) {
+      String name = reader.nextName();
+      if (ServiceNowConstants.RESULT.equals(name)) {
+        reader.beginArray();
+        return !reader.hasNext();
+      } else {
+        reader.skipValue();
+      }
+    }
+    return true;
   }
 
 }
