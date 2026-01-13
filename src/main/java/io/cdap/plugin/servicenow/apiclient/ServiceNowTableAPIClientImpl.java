@@ -28,7 +28,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
@@ -62,13 +61,13 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 import static io.cdap.plugin.servicenow.util.ServiceNowConstants.STC_FIELD_SUFFIX;
@@ -203,38 +202,10 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     return GSON.fromJson(ja, type);
   }
 
-  public List<Map<String, String>> parseResponseToResultListOfMap(InputStream in) throws ServiceNowAPIException {
-    try (InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
-         JsonReader jsonReader = new JsonReader(reader)) {
-      jsonReader.setLenient(true);
-      jsonReader.beginObject();
-
-      List<Map<String, String>> records = new ArrayList<>();
-      while (jsonReader.hasNext()) {
-        String name = jsonReader.nextName();
-        if (ServiceNowConstants.RESULT.equals(name) && jsonReader.peek() == JsonToken.BEGIN_ARRAY) {
-          jsonReader.beginArray();
-          while (jsonReader.hasNext()) {
-            jsonReader.beginObject();
-            while (jsonReader.hasNext()) {
-              Map<String, String> record = new HashMap<>();
-              String field = jsonReader.nextName();
-              JsonToken token = jsonReader.peek();
-              record.put(field, token == JsonToken.NULL ? null : jsonReader.nextString());
-              records.add(record);
-            }
-            jsonReader.endObject();
-          }
-          jsonReader.endArray();
-        } else {
-          jsonReader.skipValue();
-        }
-      }
-      jsonReader.endObject();
-      return records;
-    } catch (IOException e) {
-      throw new ServiceNowAPIException(e, null);
-    }
+  public List<Map<String, String>> parseResponseToResultListOfMap(InputStream in) {
+    APIResponse apiResponse = GSON.fromJson(new JsonReader(new InputStreamReader(in, StandardCharsets.UTF_8)),
+      APIResponse.class);
+    return apiResponse.getResult();
   }
 
   private String getErrorMessage(String responseBody) {
@@ -274,11 +245,11 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   public RestAPIResponse fetchTableRecordsRetryableMode(String tableName, SourceValueType valueType,
                                                                   String startDate, String endDate, int offset,
                                                                   int limit) throws ServiceNowAPIException {
-    //final List<Map<String, String>> results = new ArrayList<>();
-    final RestAPIResponse[] restAPIResponse = new RestAPIResponse[1];
+    // Using AtomicReference to capture a value inside a lambda that needs to be accessed outside.
+    AtomicReference<RestAPIResponse> responseRef = new AtomicReference<>();
     Callable<Boolean> fetchRecords = () -> {
-      // results.addAll(fetchTableRecords(tableName, valueType, startDate, endDate, offset, limit));
-      restAPIResponse[0] = fetchTableRecords(tableName, valueType, startDate, endDate, offset, limit);
+      RestAPIResponse restAPIResponse = fetchTableRecords(tableName, valueType, startDate, endDate, offset, limit);
+      responseRef.set(restAPIResponse);
       return true;
     };
 
@@ -295,8 +266,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
           String.format("Data Recovery failed for batch %s to %s.", offset, (offset + limit)),
           e, null, false);
     }
-
-    return restAPIResponse[0];
+    // Return the value captured inside the lambda
+    return responseRef.get();
   }
 
   /**

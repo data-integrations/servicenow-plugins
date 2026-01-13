@@ -46,13 +46,9 @@ import java.util.Map;
  * Record reader that reads the entire contents of a ServiceNow table.
  */
 public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiRecordReader.class);
+  
   private final ServiceNowMultiSourceConfig multiSourcePluginConf;
   private ServiceNowTableAPIClientImpl restApi;
-  private final Gson gson = new Gson();
-  private final Type mapType = new TypeToken<Map<String, String>>() { }.getType();
-  private JsonReader jsonReader = null;
 
   ServiceNowMultiRecordReader(ServiceNowMultiSourceConfig multiSourcePluginConf) {
     super();
@@ -68,41 +64,6 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
     tableName = ((ServiceNowInputSplit) split).getTableName();
     tableNameField = multiSourcePluginConf.getTableNameField();
     fetchSchema(restApi);
-  }
-
-  @Override
-  /**
-   * The refactored nextKeyValue() — uses Gson JsonReader to stream one record at a time.
-   * Returns true when it assigned `row` to the next record.
-   * Returns false only when there are no more pages/records (i.e., openNextPage() returns false).
-   */
-  public boolean nextKeyValue() throws IOException {
-    // Ensure we have an active page/jsonReader
-    if (jsonReader == null) {
-      // Need to open the next page
-      boolean pageOpened;
-      try {
-        pageOpened = openNextPage();
-      } catch (ServiceNowAPIException e) {
-        throw new IOException("Exception in nextKeyValue" + tableName, e);
-      }
-      if (!pageOpened) {
-        // No more pages
-        return false;
-      }
-    }
-
-    // At this point jsonReader is positioned inside the "result" array.
-    JsonToken token = jsonReader.peek();
-
-    if (token == JsonToken.BEGIN_OBJECT) {
-      LOG.debug("Reading record object for table {} at position {}", tableName, pos);
-      this.row = gson.fromJson(jsonReader, mapType); // assign row
-      pos++;
-      return true;
-    }
-    closeCurrentPage();
-    return false;
   }
 
   @Override
@@ -130,80 +91,6 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
         split.getOffset(), multiSourcePluginConf.getPageSize());
     
     return restAPIResponse;
-  }
-
-  private boolean openNextPage() throws IOException, ServiceNowAPIException {
-    LOG.debug("Opening next page for table {} at offset {}", tableName, split.getOffset());
-    closeCurrentPage();
-    LOG.debug("Fetching data for table {} at offset {}", tableName, split.getOffset());
-    RestAPIResponse resp = fetchData();
-    LOG.debug("Fetched data for table {} at offset {}", tableName, split.getOffset());
-    InputStream in = resp.getBodyAsStream();
-    if (in == null) {
-      return false;
-    }
-    this.jsonReader = new JsonReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-    this.jsonReader.setLenient(true);
-
-    // Position the reader to the "result" array: { "result": [ ... ], ... }
-    try {
-      JsonToken top;
-      try {
-        top = jsonReader.peek();
-        LOG.info("Peeking JSON token for table {}: {}", tableName, top);
-      } catch (IOException e) {
-        LOG.warn("Unexpected closure of stream while peeking JSON token for table {}", tableName, e);
-        closeCurrentPage();
-        return false;
-      }
-      if (top == JsonToken.BEGIN_OBJECT) {
-        jsonReader.beginObject();
-        while (jsonReader.hasNext()) {
-          String name = jsonReader.nextName();
-          if (name.equals(ServiceNowConstants.RESULT)) {
-            if (jsonReader.peek() == JsonToken.BEGIN_ARRAY) {
-              jsonReader.beginArray();
-              return true;
-            } else {
-              jsonReader.skipValue();
-              break;
-            }
-          } else {
-            jsonReader.skipValue();
-          }
-        }
-      } else if (top == JsonToken.BEGIN_ARRAY) {
-        jsonReader.beginArray();
-        return true;
-      } else if (jsonReader.peek() == JsonToken.END_ARRAY) {
-        // empty result array — treat as no-more-data for this split/page
-        LOG.debug("openNextPage: found empty result array (no records). Closing and returning false.");
-        jsonReader.endArray();
-        // cleanup
-        closeCurrentPage();
-        return false;
-      }
-    } catch (IOException e) {
-      closeCurrentPage();
-      throw e;
-    }
-
-    // No "result" array not found, close the current page and return false
-    closeCurrentPage();
-    return false;
-  }
-
-  public void closeCurrentPage() {
-    LOG.info("Closing current page for table {}", tableName);
-    if (this.jsonReader != null) {
-      try {
-        this.jsonReader.close();
-      } catch (IOException e) {
-        LOG.warn("Error closing JSON reader", e);
-      } finally {
-        this.jsonReader = null;
-      }
-    }
   }
 
   private void fetchSchema(ServiceNowTableAPIClientImpl restApi) {

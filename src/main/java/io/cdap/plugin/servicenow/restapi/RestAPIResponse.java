@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -97,13 +96,13 @@ public class RestAPIResponse {
       return new RestAPIResponse(headers, null, serviceNowAPIException);
     }
     try {
-      return prepareResponseStream(httpResponse, headers, serviceNowAPIException);
+      return prepareResponse(httpResponse, headers, serviceNowAPIException);
     } catch (IOException e) {
       return new RestAPIResponse(headers, null, new ServiceNowAPIException(e, httpResponse));
     }
   }
 
-  public static RestAPIResponse prepareResponseStream(HttpResponse httpResponse, Map<String, String> headers,
+  public static RestAPIResponse prepareResponse(HttpResponse httpResponse, Map<String, String> headers,
       ServiceNowAPIException serviceNowAPIException) throws IOException {
     HttpEntity httpEntity = httpResponse.getEntity();
     byte[] responseBody = new byte[0];
@@ -113,7 +112,6 @@ public class RestAPIResponse {
       BoundedInputStream boundedInputStream = new BoundedInputStream(
         inputStream, MAX_PAGE_BYTES + 1); // +1 to detect overflow
       responseBody = IOUtils.toByteArray(boundedInputStream);
-      LOG.info("RAW JSON: {}", new String(responseBody, StandardCharsets.UTF_8));
       if (responseBody.length > MAX_PAGE_BYTES) {
         throw new IOException(
           "ServiceNow page exceeded max allowed size: " + MAX_PAGE_BYTES);

@@ -162,10 +162,12 @@ public class ServiceNowBaseConfig extends PluginConfig {
   }
 
   /**
-   * Check whether the result is empty or not.
-   * @param restAPIResponse
-   * @return true if result is empty
-   * @throws IOException
+   * Determines if the "result" array in a ServiceNow REST API response is empty. It specifically looks for a top-level
+   * key named "result". Once found, it opens the associated array and checks for the presence of a first element.
+   * @param restAPIResponse The response object containing the JSON input stream
+   * @return true, if the "result" array exists and is empty, or if the "result" key is never found;
+   * false, if the array contains at least one element.
+   * @throws IOException If there is an error reading the input stream or parsing the JSON.
    */
   public boolean isResultEmpty(RestAPIResponse restAPIResponse) throws IOException {
     JsonReader reader = new JsonReader(new InputStreamReader(restAPIResponse.getBodyAsStream(),
