@@ -60,11 +60,13 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
 
   public ServiceNowBaseRecordReader() {
   }
-  
   /**
-   * The refactored nextKeyValue() — uses Gson JsonReader to stream one record at a time.
-   * Returns true when it assigned `row` to the next record.
-   * Returns false only when there are no more pages/records (i.e., openNextPage() returns false).
+   * This method reads the next key/value pair from the input.
+   * <p>
+   * The nextKeyValue() uses the jsonReader to read the next record from the current page.
+   * <p>
+   * Returns true, when it assigned `row` to the next record.
+   * Returns false, only when there are no more pages/records (i.e., openNextPage() returns false).
    */
   public boolean nextKeyValue() throws IOException {
     // Ensure we have an active page/jsonReader

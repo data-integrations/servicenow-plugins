@@ -247,11 +247,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
                                                                   int limit) throws ServiceNowAPIException {
     // Using AtomicReference to capture a value inside a lambda that needs to be accessed outside.
     AtomicReference<RestAPIResponse> responseRef = new AtomicReference<>();
-    Callable<Boolean> fetchRecords = () -> {
-      RestAPIResponse restAPIResponse = fetchTableRecords(tableName, valueType, startDate, endDate, offset, limit);
-      responseRef.set(restAPIResponse);
-      return true;
-    };
+    Callable<Boolean> fetchRecords = () -> executeFetch(tableName, valueType, startDate, endDate, offset, limit,
+      responseRef);
 
     Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
       .retryIfException(this::isExceptionRetryable)
@@ -268,6 +265,13 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     }
     // Return the value captured inside the lambda
     return responseRef.get();
+  }
+
+  private boolean executeFetch(String tableName, SourceValueType type, String startDate, String endDate, int offset,
+    int limit, AtomicReference<RestAPIResponse> ref) throws ServiceNowAPIException {
+    RestAPIResponse response = fetchTableRecords(tableName, type, startDate, endDate, offset, limit);
+    ref.set(response);
+    return true;
   }
 
   /**
@@ -565,7 +569,6 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   private Schema prepareStringBasedSchema(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
                                           String tableName) throws ServiceNowAPIException {
     List<Map<String, String>> result = parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream());
-    // List<Map<String, String>> result = parseResponseToResultListOfMap(restAPIResponse.getResponseBody());
     if (result != null && !result.isEmpty()) {
       Map<String, String> firstRecord = result.get(0);
       for (String key : firstRecord.keySet()) {

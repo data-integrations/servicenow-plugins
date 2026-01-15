@@ -122,8 +122,8 @@ public class ServiceNowSinkAPIRequestImpl {
       requestBuilder.setEntity(stringEntity);
       apiResponse = restApi.executePost(requestBuilder.build());
 
-      JsonObject responseJSON = jsonParser.parse(
-        new InputStreamReader(apiResponse.getBodyAsStream(), StandardCharsets.UTF_8)).getAsJsonObject();
+      JsonObject responseJSON = jsonParser.parse(new String(apiResponse.getResponseBody(), StandardCharsets.UTF_8))
+          .getAsJsonObject().getAsJsonObject();
       JsonArray servicedRequestsArray = responseJSON.get(ServiceNowConstants.SERVICED_REQUESTS).getAsJsonArray();
       JsonElement failedRequestId = null;
       for (int i = 0; i < servicedRequestsArray.size(); i++) {

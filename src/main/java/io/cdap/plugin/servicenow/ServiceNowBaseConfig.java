@@ -162,8 +162,12 @@ public class ServiceNowBaseConfig extends PluginConfig {
   }
 
   /**
-   * Determines if the "result" array in a ServiceNow REST API response is empty. It specifically looks for a top-level
+   * Checks if the "result" array in the ServiceNow REST API response is empty.
+   * <p>
+   * Determines if the "result" array in a ServiceNow REST API response is empty by specifically looking for a top-level
    * key named "result". Once found, it opens the associated array and checks for the presence of a first element.
+   * </p>
+   * 
    * @param restAPIResponse The response object containing the JSON input stream
    * @return true, if the "result" array exists and is empty, or if the "result" key is never found;
    * false, if the array contains at least one element.
