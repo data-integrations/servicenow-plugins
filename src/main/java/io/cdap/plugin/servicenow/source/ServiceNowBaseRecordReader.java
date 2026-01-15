@@ -98,11 +98,8 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
   }
   
   public boolean openNextPage() throws IOException, ServiceNowAPIException {
-    LOG.debug("Opening next page for table {} at offset {}", tableName, split.getOffset());
     closeCurrentPage();
-    LOG.debug("Fetching data for table {} at offset {}", tableName, split.getOffset());
     RestAPIResponse resp = fetchData();
-    LOG.debug("Fetched data for table {} at offset {}", tableName, split.getOffset());
     InputStream in = resp.getBodyAsStream();
     if (in == null) {
       return false;
