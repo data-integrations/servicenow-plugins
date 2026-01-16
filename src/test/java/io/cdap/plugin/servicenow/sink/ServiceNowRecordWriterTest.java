@@ -101,7 +101,7 @@ public class ServiceNowRecordWriterTest {
     RestAPIResponse restAPIResponse = new RestAPIResponse(
         headers, null, null);
     Mockito.when(restApi.executePost(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseStream())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     OAuthJSONAccessTokenResponse accessTokenResponse = Mockito.mock(OAuthJSONAccessTokenResponse.class);
@@ -145,7 +145,7 @@ public class ServiceNowRecordWriterTest {
     Map<String, String> headers = new HashMap<>();
     RestAPIResponse restAPIResponse = new RestAPIResponse(headers, null, null);
     Mockito.when(restApi.executePost(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseStream())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
@@ -193,7 +193,7 @@ public class ServiceNowRecordWriterTest {
     Map<String, String> headers = new HashMap<>();
     RestAPIResponse restAPIResponse = new RestAPIResponse(headers, null, null);
     Mockito.when(restApi.executePost(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseStream())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);

@@ -95,9 +95,9 @@ public class ServiceNowSinkTest {
     byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
     InputStream inputStream = new ByteArrayInputStream(body);
     MockFailureCollector collector = new MockFailureCollector();
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, body, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, inputStream, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseStream())).thenReturn(result);
     serviceNowSink.configurePipeline(mockPipelineConfigurer);
     Assert.assertNull(restAPIResponse.getException());
     Assert.assertEquals(0, collector.getValidationFailures().size());
@@ -134,9 +134,9 @@ public class ServiceNowSinkTest {
                                     Schema.Field.of("price", Schema.of(Schema.Type.DOUBLE)));
     Emitter<KeyValue<NullWritable, JsonObject>> emitter = Mockito.mock(Emitter.class);
     Mockito.when(context.getInputSchema()).thenReturn(schema);
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, body, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, inputStream, null);
     Mockito.when(restApi.executeGetWithRetries(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getBodyAsStream())).thenReturn(result);
+    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseStream())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);

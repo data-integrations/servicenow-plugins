@@ -100,7 +100,7 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
   public boolean openNextPage() throws IOException, ServiceNowAPIException {
     closeCurrentPage();
     RestAPIResponse resp = fetchData();
-    InputStream in = resp.getBodyAsStream();
+    InputStream in = resp.getResponseStream();
     if (in == null) {
       return false;
     }

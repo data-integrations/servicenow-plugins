@@ -38,7 +38,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -178,7 +180,8 @@ public class ServiceNowMultiRecordReaderTest {
       "  ]\n" +
       "}";
     byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
-    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), inputStream, null);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowMultiSourceConfig.getValueType(),
       serviceNowMultiSourceConfig.getStartDate(), serviceNowMultiSourceConfig.getEndDate(), split.getOffset(),

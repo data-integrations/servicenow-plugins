@@ -135,7 +135,7 @@ public class ServiceNowConnector implements DirectConnector {
     ServiceNowTableAPIClientImpl serviceNowTableAPIClient = new ServiceNowTableAPIClientImpl(config, true);
     RestAPIResponse apiResponse =
         serviceNowTableAPIClient.executeGetWithRetries(requestBuilder.build());
-    return GSON.fromJson(serviceNowTableAPIClient.createJsonReader(apiResponse.getBodyAsStream()), TableList.class);
+    return GSON.fromJson(serviceNowTableAPIClient.createJsonReader(apiResponse.getResponseStream()), TableList.class);
   }
 
   public ConnectorSpec generateSpec(ConnectorContext connectorContext, ConnectorSpecRequest connectorSpecRequest) {
@@ -184,7 +184,7 @@ public class ServiceNowConnector implements DirectConnector {
     requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
     RestAPIResponse apiResponse = serviceNowTableAPIClient.executeGetWithRetries(requestBuilder.build());
     List<Map<String, String>> result = serviceNowTableAPIClient.parseResponseToResultListOfMap
-      (apiResponse.getBodyAsStream());
+      (apiResponse.getResponseStream());
     List<StructuredRecord> recordList = new ArrayList<>();
     Schema schema = getSchema(tableName);
     if (schema != null) {

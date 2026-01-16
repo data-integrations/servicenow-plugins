@@ -92,7 +92,7 @@ public class ServiceNowBaseConfig extends PluginConfig {
   }
 
   @VisibleForTesting
-  public void validateServiceNowConnection(FailureCollector collector) {
+  public void   validateServiceNowConnection(FailureCollector collector) {
     try {
       ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(connection, useConnection);
       restApi.getAccessToken();
@@ -174,8 +174,7 @@ public class ServiceNowBaseConfig extends PluginConfig {
    * @throws IOException If there is an error reading the input stream or parsing the JSON.
    */
   public boolean isResultEmpty(RestAPIResponse restAPIResponse) throws IOException {
-    JsonReader reader = new JsonReader(new InputStreamReader(restAPIResponse.getBodyAsStream(),
-      StandardCharsets.UTF_8));
+    JsonReader reader = new JsonReader(new InputStreamReader(restAPIResponse.getResponseStream()));
     reader.beginObject();
     while (reader.hasNext()) {
       String name = reader.nextName();

@@ -43,7 +43,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -305,7 +307,8 @@ public class ServiceNowRecordReaderTest {
       "  ]\n" +
       "}";
     byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
-    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), inputStream, null);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
       serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(), split.getOffset(),
@@ -381,7 +384,8 @@ public class ServiceNowRecordReaderTest {
       "  ]\n" +
       "}";
     byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
-    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), inputStream, null);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
       serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(), split.getOffset(),
@@ -422,7 +426,8 @@ public class ServiceNowRecordReaderTest {
       "\"status\": \"failure\"\n" +
       "}";
     byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
-    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
+    InputStream inputStream = new ByteArrayInputStream(body);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(Collections.emptyMap(), inputStream, null);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
                                            serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(),

@@ -111,7 +111,7 @@ public class ServiceNowTableAPIClientImplTest {
       "}";
     byte[] body = jsonResponse.getBytes(StandardCharsets.UTF_8);
     InputStream inputStream = new ByteArrayInputStream(body);
-    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), inputStream, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
     Schema schema = implSpy.fetchTableSchema("sys_user", "dummy-access-token",
                                              SourceValueType.SHOW_ACTUAL_VALUE, SchemaType.SCHEMA_API_BASED);
@@ -145,7 +145,7 @@ public class ServiceNowTableAPIClientImplTest {
 
     byte[] body = jsonResponse.getBytes(StandardCharsets.UTF_8);
     InputStream inputStream = new ByteArrayInputStream(body);
-    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), inputStream, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
 
     Schema schema = implSpy.fetchTableSchema("u_custom_table",
@@ -186,7 +186,7 @@ public class ServiceNowTableAPIClientImplTest {
       "}";
     byte[] body = jsonResponse.getBytes(StandardCharsets.UTF_8);
     InputStream inputStream = new ByteArrayInputStream(body);
-    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), inputStream, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
     Schema schema = implSpy.fetchTableSchema("sys_user", "dummy-access-token",
       SourceValueType.SHOW_DISPLAY_VALUE, SchemaType.SCHEMA_API_BASED);
@@ -225,7 +225,7 @@ public class ServiceNowTableAPIClientImplTest {
       "}";
     byte[] body = jsonResponse.getBytes(StandardCharsets.UTF_8);
     InputStream inputStream = new ByteArrayInputStream(body);
-    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), body, null);
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), inputStream, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
     Schema schema = implSpy.fetchTableSchema("incident", "dummy-access-token",
                                              SourceValueType.SHOW_DISPLAY_VALUE, SchemaType.METADATA_API_BASED);

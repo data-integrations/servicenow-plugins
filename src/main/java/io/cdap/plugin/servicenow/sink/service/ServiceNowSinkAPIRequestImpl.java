@@ -25,6 +25,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 import io.cdap.cdap.api.retry.RetryableException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
@@ -122,7 +123,7 @@ public class ServiceNowSinkAPIRequestImpl {
       requestBuilder.setEntity(stringEntity);
       apiResponse = restApi.executePost(requestBuilder.build());
 
-      JsonObject responseJSON = jsonParser.parse(new String(apiResponse.getResponseBody(), StandardCharsets.UTF_8))
+      JsonObject responseJSON = jsonParser.parse(new JsonReader(new InputStreamReader(apiResponse.getResponseStream())))
           .getAsJsonObject().getAsJsonObject();
       JsonArray servicedRequestsArray = responseJSON.get(ServiceNowConstants.SERVICED_REQUESTS).getAsJsonArray();
       JsonElement failedRequestId = null;
