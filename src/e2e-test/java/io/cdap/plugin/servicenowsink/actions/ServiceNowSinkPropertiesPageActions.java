@@ -59,7 +59,7 @@ public class ServiceNowSinkPropertiesPageActions {
         System.getenv("SERVICE_NOW_REST_API_ENDPOINT"),
         System.getenv("SERVICE_NOW_USERNAME"),
         System.getenv("SERVICE_NOW_PASSWORD"),
-        "", "", "", null);
+        "", "", "", null, false);
 
     ServiceNowTableAPIClientImpl tableAPIClient = new ServiceNowTableAPIClientImpl(config.getConnection(), true);
     responseFromServiceNowTable = tableAPIClient.getRecordFromServiceNowTable(tableName, query);

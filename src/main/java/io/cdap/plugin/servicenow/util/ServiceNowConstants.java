@@ -52,6 +52,11 @@ public interface ServiceNowConstants {
   String PROPERTY_TABLE_NAME = "tableName";
 
   /**
+    * Configuration property name used to enable new data types.
+   */
+  String PROPERTY_ENABLE_NEW_DATA_TYPES = "enableNewDataTypes";
+
+  /**
    * Configuration property name used to specify table names.
    */
   String PROPERTY_TABLE_NAMES = "tableNames";

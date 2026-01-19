@@ -36,6 +36,7 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
 
   private final ServiceNowMultiSourceConfig multiSourcePluginConf;
   private ServiceNowTableAPIClientImpl restApi;
+  private Boolean enableNewDataTypes;
 
   ServiceNowMultiRecordReader(ServiceNowMultiSourceConfig multiSourcePluginConf) {
     super();
@@ -81,8 +82,8 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
     try {
       for (Schema.Field field : tableFields) {
         String fieldName = field.getName();
-        ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), row,
-                                                 recordBuilder);
+        ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), row, recordBuilder,
+          multiSourcePluginConf.getEnableNewDataTypes());
       }
     } catch (Exception e) {
       throw new IOException("Error decoding row from table " + tableName, e);

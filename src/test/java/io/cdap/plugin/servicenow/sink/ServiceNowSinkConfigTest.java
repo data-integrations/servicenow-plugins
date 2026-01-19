@@ -297,7 +297,7 @@ public class ServiceNowSinkConfigTest {
       "    ]\n" +
       "}";
     MetadataAPISchemaField schemaField = new MetadataAPISchemaField("Class", "sys_class_name",
-                                                                    "sys_class_name", "sys_class_name");
+      "sys_class_name", "sys_class_name");
     Map<String, MetadataAPISchemaField> columns = new HashMap<>();
     columns.put("sys_class_name", schemaField);
     MetadataAPISchemaResult schemaResult = new MetadataAPISchemaResult(columns);

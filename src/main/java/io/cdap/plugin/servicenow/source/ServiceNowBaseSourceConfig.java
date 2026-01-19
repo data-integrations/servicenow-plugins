@@ -74,6 +74,11 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
   @Nullable
   @Description("The number of records to fetch from ServiceNow. Default is 5000.")
   private Integer pageSize;
+  
+  @Name(ServiceNowConstants.PROPERTY_ENABLE_NEW_DATA_TYPES)
+  @Nullable
+  @Description("Enable support for new data types such as array (glide_list) ")
+  private Boolean enableNewDataTypes;
 
   /**
    * Constructor for ServiceNowSourceConfig object.
@@ -92,7 +97,8 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
    */
   public ServiceNowBaseSourceConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                                     String user, String password, String tableNameField, String valueType,
-                                    @Nullable String startDate, @Nullable String endDate, Integer pageSize) {
+                                    @Nullable String startDate, @Nullable String endDate, Integer pageSize,
+                                    Boolean enableNewDataTypes) {
     super(clientId, clientSecret, restApiEndpoint, user, password);
     this.referenceName = referenceName;
     this.tableNameField = tableNameField;
@@ -100,6 +106,7 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
     this.startDate = startDate;
     this.endDate = endDate;
     this.pageSize = pageSize;
+    this.enableNewDataTypes = enableNewDataTypes;
   }
 
   public String getReferenceName() {
@@ -122,6 +129,10 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
 
   public Integer getPageSize() {
     return pageSize == null ? ServiceNowConstants.PAGE_SIZE : pageSize;
+  }
+
+  public Boolean getEnableNewDataTypes() {
+    return enableNewDataTypes == null ? Boolean.FALSE : enableNewDataTypes;
   }
 
   /**

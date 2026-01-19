@@ -27,6 +27,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
@@ -291,7 +292,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    */
   public Schema fetchTableSchema(String tableName, SourceValueType valueType)
       throws ServiceNowAPIException {
-    return fetchTableSchema(tableName, getAccessToken(), valueType, schemaType);
+    return fetchTableSchema(tableName, getAccessToken(), valueType, schemaType, false);
   }
 
   private SchemaType getSchemaTypeBasedOnUseConnection(Boolean useConnection) {
@@ -310,10 +311,11 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param accessToken Access Token to use
    * @param valueType Type of value (Actual/Display)
    * @param schemaType Enum to determine which approach to take to fetch schema.
+   * @param enableNewDataTypes Flag to enable new data types
    * @return schema for given ServiceNow table
    */
   public Schema fetchTableSchema(String tableName, String accessToken, SourceValueType valueType,
-                                 SchemaType schemaType)
+                                 SchemaType schemaType, Boolean enableNewDataTypes)
       throws ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, true, schemaType)
@@ -325,7 +327,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     List<ServiceNowColumn> columns = new ArrayList<>();
 
     if (schemaType == SchemaType.METADATA_API_BASED) {
-      return prepareSchemaWithMetadataAPI(restAPIResponse, columns, tableName, valueType);
+      return prepareSchemaWithMetadataAPI(restAPIResponse, columns, tableName, valueType, enableNewDataTypes);
     } else if (schemaType == SchemaType.SCHEMA_API_BASED) {
       return prepareSchemaWithSchemaAPI(restAPIResponse, columns, tableName);
     } else {
@@ -362,7 +364,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     for (SchemaAPISchemaField field : schemaAPISchemaResponse.getResult()) {
       columns.add(new ServiceNowColumn(field.getName(), field.getInternalType()));
     }
-    return SchemaBuilder.constructSchema(tableName, columns);
+    return SchemaBuilder.constructSchema(tableName, columns, false);
   }
 
   /**
@@ -384,8 +386,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @throws RuntimeException if the response does not contain valid column information.
    */
   private Schema prepareSchemaWithMetadataAPI(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
-                                              String tableName, SourceValueType valueType) throws
-    ServiceNowAPIException {
+    String tableName, SourceValueType valueType, Boolean enableNewDataTypes) throws ServiceNowAPIException {
     MetadataAPISchemaResponse metadataAPISchemaResponse = parseSchemaResponse(restAPIResponse.getResponseBody());
 
     if (metadataAPISchemaResponse.getResult() == null || metadataAPISchemaResponse.getResult().getColumns() == null ||
@@ -410,7 +411,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
         columns.add(new ServiceNowColumn(field.getName(), field.getInternalType()));
       }
     }
-    return SchemaBuilder.constructSchema(tableName, columns);
+    return SchemaBuilder.constructSchema(tableName, columns, enableNewDataTypes);
   }
 
   /**
@@ -552,7 +553,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       for (String key : firstRecord.keySet()) {
         columns.add(new ServiceNowColumn(key, "string"));
       }
-      return SchemaBuilder.constructSchema(tableName, columns);
+      return SchemaBuilder.constructSchema(tableName, columns, false);
     }
     return null;
   }

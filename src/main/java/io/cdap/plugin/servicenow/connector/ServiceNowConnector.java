@@ -193,7 +193,7 @@ public class ServiceNowConnector implements DirectConnector {
         StructuredRecord.Builder recordBuilder = StructuredRecord.builder(schema);
         for (Schema.Field field : tableFields) {
           String fieldName = field.getName();
-          ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), result.get(i), recordBuilder);
+          ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), result.get(i), recordBuilder, false);
         }
         StructuredRecord structuredRecord = recordBuilder.build();
         recordList.add(structuredRecord);
