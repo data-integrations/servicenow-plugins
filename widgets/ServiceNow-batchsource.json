@@ -186,6 +186,22 @@
             "placeholder": "Number of records to fetch from ServiceNow",
             "default": 5000
           }
+        },
+        {
+          "widget-type": "hidden",
+          "label": "Enable New Data Types",
+          "name": "enableNewDataTypes",
+          "widget-attributes": {
+            "on": {
+              "value": "true",
+              "label": "YES"
+            },
+            "off": {
+              "value": "false",
+              "label": "NO"
+            },
+            "default": "false"
+          }
         }
       ]
     }
