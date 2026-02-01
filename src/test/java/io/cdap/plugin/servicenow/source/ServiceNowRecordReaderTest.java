@@ -287,7 +287,7 @@ public class ServiceNowRecordReaderTest {
     String tableName = serviceNowSourceConfig.getTableName();
     SourceValueType valueType = serviceNowSourceConfig.getValueType();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
+    ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1, null);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     List<Map<String, String>> results = new ArrayList<>();
     Map<String, String> map = new HashMap<>();
@@ -339,7 +339,7 @@ public class ServiceNowRecordReaderTest {
     serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     String tableName = serviceNowSourceConfig.getTableName();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
+    ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1, null);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     List<Map<String, String>> results = new ArrayList<>();
     Map<String, String> map = new HashMap<>();
@@ -389,7 +389,7 @@ public class ServiceNowRecordReaderTest {
 
     String tableName = serviceNowSourceConfig.getTableName();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
+    ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1, null);
     ServiceNowRecordReader serviceNowRecordReader = new ServiceNowRecordReader(serviceNowSourceConfig);
     List<Map<String, String>> results = new ArrayList<>();
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);

@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.common.base.Strings;
 import io.cdap.cdap.api.PlatformInfo;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
@@ -47,6 +48,7 @@ import javax.annotation.Nullable;
  */
 public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredRecord> {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowInputFormat.class);
+  protected ServiceNowInputSplit split;
 
   /**
    * Updates the jobConfig with the ServiceNow table information, which will then be read in getSplit() function.
@@ -133,15 +135,20 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
    */
   public List<InputSplit> getSplits(Configuration configuration) {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(configuration);
-    String startdate = jobConfig.getPluginConf().getStartDate();
-    String enddate = jobConfig.getPluginConf().getEndDate();
+    ServiceNowSourceConfig pluginConf = jobConfig.getPluginConf();
+    String filterQuery = split.getFilterQuery();
 
-    ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(jobConfig.getPluginConf().getConnection(),
-            jobConfig.getPluginConf().getUseConnection());
-    String filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
+    if (Strings.isNullOrEmpty(filterQuery)) {
+      String startdate = pluginConf.getStartDate();
+      String enddate = pluginConf.getEndDate();
+      ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(
+              pluginConf.getConnection(), pluginConf.getUseConnection());
+      filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
+    }
 
-    int pageSize = jobConfig.getPluginConf().getPageSize().intValue();
+    int pageSize = pluginConf.getPageSize().intValue();
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
+
     List<InputSplit> resultSplits = new ArrayList<>();
 
     for (ServiceNowTableInfo tableInfo : tableInfos) {
@@ -160,7 +167,7 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
       int offset = 0;
 
       for (int page = 1; page <= pages; page++) {
-        resultSplits.add(new ServiceNowInputSplit(tableName, offset, filterQuery));
+        resultSplits.add(new ServiceNowInputSplit(tableName, offset));
         offset += pageSize;
       }
     }

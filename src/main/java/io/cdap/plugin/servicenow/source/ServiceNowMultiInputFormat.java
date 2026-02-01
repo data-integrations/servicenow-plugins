@@ -52,6 +52,7 @@ import java.util.stream.Stream;
 public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, StructuredRecord> {
 
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowMultiInputFormat.class);
+  protected ServiceNowInputSplit split;
 
   /**
    * Updates the jobConfig with the ServiceNow table information, which will then be read in getSplit() function.
@@ -127,15 +128,18 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
   @Override
   public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(jobContext.getConfiguration());
-    String startdate = jobConfig.getPluginConf().getStartDate();
-    String enddate = jobConfig.getPluginConf().getEndDate();
+    ServiceNowMultiSourceConfig pluginConf = jobConfig.getMultiSourcePluginConf();
+    String filterQuery = split.getFilterQuery();
 
-    ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(
-            jobConfig.getPluginConf().getConnection(), jobConfig.getPluginConf().getUseConnection());
+    if (Strings.isNullOrEmpty(filterQuery)) {
+      String startdate = pluginConf.getStartDate();
+      String enddate = pluginConf.getEndDate();
+      ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(
+              pluginConf.getConnection(), pluginConf.getUseConnection());
+      filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
+    }
 
-    String filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
-
-    int pageSize = jobConfig.getPluginConf().getPageSize().intValue();
+    int pageSize = pluginConf.getPageSize().intValue();
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
     List<InputSplit> resultSplits = new ArrayList<>();
 

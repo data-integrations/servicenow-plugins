@@ -122,7 +122,7 @@ public class ServiceNowMultiRecordReaderTest {
   @Test
   public void testFetchData() throws ServiceNowAPIException, IOException {
     String tableName = serviceNowMultiSourceConfig.getTableNames();
-    ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
+    ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1, null);
 
     List<Map<String, String>> results = new ArrayList<>();
     Map<String, String> map = new HashMap<>();
@@ -176,7 +176,7 @@ public class ServiceNowMultiRecordReaderTest {
 
     String tableName = serviceNowMultiSourceConfig.getTableNames();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
-    ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);
+    ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1, null);
     List<Map<String, String>> results = new ArrayList<>();
     Map<String, String> map = new HashMap<>();
     map.put("calendar_integration", "1");
