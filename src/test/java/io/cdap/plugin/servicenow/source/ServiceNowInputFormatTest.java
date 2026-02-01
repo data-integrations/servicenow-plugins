@@ -167,7 +167,7 @@ public class ServiceNowInputFormatTest {
     SourceApplication application = SourceApplication.PROCUREMENT;
     SourceValueType valueType = SourceValueType.SHOW_ACTUAL_VALUE;
     Assert.assertEquals(1, ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
-                                                                application, valueType, true).size());
+                                                                application, valueType, true, null, null).size());
   }
 
   @Test
@@ -275,7 +275,7 @@ public class ServiceNowInputFormatTest {
     SourceApplication application = SourceApplication.PROCUREMENT;
     SourceValueType valueType = SourceValueType.SHOW_ACTUAL_VALUE;
     Assert.assertEquals(3, ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
-                                                                application, valueType, true).size());
+                                                                application, valueType, true, null, null).size());
   }
 
   @Test
@@ -316,6 +316,6 @@ public class ServiceNowInputFormatTest {
     SourceApplication application = SourceApplication.PROCUREMENT;
     SourceValueType valueType = SourceValueType.SHOW_ACTUAL_VALUE;
     Assert.assertTrue(ServiceNowInputFormat.fetchTableInfo(mode, connectorConfig, "table",
-                                                           application, valueType, true).isEmpty());
+                                                           application, valueType, true, null, null).isEmpty());
   }
 }

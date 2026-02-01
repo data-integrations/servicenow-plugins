@@ -27,7 +27,7 @@ public class ServiceNowInputSplitTest {
 
   @Test
   public void testInputSplitWithNonEmptyTableName() throws IOException, InterruptedException {
-    ServiceNowInputSplit actualServiceNowInputSplit = new ServiceNowInputSplit("Table Name", 2);
+    ServiceNowInputSplit actualServiceNowInputSplit = new ServiceNowInputSplit("Table Name", 2, null);
     Assert.assertEquals(0L, actualServiceNowInputSplit.getLength());
     Assert.assertEquals(2, actualServiceNowInputSplit.getOffset());
     Assert.assertEquals("Table Name", actualServiceNowInputSplit.getTableName());
@@ -43,22 +43,23 @@ public class ServiceNowInputSplitTest {
 
   @Test
   public void testReadFields() throws IOException {
-    ServiceNowInputSplit serviceNowInputSplit = new ServiceNowInputSplit("Table Name", 2);
+    ServiceNowInputSplit serviceNowInputSplit = new ServiceNowInputSplit("Table Name", 2, null);
     ObjectInputStream objectInputStream = Mockito.mock(ObjectInputStream.class);
     Mockito.when(objectInputStream.readInt()).thenReturn(1);
     Mockito.when(objectInputStream.readUTF()).thenReturn("Utf");
     serviceNowInputSplit.readFields(objectInputStream);
     Mockito.verify(objectInputStream).readInt();
-    Mockito.verify(objectInputStream).readUTF();
+    Mockito.verify(objectInputStream, Mockito.times(2)).readUTF();
     Assert.assertEquals("Utf", serviceNowInputSplit.getTableName());
     Assert.assertEquals(1, serviceNowInputSplit.getOffset());
+    Assert.assertEquals("Utf", serviceNowInputSplit.getFilterQuery());
   }
 
   @Test
   public void testGetLocations() throws IOException, InterruptedException {
-    Assert.assertEquals(String[].class, new ServiceNowInputSplit("Table Name", 2).getLocations().
+    Assert.assertEquals(String[].class, new ServiceNowInputSplit("Table Name", 2, null).getLocations().
       getClass());
-    Assert.assertEquals(0, (new ServiceNowInputSplit("Table Name", 2)).getLocations().length);
+    Assert.assertEquals(0, (new ServiceNowInputSplit("Table Name", 2, null)).getLocations().length);
   }
   
   @Test
@@ -67,7 +68,7 @@ public class ServiceNowInputSplitTest {
     String tableName = "Table";
     int offset = 0;
 
-    ServiceNowInputSplit servicenowinputsplit = new ServiceNowInputSplit(tableName, offset);
+    ServiceNowInputSplit servicenowinputsplit = new ServiceNowInputSplit(tableName, offset, null);
     String actualValue = servicenowinputsplit.getTableName();
     Assert.assertEquals(expectedValue, actualValue);
   }
@@ -77,7 +78,7 @@ public class ServiceNowInputSplitTest {
     int expectedValue = 0;
     String tableName = "Table";
     int offset = 0;
-    ServiceNowInputSplit servicenowinputsplit = new ServiceNowInputSplit(tableName, offset);
+    ServiceNowInputSplit servicenowinputsplit = new ServiceNowInputSplit(tableName, offset, null);
     int actualValue = servicenowinputsplit.getOffset();
     Assert.assertEquals(expectedValue, actualValue);
   }
@@ -88,7 +89,7 @@ public class ServiceNowInputSplitTest {
       String tableName = "";
       int offset = 0;
 
-      ServiceNowInputSplit serviceNowInputSplit = new ServiceNowInputSplit(tableName, offset);
+      ServiceNowInputSplit serviceNowInputSplit = new ServiceNowInputSplit(tableName, offset, null);
       serviceNowInputSplit.write(dataOutput);
   }
 
@@ -98,7 +99,7 @@ public class ServiceNowInputSplitTest {
       String tableName = "";
       int offset = 0;
 
-      ServiceNowInputSplit servicenowinputsplit = new ServiceNowInputSplit(tableName, offset);
+      ServiceNowInputSplit servicenowinputsplit = new ServiceNowInputSplit(tableName, offset, null);
       servicenowinputsplit.readFields(dataInput);
   }
 }
