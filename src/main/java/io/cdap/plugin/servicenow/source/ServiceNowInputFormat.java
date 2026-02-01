@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import io.cdap.cdap.api.PlatformInfo;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
@@ -132,6 +133,13 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
    */
   public List<InputSplit> getSplits(Configuration configuration) {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(configuration);
+    String startdate = jobConfig.getPluginConf().getStartDate();
+    String enddate = jobConfig.getPluginConf().getEndDate();
+
+    ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(jobConfig.getPluginConf().getConnection(),
+            jobConfig.getPluginConf().getUseConnection());
+    String filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
+
     int pageSize = jobConfig.getPluginConf().getPageSize().intValue();
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
     List<InputSplit> resultSplits = new ArrayList<>();
@@ -141,7 +149,7 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
       int totalRecords = tableInfo.getRecordCount();
       if (totalRecords <= pageSize) {
         // add single split for table and continue
-        resultSplits.add(new ServiceNowInputSplit(tableName, 0));
+        resultSplits.add(new ServiceNowInputSplit(tableName, 0, filterQuery));
         continue;
       }
 
@@ -152,7 +160,7 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
       int offset = 0;
 
       for (int page = 1; page <= pages; page++) {
-        resultSplits.add(new ServiceNowInputSplit(tableName, offset));
+        resultSplits.add(new ServiceNowInputSplit(tableName, offset, filterQuery));
         offset += pageSize;
       }
     }

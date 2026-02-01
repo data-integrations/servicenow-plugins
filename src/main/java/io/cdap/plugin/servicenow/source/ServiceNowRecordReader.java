@@ -107,8 +107,8 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
 
   private void fetchData() throws ServiceNowAPIException {
     // Get the table data
-    results = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(), pluginConf.getStartDate(),
-                                                     pluginConf.getEndDate(), split.getOffset(),
+    results = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(), split.getFilterQuery(),
+            split.getOffset(),
                                                      pluginConf.getPageSize());
     LOG.debug("Results size={}", results.size());
 

@@ -29,6 +29,7 @@ import java.io.IOException;
 public class ServiceNowInputSplit extends InputSplit implements Writable {
   private String tableName;
   private int offset;
+  private String filterQuery;
 
   // used by mapreduce
   public ServiceNowInputSplit() {
@@ -39,6 +40,12 @@ public class ServiceNowInputSplit extends InputSplit implements Writable {
     this.offset = offset;
   }
 
+  public ServiceNowInputSplit(String tableName, int offset, String filterQuery) {
+    this.tableName = tableName;
+    this.offset = offset;
+    this.filterQuery = filterQuery;
+  }
+
   public String getTableName() {
     return tableName;
   }
@@ -47,16 +54,22 @@ public class ServiceNowInputSplit extends InputSplit implements Writable {
     return offset;
   }
 
+  public String getFilterQuery() {
+    return filterQuery;
+  }
+
   @Override
   public void write(DataOutput dataOutput) throws IOException {
     dataOutput.writeUTF(this.tableName);
     dataOutput.writeInt(this.offset);
+    dataOutput.writeUTF(this.filterQuery);
   }
 
   @Override
   public void readFields(DataInput dataInput) throws IOException {
     this.tableName = dataInput.readUTF();
     this.offset = dataInput.readInt();
+    this.filterQuery = dataInput.readUTF();
   }
 
   @Override

@@ -126,20 +126,17 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    *
    * @param tableName The ServiceNow table name
    * @param valueType The value type
-   * @param startDate The start date
-   * @param endDate   The end date
    * @param offset    The number of records to skip
    * @param limit     The number of records to be fetched
    * @return The list of Map; each Map representing a table row
    */
   public List<Map<String, String>> fetchTableRecords(
-      String tableName,
-      SourceValueType valueType,
-      String startDate,
-      String endDate,
-      int offset,
-      int limit)
-      throws ServiceNowAPIException {
+    String tableName,
+    SourceValueType valueType,
+    String filterQuery,
+    int offset,
+    int limit)
+    throws ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, false, schemaType)
       .setExcludeReferenceLink(true)
@@ -150,7 +147,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       requestBuilder.setOffset(offset);
     }
 
-    applyDateRangeToRequest(requestBuilder, startDate, endDate);
+    requestBuilder.setQuery(filterQuery);
 
     String accessToken = getAccessToken();
     requestBuilder.setAuthHeader(accessToken);
@@ -158,15 +155,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     return parseResponseToResultListOfMap(apiResponse.getResponseBody());
   }
 
-  private void applyDateRangeToRequest(ServiceNowTableAPIRequestBuilder requestBuilder, String startDate,
-                                       String endDate) {
-    String dateRange = generateDateRangeQuery(startDate, endDate);
-    if (!Strings.isNullOrEmpty(dateRange)) {
-      requestBuilder.setQuery(dateRange);
-    }
-  }
-
-  private String generateDateRangeQuery(String startDate, String endDate) {
+  public String generateDateRangeQuery(String startDate, String endDate) {
     if (Util.isNullOrEmpty(startDate) || Util.isNullOrEmpty(endDate)) {
       return "";
     }
@@ -226,18 +215,16 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    *
    * @param tableName The ServiceNow table name
    * @param valueType The value type
-   * @param startDate The start date
-   * @param endDate   The end date
    * @param offset    The number of records to skip
    * @param limit     The number of records to be fetched
    * @return The list of Map; each Map representing a table row
    */
   public List<Map<String, String>> fetchTableRecordsRetryableMode(String tableName, SourceValueType valueType,
-                                                                  String startDate, String endDate, int offset,
+                                                                  String filterQuery, int offset,
                                                                   int limit) throws ServiceNowAPIException {
     final List<Map<String, String>> results = new ArrayList<>();
     Callable<Boolean> fetchRecords = () -> {
-      results.addAll(fetchTableRecords(tableName, valueType, startDate, endDate, offset, limit));
+      results.addAll(fetchTableRecords(tableName, valueType, filterQuery, offset, limit));
       return true;
     };
 
@@ -251,8 +238,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       retryer.call(fetchRecords);
     } catch (RetryException | ExecutionException e) {
       throw new ServiceNowAPIException(
-          String.format("Data Recovery failed for batch %s to %s.", offset, (offset + limit)),
-          e, null, false);
+        String.format("Data Recovery failed for batch %s to %s.", offset, (offset + limit)),
+        e, null, false);
     }
 
     return results;

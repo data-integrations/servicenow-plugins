@@ -311,8 +311,7 @@ public class ServiceNowRecordReaderTest {
     response.setTotalRecordCount(1);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
-                                                        serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.
-                                                          getEndDate(), split.getOffset(),
+            split.getFilterQuery(), split.getOffset(),
                                                         serviceNowSourceConfig.getPageSize())).thenReturn(results);
     Mockito.when(restApi.fetchTableSchema(tableName, valueType))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
@@ -364,8 +363,7 @@ public class ServiceNowRecordReaderTest {
     response.setTotalRecordCount(1);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecordsRetryableMode(tableName, serviceNowSourceConfig.getValueType(),
-                                                        serviceNowSourceConfig.getStartDate(),
-                                                        serviceNowSourceConfig.getEndDate(), split.getOffset(),
+                                                        split.getFilterQuery(), split.getOffset(),
                                                         serviceNowSourceConfig.getPageSize())).thenReturn(results);
     Mockito.when(restApi.fetchTableSchema(tableName, serviceNowSourceConfig.getValueType()))
       .thenReturn(Schema.recordOf(Schema.Field.of("calendar_integration", Schema.of(Schema.Type.STRING))));
@@ -396,7 +394,7 @@ public class ServiceNowRecordReaderTest {
     List<Map<String, String>> results = new ArrayList<>();
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     Mockito.when(restApi.fetchTableRecords(tableName, serviceNowSourceConfig.getValueType(),
-                                           serviceNowSourceConfig.getStartDate(), serviceNowSourceConfig.getEndDate(),
+                                           split.getFilterQuery(),
                                            split.getOffset(),
                                            serviceNowSourceConfig.getPageSize())).thenReturn(results);
     ServiceNowTableDataResponse response = new ServiceNowTableDataResponse();

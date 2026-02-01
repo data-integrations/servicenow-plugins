@@ -49,9 +49,10 @@ public class ServiceNowInputSplitTest {
     Mockito.when(objectInputStream.readUTF()).thenReturn("Utf");
     serviceNowInputSplit.readFields(objectInputStream);
     Mockito.verify(objectInputStream).readInt();
-    Mockito.verify(objectInputStream).readUTF();
+    Mockito.verify(objectInputStream, Mockito.times(2)).readUTF();
     Assert.assertEquals("Utf", serviceNowInputSplit.getTableName());
     Assert.assertEquals(1, serviceNowInputSplit.getOffset());
+    Assert.assertEquals("Utf", serviceNowInputSplit.getFilterQuery());
   }
 
   @Test

@@ -127,6 +127,14 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
   @Override
   public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(jobContext.getConfiguration());
+    String startdate = jobConfig.getPluginConf().getStartDate();
+    String enddate = jobConfig.getPluginConf().getEndDate();
+
+    ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(
+            jobConfig.getPluginConf().getConnection(), jobConfig.getPluginConf().getUseConnection());
+
+    String filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
+
     int pageSize = jobConfig.getPluginConf().getPageSize().intValue();
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
     List<InputSplit> resultSplits = new ArrayList<>();
@@ -142,7 +150,7 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
       int offset = 0;
 
       for (int page = 1; page <= pages; page++) {
-        resultSplits.add(new ServiceNowInputSplit(tableName, offset));
+        resultSplits.add(new ServiceNowInputSplit(tableName, offset, filterQuery));
         offset += pageSize;
       }
     }

@@ -95,9 +95,8 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
   void fetchData() throws ServiceNowAPIException {
     // Get the table data
     results = restApi.fetchTableRecordsRetryableMode(tableName, multiSourcePluginConf.getValueType(),
-                                                     multiSourcePluginConf.getStartDate(),
-                                                     multiSourcePluginConf.getEndDate(), split.getOffset(),
-                                                     multiSourcePluginConf.getPageSize());
+            split.getFilterQuery(), split.getOffset(),
+            multiSourcePluginConf.getPageSize());
 
     iterator = results.iterator();
   }
