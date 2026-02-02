@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for converting the record from ServiceNow data type to CDAP schema data types
@@ -83,7 +84,7 @@ public class ServiceNowRecordConverter {
     ));
 
   public static void convertToValue(String fieldName, Schema fieldSchema, Map<String, String> record,
-                                    StructuredRecord.Builder recordBuilder) {
+    StructuredRecord.Builder recordBuilder, Boolean enableNewDataTypes) {
     String fieldValue = record.get(fieldName);
     if (fieldValue == null || fieldValue.isEmpty()) {
       // Set 'null' value as it is
@@ -128,11 +129,24 @@ public class ServiceNowRecordConverter {
       case BOOLEAN:
         recordBuilder.set(fieldName, convertToBooleanValue(fieldValue));
         return;
+      case ARRAY:
+        recordBuilder.set(fieldName, enableNewDataTypes.equals(Boolean.TRUE) ? convertToList(fieldValue) : fieldValue);
+        return;
       default:
         throw new IllegalStateException(
           String.format("Record type '%s' is not supported for field '%s'", fieldType.name(), fieldName));
     }
 
+  }
+
+  public static List<String> convertToList(String fieldValue) {
+    if (fieldValue.trim().isEmpty()) {
+      return Collections.emptyList();
+    }
+    return Arrays.stream(fieldValue.split(","))
+      .map(String::trim)
+      .filter(s -> !s.isEmpty())
+      .collect(Collectors.toList());
   }
 
   @VisibleForTesting

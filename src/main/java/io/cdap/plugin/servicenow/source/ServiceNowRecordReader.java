@@ -38,6 +38,7 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
   private static final Logger LOG = LoggerFactory.getLogger(ServiceNowRecordReader.class);
   private final ServiceNowSourceConfig pluginConf;
   private ServiceNowTableAPIClientImpl restApi;
+  private Boolean enableNewDataTypes;
 
   public ServiceNowRecordReader(ServiceNowSourceConfig pluginConf) {
     super();
@@ -94,7 +95,8 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     try {
       for (Schema.Field field : tableFields) {
         String fieldName = field.getName();
-        ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), row, recordBuilder);
+        ServiceNowRecordConverter.convertToValue(fieldName, field.getSchema(), row, recordBuilder,
+          pluginConf.getEnableNewDataTypes());
       }
     } catch (Exception e) {
       LOG.error("Error decoding row from table " + tableName, e);

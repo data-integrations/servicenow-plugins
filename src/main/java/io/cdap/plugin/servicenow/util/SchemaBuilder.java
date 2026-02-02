@@ -34,27 +34,27 @@ public class SchemaBuilder {
    * @param columns   The list of ServiceNowColumn objects that will be added as Schema.Field
    * @return The instance of Schema object
    */
-  public static Schema constructSchema(String tableName, List<ServiceNowColumn> columns) {
+  public static Schema constructSchema(String tableName, List<ServiceNowColumn> columns, boolean enableNewDataTypes) {
     SchemaBuilder schemaBuilder = new SchemaBuilder();
-    List<Schema.Field> fields = schemaBuilder.constructSchemaFields(columns);
+    List<Schema.Field> fields = schemaBuilder.constructSchemaFields(columns, enableNewDataTypes);
 
     return Schema.recordOf(tableName, fields);
   }
 
-  private List<Schema.Field> constructSchemaFields(List<ServiceNowColumn> columns) {
+  private List<Schema.Field> constructSchemaFields(List<ServiceNowColumn> columns, Boolean enableNewDataTypes) {
     return columns.stream()
-      .map(o -> transformToField(o))
+      .map(o -> transformToField(o, enableNewDataTypes))
       .filter(Objects::nonNull)
       .collect(Collectors.toList());
   }
 
-  private Schema.Field transformToField(ServiceNowColumn column) {
+  private Schema.Field transformToField(ServiceNowColumn column, Boolean enableNewDataTypes) {
     String name = column.getFieldName();
     if (Strings.isNullOrEmpty(name)) {
       return null;
     }
 
-    Schema schema = createSchema(column);
+    Schema schema = createSchema(column, enableNewDataTypes);
     if (schema == null) {
       return null;
     }
@@ -64,7 +64,7 @@ public class SchemaBuilder {
       : Schema.Field.of(name, Schema.nullableOf(schema));
   }
 
-  private Schema createSchema(ServiceNowColumn column) {
+  private Schema createSchema(ServiceNowColumn column, Boolean enableNewDataTypes) {
     switch (column.getTypeName().toLowerCase()) {
       case "decimal":
         return Schema.of(Schema.Type.DOUBLE);
@@ -78,6 +78,9 @@ public class SchemaBuilder {
         return Schema.of(Schema.LogicalType.DATETIME);
       case "glide_time":
         return Schema.of(Schema.LogicalType.TIME_MICROS);
+      case "glide_list":
+        return enableNewDataTypes.equals(Boolean.TRUE) ? Schema.arrayOf(Schema.of(Schema.Type.STRING)) :
+          Schema.of(Schema.Type.STRING);
       case "reference":
       case "currency":
       case "sys_class_name":
