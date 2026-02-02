@@ -35,13 +35,6 @@ public class ServiceNowInputSplit extends InputSplit implements Writable {
   public ServiceNowInputSplit() {
   }
 
-
-  public ServiceNowInputSplit(String tableName, int offset, String filterQuery) {
-    this.tableName = tableName;
-    this.offset = offset;
-    this.filterQuery = filterQuery;
-  }
-
   public ServiceNowInputSplit(String tableName, int offset, String filterQuery) {
     this.tableName = tableName;
     this.offset = offset;

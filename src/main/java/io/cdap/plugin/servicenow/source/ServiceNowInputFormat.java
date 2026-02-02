@@ -135,18 +135,17 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
    */
   public List<InputSplit> getSplits(Configuration configuration) {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(configuration);
-    ServiceNowSourceConfig pluginConf = jobConfig.getPluginConf();
     String filterQuery = split.getFilterQuery();
 
     if (Strings.isNullOrEmpty(filterQuery)) {
-      String startdate = pluginConf.getStartDate();
-      String enddate = pluginConf.getEndDate();
+      String startdate = jobConfig.getPluginConf().getStartDate();
+      String enddate = jobConfig.getPluginConf().getEndDate();
       ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(
-              pluginConf.getConnection(), pluginConf.getUseConnection());
+              jobConfig.getPluginConf().getConnection(), jobConfig.getPluginConf().getUseConnection());
       filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
     }
 
-    int pageSize = pluginConf.getPageSize().intValue();
+    int pageSize = jobConfig.getPluginConf().getPageSize().intValue();
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
 
     List<InputSplit> resultSplits = new ArrayList<>();
@@ -167,7 +166,7 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
       int offset = 0;
 
       for (int page = 1; page <= pages; page++) {
-        resultSplits.add(new ServiceNowInputSplit(tableName, offset));
+        resultSplits.add(new ServiceNowInputSplit(tableName, offset, filterQuery));
         offset += pageSize;
       }
     }

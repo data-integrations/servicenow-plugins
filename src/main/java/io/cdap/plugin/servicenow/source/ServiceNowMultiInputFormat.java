@@ -132,14 +132,14 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     String filterQuery = split.getFilterQuery();
 
     if (Strings.isNullOrEmpty(filterQuery)) {
-      String startdate = pluginConf.getStartDate();
-      String enddate = pluginConf.getEndDate();
+      String startdate = jobConfig.getPluginConf().getStartDate();
+      String enddate = jobConfig.getPluginConf().getEndDate();
       ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(
               pluginConf.getConnection(), pluginConf.getUseConnection());
       filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
     }
 
-    int pageSize = pluginConf.getPageSize().intValue();
+    int pageSize = jobConfig.getPluginConf().getPageSize().intValue();
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
     List<InputSplit> resultSplits = new ArrayList<>();
 
