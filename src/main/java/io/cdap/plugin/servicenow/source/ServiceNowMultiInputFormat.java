@@ -128,14 +128,13 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
   @Override
   public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(jobContext.getConfiguration());
-    ServiceNowMultiSourceConfig pluginConf = jobConfig.getMultiSourcePluginConf();
     String filterQuery = split.getFilterQuery();
 
     if (Strings.isNullOrEmpty(filterQuery)) {
       String startdate = jobConfig.getPluginConf().getStartDate();
       String enddate = jobConfig.getPluginConf().getEndDate();
       ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(
-              pluginConf.getConnection(), pluginConf.getUseConnection());
+              jobConfig.getPluginConf().getConnection(), jobConfig.getPluginConf().getUseConnection());
       filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
     }
 
