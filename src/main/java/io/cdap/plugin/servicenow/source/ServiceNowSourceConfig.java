@@ -74,14 +74,15 @@ public class ServiceNowSourceConfig extends ServiceNowBaseSourceConfig {
    * @param startDate       The start date
    * @param endDate         The end date
    * @param pageSize        The page size
+   * @param filterQuery     The filter query
    */
   public ServiceNowSourceConfig(String referenceName, String queryMode, @Nullable String applicationName,
                                 @Nullable String tableNameField, @Nullable String tableName, String clientId,
                                 String clientSecret, String restApiEndpoint, String user, String password,
                                 String valueType, @Nullable String startDate, @Nullable String endDate,
-                                Integer pageSize, Boolean enableNewDataTypes) {
+                                Integer pageSize, Boolean enableNewDataTypes, @Nullable String filterQuery) {
     super(referenceName, clientId, clientSecret, restApiEndpoint, user, password, tableNameField, valueType, startDate,
-          endDate, pageSize, enableNewDataTypes);
+          endDate, pageSize, enableNewDataTypes, filterQuery);
     this.referenceName = referenceName;
     this.queryMode = queryMode;
     this.applicationName = applicationName;

@@ -135,13 +135,14 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
    */
   public List<InputSplit> getSplits(Configuration configuration) {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(configuration);
-    String filterQuery = split.getFilterQuery();
+    ServiceNowSourceConfig pluginConf = jobConfig.getPluginConf();
+    String filterQuery = pluginConf.getFilterQuery();
 
     if (Strings.isNullOrEmpty(filterQuery)) {
-      String startdate = jobConfig.getPluginConf().getStartDate();
-      String enddate = jobConfig.getPluginConf().getEndDate();
+      String startdate = pluginConf.getStartDate();
+      String enddate = pluginConf.getEndDate();
       ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(
-              jobConfig.getPluginConf().getConnection(), jobConfig.getPluginConf().getUseConnection());
+        pluginConf.getConnection(), pluginConf.getUseConnection());
       filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
     }
 
