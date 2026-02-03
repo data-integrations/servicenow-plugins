@@ -34,27 +34,27 @@ public class SchemaBuilder {
    * @param columns   The list of ServiceNowColumn objects that will be added as Schema.Field
    * @return The instance of Schema object
    */
-  public static Schema constructSchema(String tableName, List<ServiceNowColumn> columns, boolean enableNewDataTypes) {
+  public static Schema constructSchema(String tableName, List<ServiceNowColumn> columns, boolean legacyMapping) {
     SchemaBuilder schemaBuilder = new SchemaBuilder();
-    List<Schema.Field> fields = schemaBuilder.constructSchemaFields(columns, enableNewDataTypes);
+    List<Schema.Field> fields = schemaBuilder.constructSchemaFields(columns, legacyMapping);
 
     return Schema.recordOf(tableName, fields);
   }
 
-  private List<Schema.Field> constructSchemaFields(List<ServiceNowColumn> columns, Boolean enableNewDataTypes) {
+  private List<Schema.Field> constructSchemaFields(List<ServiceNowColumn> columns, Boolean legacyMapping) {
     return columns.stream()
-      .map(o -> transformToField(o, enableNewDataTypes))
+      .map(o -> transformToField(o, legacyMapping))
       .filter(Objects::nonNull)
       .collect(Collectors.toList());
   }
 
-  private Schema.Field transformToField(ServiceNowColumn column, Boolean enableNewDataTypes) {
+  private Schema.Field transformToField(ServiceNowColumn column, Boolean legacyMapping) {
     String name = column.getFieldName();
     if (Strings.isNullOrEmpty(name)) {
       return null;
     }
 
-    Schema schema = createSchema(column, enableNewDataTypes);
+    Schema schema = createSchema(column, legacyMapping);
     if (schema == null) {
       return null;
     }
@@ -64,7 +64,7 @@ public class SchemaBuilder {
       : Schema.Field.of(name, Schema.nullableOf(schema));
   }
 
-  private Schema createSchema(ServiceNowColumn column, Boolean enableNewDataTypes) {
+  private Schema createSchema(ServiceNowColumn column, Boolean legacyMapping) {
     switch (column.getTypeName().toLowerCase()) {
       case "decimal":
         return Schema.of(Schema.Type.DOUBLE);
@@ -79,7 +79,7 @@ public class SchemaBuilder {
       case "glide_time":
         return Schema.of(Schema.LogicalType.TIME_MICROS);
       case "glide_list":
-        return enableNewDataTypes.equals(Boolean.TRUE) ? Schema.arrayOf(Schema.of(Schema.Type.STRING)) :
+        return legacyMapping.equals(Boolean.FALSE) ? Schema.arrayOf(Schema.of(Schema.Type.STRING)) :
           Schema.of(Schema.Type.STRING);
       case "reference":
       case "currency":

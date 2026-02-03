@@ -253,7 +253,7 @@ public class ServiceNowTableAPIClientImplTest {
     RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
     Schema schema = implSpy.fetchTableSchema("u_custom_13", "dummy-access-token",
-      SourceValueType.SHOW_ACTUAL_VALUE, SchemaType.METADATA_API_BASED, true);
+      SourceValueType.SHOW_ACTUAL_VALUE, SchemaType.METADATA_API_BASED, false);
     Assert.assertNotNull(schema);
     Assert.assertEquals("record", schema.getDisplayName());
     Assert.assertEquals(2, schema.getFields().size());
@@ -291,7 +291,7 @@ public class ServiceNowTableAPIClientImplTest {
     RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
     Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
     Schema schema = implSpy.fetchTableSchema("u_custom_13", "dummy-access-token",
-     SourceValueType.SHOW_ACTUAL_VALUE, SchemaType.METADATA_API_BASED, false);
+     SourceValueType.SHOW_ACTUAL_VALUE, SchemaType.METADATA_API_BASED, true);
     Assert.assertNotNull(schema);
     Assert.assertEquals("record", schema.getDisplayName());
     Assert.assertEquals(2, schema.getFields().size());

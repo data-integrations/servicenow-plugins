@@ -84,7 +84,7 @@ public class ServiceNowRecordConverter {
     ));
 
   public static void convertToValue(String fieldName, Schema fieldSchema, Map<String, String> record,
-    StructuredRecord.Builder recordBuilder, Boolean enableNewDataTypes) {
+    StructuredRecord.Builder recordBuilder, Boolean legacyMapping) {
     String fieldValue = record.get(fieldName);
     if (fieldValue == null || fieldValue.isEmpty()) {
       // Set 'null' value as it is
@@ -130,7 +130,7 @@ public class ServiceNowRecordConverter {
         recordBuilder.set(fieldName, convertToBooleanValue(fieldValue));
         return;
       case ARRAY:
-        recordBuilder.set(fieldName, enableNewDataTypes.equals(Boolean.TRUE) ? convertToList(fieldValue) : fieldValue);
+        recordBuilder.set(fieldName, legacyMapping.equals(Boolean.FALSE) ? convertToList(fieldValue) : fieldValue);
         return;
       default:
         throw new IllegalStateException(
