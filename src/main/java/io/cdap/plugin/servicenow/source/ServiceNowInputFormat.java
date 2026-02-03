@@ -27,6 +27,7 @@ import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.util.SourceApplication;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
 import io.cdap.plugin.servicenow.util.SourceValueType;
+import io.cdap.plugin.servicenow.util.Util;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -141,9 +142,7 @@ public class ServiceNowInputFormat extends InputFormat<NullWritable, StructuredR
     if (Strings.isNullOrEmpty(filterQuery)) {
       String startdate = pluginConf.getStartDate();
       String enddate = pluginConf.getEndDate();
-      ServiceNowTableAPIClientImpl apiClient = new ServiceNowTableAPIClientImpl(
-        pluginConf.getConnection(), pluginConf.getUseConnection());
-      filterQuery = apiClient.generateDateRangeQuery(startdate, enddate);
+      filterQuery = Util.generateDateRangeQuery(startdate, enddate);
     }
 
     int pageSize = jobConfig.getPluginConf().getPageSize().intValue();

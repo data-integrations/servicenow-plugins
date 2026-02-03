@@ -105,7 +105,7 @@ public class ServiceNowRecordReaderTest {
                                                                                "Actual",
                                                                                "2021-12-30",
                                                                                "2021-12-31", 10,
-                                                                               false);
+                                                                               false, "");
 
     serviceNowRecordReader.close();
     Assert.assertEquals(0, serviceNowRecordReader.pos);

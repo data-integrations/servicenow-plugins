@@ -17,6 +17,8 @@
 package io.cdap.plugin.servicenow.util;
 
 import com.google.common.base.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -26,6 +28,12 @@ import java.util.Date;
  * Utility class.
  */
 public class Util {
+  private static final Logger LOG = LoggerFactory.getLogger(Util.class);
+  private static final String DATE_RANGE_TEMPLATE = "%sBETWEENjavascript:gs.dateGenerate('%s','start')" +
+          "@javascript:gs.dateGenerate('%s','end')";
+  private static final String FIELD_CREATED_ON = "sys_created_on";
+  private static final String FIELD_UPDATED_ON = "sys_updated_on";
+
   /**
    * Utility function to check if incoming string is empty or not.
    *
@@ -55,5 +63,29 @@ public class Util {
       return false;
     }
     return true;
+  }
+
+  /**
+   * Generates a date range query for ServiceNow.
+   *
+   * @param startDate The start date
+   * @param endDate The end date
+   * @return The date range query
+   */
+  public static String generateDateRangeQuery(String startDate, String endDate) {
+    if (Util.isNullOrEmpty(startDate) || Util.isNullOrEmpty(endDate)) {
+        return "";
+    }
+
+    String dateRange = "";
+    try {
+        String createdOnDateRange = String.format(DATE_RANGE_TEMPLATE, FIELD_CREATED_ON, startDate, endDate);
+        String updatedOnDateRange = String.format(DATE_RANGE_TEMPLATE, FIELD_UPDATED_ON, startDate, endDate);
+        dateRange = String.format("%s^OR%s", createdOnDateRange, updatedOnDateRange);
+      } catch (Exception e) {
+          LOG.error("Error in generateDateRangeQuery, hence ignoring the date range", e);
+    }
+
+    return dateRange;
   }
 }
