@@ -59,7 +59,7 @@ public class ServiceNowSourceConfigHelper {
     private String startDate = "";
     private String endDate = "";
     private Integer pageSize = 5000;
-    private Boolean enableNewDataTypes = false;
+    private Boolean legacyMapping = true;
 
     public ConfigBuilder setReferenceName(String referenceName) {
       this.referenceName = referenceName;
@@ -136,20 +136,20 @@ public class ServiceNowSourceConfigHelper {
       return this;
     }
 
-    public ConfigBuilder setEnableNewDataTypes(Boolean enableNewDataTypes) {
-      this.enableNewDataTypes = enableNewDataTypes;
+    public ConfigBuilder setLegacyMapping(Boolean legacyMapping) {
+      this.legacyMapping = legacyMapping;
       return this;
     }
 
     public ServiceNowSourceConfig build() {
       return new ServiceNowSourceConfig(referenceName, queryMode, applicationName, tableNameField, tableName,
         clientId, clientSecret, restApiEndpoint, user, password, valueType, startDate, endDate, pageSize,
-          enableNewDataTypes);
+          legacyMapping);
     }
 
     public ServiceNowMultiSourceConfig buildMultiSource() {
       return new ServiceNowMultiSourceConfig(referenceName, clientId, clientSecret, restApiEndpoint, user, password,
-        tableNameField, valueType, startDate, endDate, pageSize, tableNames, enableNewDataTypes);
+        tableNameField, valueType, startDate, endDate, pageSize, tableNames, legacyMapping);
     }
 
 

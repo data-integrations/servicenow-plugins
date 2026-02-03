@@ -54,7 +54,7 @@ public interface ServiceNowConstants {
   /**
     * Configuration property name used to enable new data types.
    */
-  String PROPERTY_ENABLE_NEW_DATA_TYPES = "enableNewDataTypes";
+  String PROPERTY_LEGACY_MAPPING = "legacyMapping";
 
   /**
    * Configuration property name used to specify table names.

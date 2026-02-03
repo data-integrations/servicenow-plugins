@@ -77,7 +77,7 @@ public class ServiceNowRecordReaderTest {
       .setStartDate("2021-12-30")
       .setEndDate("2021-12-31")
       .setPageSize(10)
-      .setEnableNewDataTypes(false)
+      .setLegacyMapping(true)
       .setTableNameField("tablename")
       .build();
 
@@ -241,7 +241,7 @@ public class ServiceNowRecordReaderTest {
     Map<String, String> inputMap = new HashMap<>();
     inputMap.put("ArrayField", "\"service_sys_id_1_1\",\"service_sys_id_2_1\"");
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
-    ServiceNowRecordConverter.convertToValue("ArrayField", fieldSchema, inputMap, recordBuilder, false);
+    ServiceNowRecordConverter.convertToValue("ArrayField", fieldSchema, inputMap, recordBuilder, true);
     StructuredRecord record = recordBuilder.build();
     Assert.assertEquals(inputMap.get("ArrayField"), record.get("ArrayField"));
   }
@@ -256,7 +256,7 @@ public class ServiceNowRecordReaderTest {
     Map<String, String> inputMap = new HashMap<>();
     inputMap.put("ArrayField", "\"service_sys_id_1_1\",\"service_sys_id_2_1\"");
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
-    ServiceNowRecordConverter.convertToValue("ArrayField", fieldSchema, inputMap, recordBuilder, true);
+    ServiceNowRecordConverter.convertToValue("ArrayField", fieldSchema, inputMap, recordBuilder, false);
     StructuredRecord record = recordBuilder.build();
     Assert.assertEquals(Arrays.asList(inputMap.get("ArrayField").split(",")), record.get("ArrayField"));
   }
