@@ -189,8 +189,8 @@
         },
         {
           "widget-type": "hidden",
-          "label": "Enable New Data Types",
-          "name": "enableNewDataTypes",
+          "label": "Legacy Mapping",
+          "name": "legacyMapping",
           "widget-attributes": {
             "on": {
               "value": "true",
@@ -200,7 +200,7 @@
               "value": "false",
               "label": "NO"
             },
-            "default": "false"
+            "default": "true"
           }
         }
       ]

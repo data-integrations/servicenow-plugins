@@ -311,11 +311,11 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param accessToken Access Token to use
    * @param valueType Type of value (Actual/Display)
    * @param schemaType Enum to determine which approach to take to fetch schema.
-   * @param enableNewDataTypes Flag to enable new data types
+   * @param legacyMapping Boolean Flag to determine whether to use legacy mapping for data types.
    * @return schema for given ServiceNow table
    */
   public Schema fetchTableSchema(String tableName, String accessToken, SourceValueType valueType,
-                                 SchemaType schemaType, Boolean enableNewDataTypes)
+                                 SchemaType schemaType, Boolean legacyMapping)
       throws ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, true, schemaType)
@@ -327,7 +327,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     List<ServiceNowColumn> columns = new ArrayList<>();
 
     if (schemaType == SchemaType.METADATA_API_BASED) {
-      return prepareSchemaWithMetadataAPI(restAPIResponse, columns, tableName, valueType, enableNewDataTypes);
+      return prepareSchemaWithMetadataAPI(restAPIResponse, columns, tableName, valueType, legacyMapping);
     } else if (schemaType == SchemaType.SCHEMA_API_BASED) {
       return prepareSchemaWithSchemaAPI(restAPIResponse, columns, tableName);
     } else {
@@ -386,7 +386,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @throws RuntimeException if the response does not contain valid column information.
    */
   private Schema prepareSchemaWithMetadataAPI(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
-    String tableName, SourceValueType valueType, Boolean enableNewDataTypes) throws ServiceNowAPIException {
+    String tableName, SourceValueType valueType, Boolean legacyMapping) throws ServiceNowAPIException {
     MetadataAPISchemaResponse metadataAPISchemaResponse = parseSchemaResponse(restAPIResponse.getResponseBody());
 
     if (metadataAPISchemaResponse.getResult() == null || metadataAPISchemaResponse.getResult().getColumns() == null ||
@@ -411,7 +411,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
         columns.add(new ServiceNowColumn(field.getName(), field.getInternalType()));
       }
     }
-    return SchemaBuilder.constructSchema(tableName, columns, enableNewDataTypes);
+    return SchemaBuilder.constructSchema(tableName, columns, legacyMapping);
   }
 
   /**

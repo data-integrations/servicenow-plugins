@@ -170,7 +170,7 @@ public class ServiceNowMultiRecordReaderTest {
             .setStartDate("2021-01-01")
             .setEndDate("2022-02-18")
             .setPageSize(10)
-            .setEnableNewDataTypes(false)
+            .setLegacyMapping(true)
             .setTableNameField("tablename")
             .buildMultiSource();
 
