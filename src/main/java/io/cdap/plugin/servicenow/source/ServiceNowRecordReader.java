@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.common.base.Strings;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
@@ -23,6 +24,7 @@ import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
+import io.cdap.plugin.servicenow.util.Util;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.slf4j.Logger;
@@ -106,8 +108,14 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
   }
 
   private void fetchData() throws ServiceNowAPIException {
+    String filterQuery = split.getFilterQuery();
+    if (Strings.isNullOrEmpty(filterQuery)) {
+      String startDate = pluginConf.getStartDate();
+      String endDate = pluginConf.getEndDate();
+      filterQuery = Util.generateDateRangeQuery(startDate, endDate);
+    }
     // Get the table data
-    results = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(), split.getFilterQuery(),
+    results = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(), filterQuery,
             split.getOffset(),
                                                      pluginConf.getPageSize());
     LOG.debug("Results size={}", results.size());

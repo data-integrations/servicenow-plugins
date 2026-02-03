@@ -80,12 +80,6 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
   @Description("Enable support for new data types such as array (glide_list) ")
   private Boolean enableNewDataTypes;
 
-  @Name(ServiceNowConstants.PROPERTY_FILTER_QUERY)
-  @Macro
-  @Nullable
-  @Description("A filter query to apply to the ServiceNow table.")
-  private String filterQuery;
-
   /**
    * Constructor for ServiceNowSourceConfig object.
    *
@@ -105,7 +99,7 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
   public ServiceNowBaseSourceConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                                     String user, String password, String tableNameField, String valueType,
                                     @Nullable String startDate, @Nullable String endDate, Integer pageSize,
-                                    Boolean enableNewDataTypes, @Nullable String filterQuery) {
+                                    Boolean enableNewDataTypes) {
     super(clientId, clientSecret, restApiEndpoint, user, password);
     this.referenceName = referenceName;
     this.tableNameField = tableNameField;
@@ -114,7 +108,6 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
     this.endDate = endDate;
     this.pageSize = pageSize;
     this.enableNewDataTypes = enableNewDataTypes;
-    this.filterQuery = filterQuery;
   }
 
   public String getReferenceName() {
@@ -129,11 +122,6 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
   @Nullable
   public String getEndDate() {
     return endDate;
-  }
-
-  @Nullable
-  public String getFilterQuery() {
-    return filterQuery;
   }
 
   public String getTableNameField() {

@@ -291,9 +291,4 @@ public interface ServiceNowConstants {
    * Suffix for ServiceNow fields that store elapsed time in seconds (e.g., calendar_stc, business_stc).
    */
   String STC_FIELD_SUFFIX = "_stc";
-
-  /**
-   * Configuration property name used to specify the filter query.
-   */
-  String PROPERTY_FILTER_QUERY = "filterQuery";
 }

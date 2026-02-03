@@ -17,11 +17,13 @@
 package io.cdap.plugin.servicenow.source;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
+import io.cdap.plugin.servicenow.util.Util;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
@@ -93,9 +95,15 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
 
   @VisibleForTesting
   void fetchData() throws ServiceNowAPIException {
+    String filterQuery = split.getFilterQuery();
+    if (Strings.isNullOrEmpty(filterQuery)) {
+      String startDate = multiSourcePluginConf.getStartDate();
+      String endDate = multiSourcePluginConf.getEndDate();
+      filterQuery = Util.generateDateRangeQuery(startDate, endDate);
+    }
     // Get the table data
     results = restApi.fetchTableRecordsRetryableMode(tableName, multiSourcePluginConf.getValueType(),
-            split.getFilterQuery(), split.getOffset(),
+            filterQuery, split.getOffset(),
             multiSourcePluginConf.getPageSize());
 
     iterator = results.iterator();
