@@ -143,7 +143,7 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
         jsonReader.endArray();
         // cleanup
         closeCurrentPage();
-        resp.close();
+        closeRestAPIResponse(resp);
         return false;
       }
     } catch (IOException e) {
@@ -164,6 +164,16 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
         LOG.warn("Error closing JSON reader", e);
       } finally {
         this.jsonReader = null;
+      }
+    }
+  }
+
+  public void closeRestAPIResponse(RestAPIResponse resp) {
+    if (resp != null) {
+      try {
+        resp.close();
+      } catch (IOException e) {
+        LOG.warn("Error closing RestAPIResponse", e);
       }
     }
   }

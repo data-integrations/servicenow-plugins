@@ -43,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.SocketException;
 import java.util.Collections;
 import java.util.concurrent.Callable;
@@ -56,17 +55,25 @@ import java.util.concurrent.TimeUnit;
 public abstract class RestAPIClient {
   private static final Logger LOG = LoggerFactory.getLogger(RestAPIClient.class);
   
-  /* Connect Timout in ms for establishing the conenction with the server */
+  /* Connect Timeout in ms for establishing the connection with the server */
   private static final int DEFAULT_CONNECT_TIMEOUT_MS = 120000;
 
   /* Read Timeout in ms for waiting for data after the connection is established */
   private static final int DEFAULT_READ_TIMEOUT_MS = 300000;
 
-  // These settings are the "Ideal Cap" for parallel processing
+  /* Maximum total connections. */
   private static final int MAX_CONNECTIONS = 200;
-  private static final int MAX_PER_ROUTE = 100;
-  private static final int TIMEOUT_MILLIS = 120000; // 2 minutes
 
+  // Maximum connections per route. */
+  private static final int MAX_PER_ROUTE = 100;
+
+  /** The maximum time a connection is allowed to live in the pool before being retired.
+   * Helps avoid "stale connection" errors during long-running pipelines. */
+  private static final long CONNECTION_TTL_MINUTES = 5;
+
+  /** The interval at which idle connections are scanned and closed by the background monitor. */
+  private static final long IDLE_EVICTION_SECONDS = 30;
+  
   private static final RequestConfig requestConfig = RequestConfig.custom()
     .setConnectTimeout(DEFAULT_CONNECT_TIMEOUT_MS)
     .setSocketTimeout(DEFAULT_READ_TIMEOUT_MS)
@@ -76,8 +83,8 @@ public abstract class RestAPIClient {
     .setDefaultRequestConfig(requestConfig)
     .setMaxConnTotal(MAX_CONNECTIONS)
     .setMaxConnPerRoute(MAX_PER_ROUTE)
-    .setConnectionTimeToLive(5, TimeUnit.MINUTES)
-    .evictIdleConnections(30, TimeUnit.SECONDS)
+    .setConnectionTimeToLive(CONNECTION_TTL_MINUTES, TimeUnit.MINUTES)
+    .evictIdleConnections(IDLE_EVICTION_SECONDS, TimeUnit.SECONDS)
     .evictExpiredConnections()
     .build();
 
