@@ -143,6 +143,7 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
         jsonReader.endArray();
         // cleanup
         closeCurrentPage();
+        resp.close();
         return false;
       }
     } catch (IOException e) {

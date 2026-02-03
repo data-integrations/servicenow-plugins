@@ -62,9 +62,23 @@ public abstract class RestAPIClient {
   /* Read Timeout in ms for waiting for data after the connection is established */
   private static final int DEFAULT_READ_TIMEOUT_MS = 300000;
 
+  // These settings are the "Ideal Cap" for parallel processing
+  private static final int MAX_CONNECTIONS = 200;
+  private static final int MAX_PER_ROUTE = 100;
+  private static final int TIMEOUT_MILLIS = 120000; // 2 minutes
+
   private static final RequestConfig requestConfig = RequestConfig.custom()
     .setConnectTimeout(DEFAULT_CONNECT_TIMEOUT_MS)
     .setSocketTimeout(DEFAULT_READ_TIMEOUT_MS)
+    .build();
+
+  private static final CloseableHttpClient httpClient = HttpClientBuilder.create()
+    .setDefaultRequestConfig(requestConfig)
+    .setMaxConnTotal(MAX_CONNECTIONS)
+    .setMaxConnPerRoute(MAX_PER_ROUTE)
+    .setConnectionTimeToLive(5, TimeUnit.MINUTES)
+    .evictIdleConnections(30, TimeUnit.SECONDS)
+    .evictExpiredConnections()
     .build();
 
   /**
@@ -77,10 +91,9 @@ public abstract class RestAPIClient {
     HttpGet httpGet = new HttpGet(request.getUrl());
     request.getHeaders().entrySet().forEach(e -> httpGet.addHeader(e.getKey(), e.getValue()));
 
-    try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build()) {
-      try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
-        return RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
-      }
+    try {
+      CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+      return RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
     } catch (ConnectTimeoutException | SocketException e) {
       ServiceNowAPIException exception = new ServiceNowAPIException(e, null);
       return new RestAPIResponse(Collections.emptyMap(), null, exception);

@@ -52,7 +52,7 @@ public class RestAPIResponse {
   private final Map<String, String> headers;
   @Nullable private final ServiceNowAPIException exception;
 
-  // New: store byte array
+  // Input stream of the response body.
   private InputStream responseStream;
 
   public RestAPIResponse(
@@ -95,6 +95,12 @@ public class RestAPIResponse {
       return prepareResponse(httpResponse, headers, serviceNowAPIException);
     } catch (IOException e) {
       return new RestAPIResponse(headers, null, new ServiceNowAPIException(e, httpResponse));
+    }
+  }
+
+  public void close() throws IOException {
+    if (responseStream != null) {
+      responseStream.close();
     }
   }
 
