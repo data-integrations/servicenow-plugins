@@ -74,6 +74,12 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
   @Nullable
   @Description("The number of records to fetch from ServiceNow. Default is 5000.")
   private Integer pageSize;
+  
+  @Name(ServiceNowConstants.PROPERTY_LEGACY_MAPPING)
+  @Nullable
+  @Description("Specifies whether to use legacy mapping for data types. If true, uses legacy mapping; if false, uses" +
+    " updated mapping. Default is true.")
+  private Boolean legacyMapping;
 
   /**
    * Constructor for ServiceNowSourceConfig object.
@@ -92,7 +98,8 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
    */
   public ServiceNowBaseSourceConfig(String referenceName, String clientId, String clientSecret, String restApiEndpoint,
                                     String user, String password, String tableNameField, String valueType,
-                                    @Nullable String startDate, @Nullable String endDate, Integer pageSize) {
+                                    @Nullable String startDate, @Nullable String endDate, Integer pageSize,
+                                    Boolean legacyMapping) {
     super(clientId, clientSecret, restApiEndpoint, user, password);
     this.referenceName = referenceName;
     this.tableNameField = tableNameField;
@@ -100,6 +107,7 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
     this.startDate = startDate;
     this.endDate = endDate;
     this.pageSize = pageSize;
+    this.legacyMapping = legacyMapping;
   }
 
   public String getReferenceName() {
@@ -122,6 +130,10 @@ public class ServiceNowBaseSourceConfig extends ServiceNowBaseConfig {
 
   public Integer getPageSize() {
     return pageSize == null ? ServiceNowConstants.PAGE_SIZE : pageSize;
+  }
+
+  public Boolean getLegacyMapping() {
+    return legacyMapping == null ? Boolean.TRUE : legacyMapping;
   }
 
   /**

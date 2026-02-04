@@ -77,6 +77,7 @@ public class ServiceNowRecordReaderTest {
       .setStartDate("2021-12-30")
       .setEndDate("2021-12-31")
       .setPageSize(10)
+      .setLegacyMapping(true)
       .setTableNameField("tablename")
       .build();
 
@@ -103,7 +104,8 @@ public class ServiceNowRecordReaderTest {
                                                                                "password",
                                                                                "Actual",
                                                                                "2021-12-30",
-                                                                               "2021-12-31", 10);
+                                                                               "2021-12-31", 10,
+                                                                               false);
 
     serviceNowRecordReader.close();
     Assert.assertEquals(0, serviceNowRecordReader.pos);
@@ -131,7 +133,7 @@ public class ServiceNowRecordReaderTest {
     Map<String, String> map = new HashMap<>();
     map.put("TimeField", "value");
     thrown.expect(IllegalStateException.class);
-    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, map, recordBuilder);
+    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, map, recordBuilder, false);
   }
 
   @Test
@@ -159,7 +161,7 @@ public class ServiceNowRecordReaderTest {
 
       StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
       try {
-        ServiceNowRecordConverter.convertToValue("DateTimeField", fieldSchema, inputMap, recordBuilder);
+        ServiceNowRecordConverter.convertToValue("DateTimeField", fieldSchema, inputMap, recordBuilder, false);
         StructuredRecord record = recordBuilder.build();
         Assert.assertNotNull("Parsed datetime should not be null for input: " + value,
             record.get("DateTimeField"));
@@ -190,7 +192,7 @@ public class ServiceNowRecordReaderTest {
 
       StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
       try {
-        ServiceNowRecordConverter.convertToValue("DateField", fieldSchema, inputMap, recordBuilder);
+        ServiceNowRecordConverter.convertToValue("DateField", fieldSchema, inputMap, recordBuilder, false);
         StructuredRecord record = recordBuilder.build();
         Assert.assertNotNull("Parsed date should not be null for input: " + value,
             record.get("DateField"));
@@ -219,7 +221,7 @@ public class ServiceNowRecordReaderTest {
 
       StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
       try {
-        ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, inputMap, recordBuilder);
+        ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, inputMap, recordBuilder, false);
         StructuredRecord record = recordBuilder.build();
         Assert.assertNotNull("Parsed date should not be null for input: " + value,
             record.get("TimeField"));
@@ -227,6 +229,36 @@ public class ServiceNowRecordReaderTest {
         Assert.fail("Failed to parse valid date format: " + value + " - " + e.getMessage());
       }
     }
+  }
+
+  @Test
+  public void testConvertToValue_WithArrayFieldType_ParseAsString() {
+    Schema recordSchema = Schema.recordOf(
+      "record",
+      Schema.Field.of("ArrayField", Schema.arrayOf(Schema.of(Schema.Type.STRING))
+    ));
+    Schema fieldSchema = recordSchema.getField("ArrayField").getSchema();
+    Map<String, String> inputMap = new HashMap<>();
+    inputMap.put("ArrayField", "\"service_sys_id_1_1\",\"service_sys_id_2_1\"");
+    StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
+    ServiceNowRecordConverter.convertToValue("ArrayField", fieldSchema, inputMap, recordBuilder, true);
+    StructuredRecord record = recordBuilder.build();
+    Assert.assertEquals(inputMap.get("ArrayField"), record.get("ArrayField"));
+  }
+
+  @Test
+  public void testConvertToValue_WithArrayFieldType_ParseAsArray() {
+    Schema recordSchema = Schema.recordOf(
+      "record",
+      Schema.Field.of("ArrayField", Schema.arrayOf(Schema.of(Schema.Type.STRING))
+      ));
+    Schema fieldSchema = recordSchema.getField("ArrayField").getSchema();
+    Map<String, String> inputMap = new HashMap<>();
+    inputMap.put("ArrayField", "\"service_sys_id_1_1\",\"service_sys_id_2_1\"");
+    StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
+    ServiceNowRecordConverter.convertToValue("ArrayField", fieldSchema, inputMap, recordBuilder, false);
+    StructuredRecord record = recordBuilder.build();
+    Assert.assertEquals(Arrays.asList(inputMap.get("ArrayField").split(",")), record.get("ArrayField"));
   }
 
   @Test

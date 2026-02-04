@@ -24,7 +24,6 @@ import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
-import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.junit.Assert;
@@ -97,7 +96,7 @@ public class ServiceNowMultiRecordReaderTest {
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(fieldSchema);
     Map<String, String> map = new HashMap<>();
     map.put("TimeField", "value");
-    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, map, recordBuilder);
+    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, map, recordBuilder, false);
   }
 
   @Test
@@ -171,6 +170,7 @@ public class ServiceNowMultiRecordReaderTest {
             .setStartDate("2021-01-01")
             .setEndDate("2022-02-18")
             .setPageSize(10)
+            .setLegacyMapping(true)
             .setTableNameField("tablename")
             .buildMultiSource();
 

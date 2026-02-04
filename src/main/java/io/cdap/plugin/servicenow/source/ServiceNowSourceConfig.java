@@ -79,9 +79,9 @@ public class ServiceNowSourceConfig extends ServiceNowBaseSourceConfig {
                                 @Nullable String tableNameField, @Nullable String tableName, String clientId,
                                 String clientSecret, String restApiEndpoint, String user, String password,
                                 String valueType, @Nullable String startDate, @Nullable String endDate,
-                                Integer pageSize) {
+                                Integer pageSize, Boolean legacyMapping) {
     super(referenceName, clientId, clientSecret, restApiEndpoint, user, password, tableNameField, valueType, startDate,
-          endDate, pageSize);
+          endDate, pageSize, legacyMapping);
     this.referenceName = referenceName;
     this.queryMode = queryMode;
     this.applicationName = applicationName;

@@ -52,6 +52,11 @@ public interface ServiceNowConstants {
   String PROPERTY_TABLE_NAME = "tableName";
 
   /**
+    * Configuration property name used to enable new data types.
+   */
+  String PROPERTY_LEGACY_MAPPING = "legacyMapping";
+
+  /**
    * Configuration property name used to specify table names.
    */
   String PROPERTY_TABLE_NAMES = "tableNames";

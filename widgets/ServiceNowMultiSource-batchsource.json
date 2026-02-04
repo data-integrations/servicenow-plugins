@@ -148,6 +148,22 @@
             "placeholder": "The name of the field that holds the table name.",
             "default": "tablename"
           }
+        },
+        {
+          "widget-type": "hidden",
+          "label": "Legacy Mapping",
+          "name": "legacyMapping",
+          "widget-attributes": {
+            "on": {
+              "value": "true",
+              "label": "YES"
+            },
+            "off": {
+              "value": "false",
+              "label": "NO"
+            },
+            "default": "true"
+          }
         }
       ]
     }
