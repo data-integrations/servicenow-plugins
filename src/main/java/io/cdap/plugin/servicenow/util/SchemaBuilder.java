@@ -79,6 +79,7 @@ public class SchemaBuilder {
       case "glide_time":
         return Schema.of(Schema.LogicalType.TIME_MICROS);
       case "glide_list":
+      case "glide_static_list":
         return legacyMapping.equals(Boolean.FALSE) ? Schema.arrayOf(Schema.of(Schema.Type.STRING)) :
           Schema.of(Schema.Type.STRING);
       case "reference":

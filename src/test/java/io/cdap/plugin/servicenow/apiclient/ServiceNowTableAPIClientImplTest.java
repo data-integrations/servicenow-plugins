@@ -300,4 +300,80 @@ public class ServiceNowTableAPIClientImplTest {
     Assert.assertEquals(Schema.Type.STRING,
                         schema.getField("u_glide_array3").getSchema().getUnionSchemas().get(0).getType());
   }
+
+  @Test
+  public void testFetchTableSchema_WithGlide_Static_ListType_ParseAsArray() throws Exception {
+    ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
+    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
+    ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
+    String jsonResponse = "{\n" +
+      "  \"result\": {\n" +
+      "    \"columns\": {\n" +
+      "      \"u_glide_array2\": {\n" +
+      "         \"label\": \"glide_array2\",\n" +
+      "         \"type\": \"glide_static_list\",\n" +
+      "         \"base_type\": \"string\",\n" +
+      "         \"name\": \"u_glide_array2\",\n" +
+      "         \"internal_type\": \"glide_list\"\n" +
+      "       },\n" +
+      "         \"u_glide_array3\": {\n" +
+      "         \"label\": \"glide_array3\",\n" +
+      "         \"type\": \"glide_static_list\",\n" +
+      "         \"base_type\": \"string\",\n" +
+      "         \"name\": \"u_glide_array3\",\n" +
+      "         \"internal_type\": \"glide_list\"\n" +
+      "       }\n" +
+      "    }\n" +
+      "  }\n" +
+      "}";
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
+    Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
+    Schema schema = implSpy.fetchTableSchema("u_custom_13", "dummy-access-token",
+      SourceValueType.SHOW_DISPLAY_VALUE, SchemaType.METADATA_API_BASED, false);
+    Assert.assertNotNull(schema);
+    Assert.assertEquals("record", schema.getDisplayName());
+    Assert.assertEquals(2, schema.getFields().size());
+    Assert.assertEquals(Schema.Type.ARRAY,
+                        schema.getField("u_glide_array2").getSchema().getUnionSchemas().get(0).getType());
+    Assert.assertEquals(Schema.Type.ARRAY,
+                        schema.getField("u_glide_array3").getSchema().getUnionSchemas().get(0).getType());
+  }
+
+  @Test
+  public void testFetchTableSchema_WithGlide_Static_ListType_ParseAsString() throws Exception {
+    ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
+    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
+    ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
+    String jsonResponse = "{\n" +
+      "  \"result\": {\n" +
+      "    \"columns\": {\n" +
+      "      \"u_glide_array2\": {\n" +
+      "         \"label\": \"glide_array2\",\n" +
+      "         \"type\": \"glide_static_list\",\n" +
+      "         \"base_type\": \"string\",\n" +
+      "         \"name\": \"u_glide_array2\",\n" +
+      "         \"internal_type\": \"glide_list\"\n" +
+      "       },\n" +
+      "         \"u_glide_array3\": {\n" +
+      "         \"label\": \"glide_array3\",\n" +
+      "         \"type\": \"glide_static_list\",\n" +
+      "         \"base_type\": \"string\",\n" +
+      "         \"name\": \"u_glide_array3\",\n" +
+      "         \"internal_type\": \"glide_list\"\n" +
+      "       }\n" +
+      "    }\n" +
+      "  }\n" +
+      "}";
+    RestAPIResponse mockResponse = new RestAPIResponse(Collections.emptyMap(), jsonResponse, null);
+    Mockito.doReturn(mockResponse).when(implSpy).executeGetWithRetries(Mockito.any());
+    Schema schema = implSpy.fetchTableSchema("u_custom_13", "dummy-access-token",
+      SourceValueType.SHOW_DISPLAY_VALUE, SchemaType.METADATA_API_BASED, true);
+    Assert.assertNotNull(schema);
+    Assert.assertEquals("record", schema.getDisplayName());
+    Assert.assertEquals(2, schema.getFields().size());
+    Assert.assertEquals(Schema.Type.STRING,
+                        schema.getField("u_glide_array2").getSchema().getUnionSchemas().get(0).getType());
+    Assert.assertEquals(Schema.Type.STRING,
+                        schema.getField("u_glide_array3").getSchema().getUnionSchemas().get(0).getType());
+  }
 }
