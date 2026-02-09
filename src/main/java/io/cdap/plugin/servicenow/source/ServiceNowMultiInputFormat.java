@@ -25,6 +25,7 @@ import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.util.SourceValueType;
+import io.cdap.plugin.servicenow.util.Util;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -45,6 +46,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /**
  * ServiceNow input format.
@@ -68,7 +70,8 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
     // Depending on conf value fetch the list of fields for each table and create schema object
     // return the schema object for each table as ServiceNowTableInfo
     Set<ServiceNowTableInfo> tableInfos = fetchTablesInfo(conf.getConnection(), conf.getTableNames(),
-                                                          conf.getUseConnection());
+                                                          conf.getUseConnection(), conf.getStartDate(),
+                                                          conf.getEndDate());
 
     jobConf.setTableInfos(tableInfos.stream().collect(Collectors.toList()));
 
@@ -76,13 +79,14 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
   }
 
   static Set<ServiceNowTableInfo> fetchTablesInfo(ServiceNowConnectorConfig conf, String tableNames,
-                                                  Boolean useConnection) {
+                                                  Boolean useConnection, @Nullable String startdate,
+                                                  @Nullable String enddate) {
 
     Set<ServiceNowTableInfo> tablesInfos = new LinkedHashSet<>();
 
     Set<String> tableNameSet = getList(tableNames);
     for (String table : tableNameSet) {
-      ServiceNowTableInfo tableInfo = getTableMetaData(table, conf, useConnection);
+      ServiceNowTableInfo tableInfo = getTableMetaData(table, conf, useConnection, startdate, enddate);
       if (tableInfo == null) {
         continue;
       }
@@ -93,7 +97,8 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
   }
 
   private static ServiceNowTableInfo getTableMetaData(String tableName, ServiceNowConnectorConfig conf,
-                                                      Boolean useConnection) {
+                                                      Boolean useConnection, @Nullable String startdate,
+                                                      @Nullable String enddate) {
     // Call API to fetch first record from the table
     ServiceNowTableAPIClientImpl restApi = new ServiceNowTableAPIClientImpl(conf, useConnection);
 
@@ -107,7 +112,7 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
       if (schema == null) {
         return null;
       }
-      recordCount = restApi.getTableRecordCount(tableName);
+      recordCount = restApi.getTableRecordCount(tableName, startdate, enddate);
     } catch (ServiceNowAPIException e) {
       throw new RuntimeException(e);
     }
@@ -127,6 +132,11 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
   @Override
   public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
     ServiceNowJobConfiguration jobConfig = new ServiceNowJobConfiguration(jobContext.getConfiguration());
+
+      String startdate = jobConfig.getMultiSourcePluginConf().getStartDate();
+      String enddate = jobConfig.getMultiSourcePluginConf().getEndDate();
+      String filterQuery = Util.generateDateRangeQuery(startdate, enddate);
+
     int pageSize = jobConfig.getPluginConf().getPageSize().intValue();
     List<ServiceNowTableInfo> tableInfos = jobConfig.getTableInfos();
     List<InputSplit> resultSplits = new ArrayList<>();
@@ -142,7 +152,7 @@ public class ServiceNowMultiInputFormat extends InputFormat<NullWritable, Struct
       int offset = 0;
 
       for (int page = 1; page <= pages; page++) {
-        resultSplits.add(new ServiceNowInputSplit(tableName, offset));
+        resultSplits.add(new ServiceNowInputSplit(tableName, offset, filterQuery));
         offset += pageSize;
       }
     }
