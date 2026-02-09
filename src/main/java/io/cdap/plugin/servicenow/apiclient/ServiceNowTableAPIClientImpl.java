@@ -122,24 +122,26 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   }
 
   /**
-   * Fetch the list of records from ServiceNow table.
+   * Fetches a list of records from a ServiceNow table.
    *
-   * @param tableName The ServiceNow table name
-   * @param valueType The value type
-   * @param startDate The start date
-   * @param endDate   The end date
-   * @param offset    The number of records to skip
-   * @param limit     The number of records to be fetched
-   * @return The list of Map; each Map representing a table row
+   * @param tableName The name of the ServiceNow table.
+   * @param valueType The type of value to retrieve (e.g., actual or display).
+   * @param filterQuery An encoded query to filter the records. For example, to filter records created
+   *  between two dates, the query would be: {@code
+   *  sys_created_onBETWEENjavascript:gs.dateGenerate
+   *  ('2023-01-01','start')@javascript:gs.dateGenerate('2023-01-31','end')}
+   * @param offset The number of records to skip from the beginning of the result set.
+   * @param limit The maximum number of records to retrieve.
+   * @return A list of maps, where each map represents a record from the table.
+   * @throws ServiceNowAPIException If an error occurs while fetching the records.
    */
   public List<Map<String, String>> fetchTableRecords(
-      String tableName,
-      SourceValueType valueType,
-      String startDate,
-      String endDate,
-      int offset,
-      int limit)
-      throws ServiceNowAPIException {
+    String tableName,
+    SourceValueType valueType,
+    String filterQuery,
+    int offset,
+    int limit)
+    throws ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, false, schemaType)
       .setExcludeReferenceLink(true)
@@ -150,37 +152,14 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       requestBuilder.setOffset(offset);
     }
 
-    applyDateRangeToRequest(requestBuilder, startDate, endDate);
+    if (!Util.isNullOrEmpty(filterQuery)) {
+      requestBuilder.setQuery(filterQuery);
+    }
 
     String accessToken = getAccessToken();
     requestBuilder.setAuthHeader(accessToken);
     RestAPIResponse apiResponse = executeGetWithRetries(requestBuilder.build());
     return parseResponseToResultListOfMap(apiResponse.getResponseBody());
-  }
-
-  private void applyDateRangeToRequest(ServiceNowTableAPIRequestBuilder requestBuilder, String startDate,
-                                       String endDate) {
-    String dateRange = generateDateRangeQuery(startDate, endDate);
-    if (!Strings.isNullOrEmpty(dateRange)) {
-      requestBuilder.setQuery(dateRange);
-    }
-  }
-
-  private String generateDateRangeQuery(String startDate, String endDate) {
-    if (Util.isNullOrEmpty(startDate) || Util.isNullOrEmpty(endDate)) {
-      return "";
-    }
-
-    String dateRange = "";
-    try {
-      String createdOnDateRange = String.format(DATE_RANGE_TEMPLATE, FIELD_CREATED_ON, startDate, endDate);
-      String updatedOnDateRange = String.format(DATE_RANGE_TEMPLATE, FIELD_UPDATED_ON, startDate, endDate);
-      dateRange = String.format("%s^OR%s", createdOnDateRange, updatedOnDateRange);
-    } catch (Exception e) {
-      LOG.error("Error in generateDateRangeQuery, hence ignoring the date range", e);
-    }
-
-    return dateRange;
   }
 
   private int getRecordCountFromHeader(RestAPIResponse apiResponse) {
@@ -226,18 +205,16 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    *
    * @param tableName The ServiceNow table name
    * @param valueType The value type
-   * @param startDate The start date
-   * @param endDate   The end date
    * @param offset    The number of records to skip
    * @param limit     The number of records to be fetched
    * @return The list of Map; each Map representing a table row
    */
   public List<Map<String, String>> fetchTableRecordsRetryableMode(String tableName, SourceValueType valueType,
-                                                                  String startDate, String endDate, int offset,
+                                                                  String filterQuery, int offset,
                                                                   int limit) throws ServiceNowAPIException {
     final List<Map<String, String>> results = new ArrayList<>();
     Callable<Boolean> fetchRecords = () -> {
-      results.addAll(fetchTableRecords(tableName, valueType, startDate, endDate, offset, limit));
+      results.addAll(fetchTableRecords(tableName, valueType, filterQuery, offset, limit));
       return true;
     };
 
@@ -415,15 +392,18 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   }
 
   /**
-   * Get the total number of records in the table
+   * Gets the total number of records in the table based on the provided date range.
    *
-   * @param tableName ServiceNow table name for which record count is fetched.
-   * @return the table record count
-   * @throws ServiceNowAPIException
+   * @param tableName ServiceNow table name for which record count is fetched
+   * @param startDate Start date to use for filtering records
+   * @param endDate End date to use for filtering records
+   * @return The total number of records
+   * @throws ServiceNowAPIException If an error occurs while fetching the record count
    */
-  public int getTableRecordCount(String tableName)
+  public int getTableRecordCount(String tableName, @Nullable String startDate, @Nullable String endDate)
       throws ServiceNowAPIException {
-    return getTableRecordCount(tableName, getAccessToken());
+      String filterQuery = Util.generateDateRangeQuery(startDate, endDate);
+    return getTableRecordCountUsingFilterQuery(tableName, getAccessToken(), filterQuery);
   }
 
   /**
@@ -434,13 +414,18 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @return the table record count
    * @throws ServiceNowAPIException
    */
-  public int getTableRecordCount(String tableName, String accessToken) throws ServiceNowAPIException {
+  public int getTableRecordCountUsingFilterQuery(String tableName, String accessToken,
+                                 @Nullable String filterQuery)
+          throws ServiceNowAPIException {
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
       this.conf.getRestApiEndpoint(), tableName, false, schemaType)
       .setExcludeReferenceLink(true)
       .setDisplayValue(SourceValueType.SHOW_DISPLAY_VALUE)
       .setLimit(1);
     RestAPIResponse apiResponse = null;
+    if (!Util.isNullOrEmpty(filterQuery)) {
+      requestBuilder.setQuery(filterQuery);
+    }
     requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
     requestBuilder.setAuthHeader(accessToken);
     apiResponse = executeGetWithRetries(requestBuilder.build());

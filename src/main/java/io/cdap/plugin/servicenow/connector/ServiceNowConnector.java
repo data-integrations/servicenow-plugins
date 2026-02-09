@@ -214,7 +214,9 @@ public class ServiceNowConnector implements DirectConnector {
       tableName,
       null,
       SourceValueType.SHOW_DISPLAY_VALUE,
-      true);
+      true,
+      null,
+      null);
     Schema schema = tableInfo.stream().findFirst().isPresent() ? tableInfo.stream().findFirst().get().getSchema() :
       null;
     return schema;

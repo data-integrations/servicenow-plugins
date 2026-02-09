@@ -42,16 +42,14 @@ public class ServiceNowTableAPIClientImplTest {
             Mockito.anyString(),
             Mockito.any(),
             Mockito.anyString(),
-            Mockito.anyString(),
             Mockito.anyInt(),
             Mockito.anyInt());
     List<Map<String, String>> receivedResults =
         implSpy.fetchTableRecordsRetryableMode(
-            "test", SourceValueType.SHOW_DISPLAY_VALUE, "", "", 0, 0);
+            "test", SourceValueType.SHOW_DISPLAY_VALUE, "", 0, 0);
     Mockito.verify(implSpy, Mockito.times(2)).fetchTableRecords(
         Mockito.anyString(),
         Mockito.any(),
-        Mockito.anyString(),
         Mockito.anyString(),
         Mockito.anyInt(),
         Mockito.anyInt());
@@ -74,13 +72,12 @@ public class ServiceNowTableAPIClientImplTest {
             Mockito.anyString(),
             Mockito.any(),
             Mockito.anyString(),
-            Mockito.anyString(),
             Mockito.anyInt(),
             Mockito.anyInt());
     exceptionRule.expect(ServiceNowAPIException.class);
     exceptionRule.expectMessage("Data Recovery failed for batch 0 to 0.");
     implSpy.fetchTableRecordsRetryableMode(
-        "test", SourceValueType.SHOW_DISPLAY_VALUE, "", "", 0, 0);
+        "test", SourceValueType.SHOW_DISPLAY_VALUE, "", 0, 0);
   }
 
   @Test
