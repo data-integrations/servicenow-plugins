@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.gson.JsonObject;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.format.UnexpectedFormatException;
 import io.cdap.cdap.api.data.schema.Schema;
@@ -134,10 +135,10 @@ public class ServiceNowRecordReaderTest {
     Schema fieldSchema = Schema.recordOf("record", Schema.Field.of("TimeField",
                                                                    Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)));
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(fieldSchema);
-    Map<String, String> map = new HashMap<>();
-    map.put("TimeField", "value");
+    JsonObject jsonObject = new JsonObject();
+    jsonObject.addProperty("TimeField", "value");
     thrown.expect(IllegalStateException.class);
-    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, map, recordBuilder);
+    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, jsonObject, recordBuilder);
   }
 
   @Test
@@ -160,12 +161,12 @@ public class ServiceNowRecordReaderTest {
     );
 
     for (String value : dateTimeValues) {
-      Map<String, String> inputMap = new HashMap<>();
-      inputMap.put("DateTimeField", value);
+      JsonObject jsonObject = new JsonObject();
+      jsonObject.addProperty("DateTimeField", value);
 
       StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
       try {
-        ServiceNowRecordConverter.convertToValue("DateTimeField", fieldSchema, inputMap, recordBuilder);
+        ServiceNowRecordConverter.convertToValue("DateTimeField", fieldSchema, jsonObject, recordBuilder);
         StructuredRecord record = recordBuilder.build();
         Assert.assertNotNull("Parsed datetime should not be null for input: " + value,
             record.get("DateTimeField"));
@@ -191,12 +192,12 @@ public class ServiceNowRecordReaderTest {
     );
 
     for (String value : dateValues) {
-      Map<String, String> inputMap = new HashMap<>();
-      inputMap.put("DateField", value);
+      JsonObject jsonObject = new JsonObject();
+      jsonObject.addProperty("DateField", value);
 
       StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
       try {
-        ServiceNowRecordConverter.convertToValue("DateField", fieldSchema, inputMap, recordBuilder);
+        ServiceNowRecordConverter.convertToValue("DateField", fieldSchema, jsonObject, recordBuilder);
         StructuredRecord record = recordBuilder.build();
         Assert.assertNotNull("Parsed date should not be null for input: " + value,
             record.get("DateField"));
@@ -220,12 +221,12 @@ public class ServiceNowRecordReaderTest {
     );
 
     for (String value : timeValues) {
-      Map<String, String> inputMap = new HashMap<>();
-      inputMap.put("TimeField", value);
+      JsonObject jsonObject = new JsonObject();
+      jsonObject.addProperty("TimeField", value);
 
       StructuredRecord.Builder recordBuilder = StructuredRecord.builder(recordSchema);
       try {
-        ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, inputMap, recordBuilder);
+        ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, jsonObject, recordBuilder);
         StructuredRecord record = recordBuilder.build();
         Assert.assertNotNull("Parsed date should not be null for input: " + value,
             record.get("TimeField"));

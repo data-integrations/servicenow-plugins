@@ -203,7 +203,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     return GSON.fromJson(ja, type);
   }
 
-  public List<Map<String, String>> parseResponseToResultListOfMap(InputStream in) {
+  public List<JsonObject> parseResponseToResultListOfMap(InputStream in) {
     APIResponse apiResponse = GSON.fromJson(new JsonReader(new InputStreamReader(in, StandardCharsets.UTF_8)),
       APIResponse.class);
     return apiResponse.getResult();
@@ -538,7 +538,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    * @param tableName The ServiceNow table name
    * @param query The query
    */
-  public Map<String, String> getRecordFromServiceNowTable(String tableName, String query)
+  public JsonObject getRecordFromServiceNowTable(String tableName, String query)
       throws ServiceNowAPIException {
 
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder(
@@ -570,12 +570,11 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
    */
   private Schema prepareStringBasedSchema(RestAPIResponse restAPIResponse, List<ServiceNowColumn> columns,
                                           String tableName) throws ServiceNowAPIException {
-    List<Map<String, String>> result = parseResponseToResultListOfMap(restAPIResponse.getResponseStream());
+    List<JsonObject> result = parseResponseToResultListOfMap(restAPIResponse.getResponseStream());
     if (result != null && !result.isEmpty()) {
-      Map<String, String> firstRecord = result.get(0);
-      for (String key : firstRecord.keySet()) {
-        columns.add(new ServiceNowColumn(key, "string"));
-      }
+      result.get(0).entrySet().forEach(entry ->
+        columns.add(new ServiceNowColumn(entry.getKey(), "string"))
+      );
       return SchemaBuilder.constructSchema(tableName, columns);
     }
     return null;

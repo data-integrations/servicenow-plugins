@@ -17,6 +17,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.gson.JsonObject;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
@@ -74,10 +75,10 @@ public class ServiceNowInputFormatTest {
     SourceQueryMode mode = SourceQueryMode.TABLE;
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    List<Map<String, String>> result = new ArrayList<>();
-    Map<String, String> map = new HashMap<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
       "    \"result\": [\n" +
@@ -180,10 +181,10 @@ public class ServiceNowInputFormatTest {
     SourceQueryMode mode = SourceQueryMode.REPORTING;
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    List<Map<String, String>> result = new ArrayList<>();
-    Map<String, String> map = new HashMap<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
       "    \"result\": [\n" +
@@ -290,10 +291,10 @@ public class ServiceNowInputFormatTest {
     SourceQueryMode mode = SourceQueryMode.TABLE;
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    List<Map<String, String>> result = new ArrayList<>();
-    Map<String, String> map = new HashMap<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
       "    \"result\": []\n" +

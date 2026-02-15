@@ -15,6 +15,7 @@
  */
 package io.cdap.plugin.servicenow.connector;
 
+import com.google.gson.JsonObject;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.batch.BatchSource;
 import io.cdap.cdap.etl.api.connector.ConnectorContext;
@@ -126,10 +127,10 @@ public class ServiceNowConnectorTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    Map<String, String> map = new HashMap<>();
-    List<Map<String, String>> result = new ArrayList<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject.addProperty("key", "value");
+    result.add(jsonObject);
     int httpStatus = HttpStatus.SC_OK;
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +

@@ -93,10 +93,10 @@ public class ServiceNowRecordWriterTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    Map<String, String> map = new HashMap<>();
-    List<Map<String, String>> result = new ArrayList<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject1 = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject1.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
     RestAPIResponse restAPIResponse = new RestAPIResponse(
         headers, null, null);
@@ -138,10 +138,10 @@ public class ServiceNowRecordWriterTest {
     ServiceNowSinkAPIRequestImpl serviceNowSinkAPIRequest = Mockito.mock(ServiceNowSinkAPIRequestImpl.class);
     PowerMockito.whenNew(ServiceNowSinkAPIRequestImpl.class).withParameterTypes(ServiceNowSinkConfig.class)
       .withArguments(Mockito.any(ServiceNowSinkConfig.class)).thenReturn(serviceNowSinkAPIRequest);
-    Map<String, String> map = new HashMap<>();
-    List<Map<String, String>> result = new ArrayList<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject1 = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject1.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
     RestAPIResponse restAPIResponse = new RestAPIResponse(headers, null, null);
     Mockito.when(restApi.executePost(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
@@ -186,10 +186,10 @@ public class ServiceNowRecordWriterTest {
     ServiceNowSinkAPIRequestImpl serviceNowSinkAPIRequest = Mockito.mock(ServiceNowSinkAPIRequestImpl.class);
     PowerMockito.whenNew(ServiceNowSinkAPIRequestImpl.class).withParameterTypes(ServiceNowSinkConfig.class)
       .withArguments(Mockito.any(ServiceNowSinkConfig.class)).thenReturn(serviceNowSinkAPIRequest);
-    Map<String, String> map = new HashMap<>();
-    List<Map<String, String>> result = new ArrayList<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject1 = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject1.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
     RestAPIResponse restAPIResponse = new RestAPIResponse(headers, null, null);
     Mockito.when(restApi.executePost(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);

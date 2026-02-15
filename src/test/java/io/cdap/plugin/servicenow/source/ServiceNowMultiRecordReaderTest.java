@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.gson.JsonObject;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.format.UnexpectedFormatException;
 import io.cdap.cdap.api.data.schema.Schema;
@@ -107,9 +108,9 @@ public class ServiceNowMultiRecordReaderTest {
     Schema fieldSchema = Schema.recordOf("record", Schema.Field.of("TimeField",
                                                                    Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)));
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(fieldSchema);
-    Map<String, String> map = new HashMap<>();
-    map.put("TimeField", "value");
-    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, map, recordBuilder);
+    JsonObject record = new JsonObject();
+    record.addProperty("TimeField", "value");
+    ServiceNowRecordConverter.convertToValue("TimeField", fieldSchema, record, recordBuilder);
   }
 
   @Test

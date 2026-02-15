@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.gson.JsonObject;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.batch.BatchSourceContext;
 import io.cdap.cdap.etl.api.validation.ValidationException;
@@ -102,10 +103,10 @@ public class ServiceNowSourceTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token1");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    Map<String, String> map = new HashMap<>();
-    List<Map<String, String>> result = new ArrayList<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
       "    \"result\": [\n" +
@@ -207,7 +208,7 @@ public class ServiceNowSourceTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    List<Map<String, String>> result = new ArrayList<>();
+    List<JsonObject> result = new ArrayList<>();
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
       "    \"result\": []\n" +
@@ -235,10 +236,10 @@ public class ServiceNowSourceTest {
     Mockito.when(context.getArguments()).thenReturn(mockArguments);
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    List<Map<String, String>> result = new ArrayList<>();
-    Map<String, String> map = new HashMap<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
     String responseBody = "{\n" +
       "    \"result\": [\n" +

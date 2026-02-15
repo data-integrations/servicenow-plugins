@@ -17,6 +17,7 @@
 package io.cdap.plugin.servicenow.source;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -53,7 +54,7 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
   protected String tableNameField;
   protected List<Map<String, String>> results;
   protected Iterator<Map<String, String>> iterator;
-  protected Map<String, String> row;
+  protected JsonObject row;
   protected final Gson gson = new Gson();
   protected final Type mapType = new TypeToken<Map<String, String>>() { }.getType();
   protected JsonReader jsonReader = null;
@@ -89,7 +90,7 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
 
     if (token == JsonToken.BEGIN_OBJECT) {
       LOG.debug("Reading record object for table {} at position {}", tableName, pos);
-      this.row = gson.fromJson(jsonReader, mapType); // assign row
+      this.row = gson.fromJson(jsonReader, JsonObject.class); // assign row
       pos++;
       return true;
     }
