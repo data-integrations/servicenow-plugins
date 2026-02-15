@@ -64,9 +64,6 @@ public abstract class RestAPIClient {
   /* Maximum total connections. */
   private static final int MAX_CONNECTIONS = 200;
 
-  // Maximum connections per route. */
-  private static final int MAX_PER_ROUTE = 100;
-
   /** The maximum time a connection is allowed to live in the pool before being retired.
    * Helps avoid "stale connection" errors during long-running pipelines. */
   private static final long CONNECTION_TTL_MINUTES = 5;
@@ -79,14 +76,34 @@ public abstract class RestAPIClient {
     .setSocketTimeout(DEFAULT_READ_TIMEOUT_MS)
     .build();
 
-  private static final CloseableHttpClient httpClient = HttpClientBuilder.create()
-    .setDefaultRequestConfig(requestConfig)
-    .setMaxConnTotal(MAX_CONNECTIONS)
-    .setMaxConnPerRoute(MAX_PER_ROUTE)
-    .setConnectionTimeToLive(CONNECTION_TTL_MINUTES, TimeUnit.MINUTES)
-    .evictIdleConnections(IDLE_EVICTION_SECONDS, TimeUnit.SECONDS)
-    .evictExpiredConnections()
-    .build();
+  private final CloseableHttpClient httpClient;
+
+  /* Default constructor to initialize the HttpClient. */
+  protected RestAPIClient() {
+    this.httpClient = getHttpClient();
+  }
+
+  /* Lazy Holder to protect unit tests from premature static initialization errors. */
+  static class HttpClientHolder {
+    static final CloseableHttpClient HTTP_CLIENT = createClient();
+
+    private static CloseableHttpClient createClient() {
+      return HttpClientBuilder.create()
+        .setMaxConnTotal(MAX_CONNECTIONS)
+        .setMaxConnPerRoute(MAX_CONNECTIONS)
+        .setConnectionTimeToLive(CONNECTION_TTL_MINUTES, TimeUnit.MINUTES)
+        .evictIdleConnections(IDLE_EVICTION_SECONDS, TimeUnit.SECONDS)
+        .setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(DEFAULT_CONNECT_TIMEOUT_MS)
+           .setSocketTimeout(DEFAULT_READ_TIMEOUT_MS).build())
+        .build();
+    }
+  }
+  /**
+   * Protected method to return the HttpClient instance. This is used to mock the HttpClient in unit tests.
+   */
+  protected CloseableHttpClient getHttpClient() {
+    return HttpClientHolder.HTTP_CLIENT;
+  }
 
   /**
    * Executes the Rest API request and returns the response.

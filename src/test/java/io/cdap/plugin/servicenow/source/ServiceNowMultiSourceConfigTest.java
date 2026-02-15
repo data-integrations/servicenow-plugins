@@ -20,7 +20,9 @@ import io.cdap.cdap.etl.api.validation.ValidationException;
 import io.cdap.cdap.etl.api.validation.ValidationFailure;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
+import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -80,6 +82,9 @@ public class ServiceNowMultiSourceConfigTest {
         .setEndDate("2021-12-31")
         .setTableNameField("tablename")
         .buildMultiSource();
+    CloseableHttpClient mockHttpClient = Mockito.mock(CloseableHttpClient.class);
+    PowerMockito.stub(PowerMockito.method(RestAPIClient.class, "getHttpClient"))
+      .toReturn(mockHttpClient);
     try {
       serviceNowMultiSourceConfig.validate(mockFailureCollector);
       Assert.fail("Exception is not thrown if connection is successful");

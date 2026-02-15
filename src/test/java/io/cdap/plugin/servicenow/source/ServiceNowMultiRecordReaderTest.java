@@ -24,7 +24,9 @@ import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableDataResponse;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
+import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.junit.Assert;
@@ -216,6 +218,9 @@ public class ServiceNowMultiRecordReaderTest {
             .setTableNameField("tablename")
             .buildMultiSource();
 
+    CloseableHttpClient mockHttpClient = Mockito.mock(CloseableHttpClient.class);
+    PowerMockito.stub(PowerMockito.method(RestAPIClient.class, "getHttpClient"))
+      .toReturn(mockHttpClient);
     String tableName = serviceNowMultiSourceConfig.getTableNames();
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     ServiceNowInputSplit split = new ServiceNowInputSplit(tableName, 1);

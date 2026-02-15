@@ -90,6 +90,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   public static JsonArray serviceNowJsonResultArray;
 
   public ServiceNowTableAPIClientImpl(ServiceNowConnectorConfig conf, Boolean useConnection) {
+    super();
     this.conf = conf;
     this.schemaType = getSchemaTypeBasedOnUseConnection(useConnection);
   }
