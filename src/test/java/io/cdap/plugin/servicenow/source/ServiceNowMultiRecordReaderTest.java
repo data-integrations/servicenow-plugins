@@ -101,22 +101,22 @@ public class ServiceNowMultiRecordReaderTest {
 
   @Test
   public void testConvertToDoubleValue() throws ParseException {
-    Assert.assertEquals(42.0, ServiceNowRecordConverter.convertToDoubleValue("42"), 0.0);
+    Assert.assertEquals(42.0, ServiceNowRecordConverter.convertToDoubleValue("42", "code"), 0.0);
   }
 
   @Test
   public void testConvertToIntegerValue() throws ParseException {
-    Assert.assertEquals(42, ServiceNowRecordConverter.convertToIntegerValue("42").intValue());
+    Assert.assertEquals(42, ServiceNowRecordConverter.convertToIntegerValue("42", "code").intValue());
   }
 
   @Test
   public void testConvertToBooleanValue() {
-    Assert.assertTrue(ServiceNowRecordConverter.convertToBooleanValue("true"));
+    Assert.assertTrue(ServiceNowRecordConverter.convertToBooleanValue("true", "accept"));
   }
 
   @Test(expected = UnexpectedFormatException.class)
   public void testConvertToBooleanValueForInvalidFieldValue() {
-    Assert.assertTrue(ServiceNowRecordConverter.convertToBooleanValue("1"));
+    Assert.assertTrue(ServiceNowRecordConverter.convertToBooleanValue("1", "accept"));
   }
 
   @Test
