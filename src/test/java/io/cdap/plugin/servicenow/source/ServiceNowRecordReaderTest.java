@@ -263,23 +263,80 @@ public class ServiceNowRecordReaderTest {
 
   @Test
   public void testConvertToDoubleValue() throws ParseException {
-    Assert.assertEquals(42.0, ServiceNowRecordConverter.convertToDoubleValue("42"),
+    Assert.assertEquals(42.0, ServiceNowRecordConverter.convertToDoubleValue("42", "code"),
                         0.0);
   }
 
   @Test
+  public void testConvertToDoubleValue_ThrowsExceptionForBadData() {
+    String badValue = "not_a_number";
+    String testFieldName = "code";
+
+    try {
+      // 1. Attempt the conversion with bad data
+      ServiceNowRecordConverter.convertToDoubleValue(badValue, testFieldName);
+
+      // 2. If the line above DOES NOT throw an error, fail the test immediately
+      Assert.fail("Expected an UnexpectedFormatException to be thrown, but it was not.");
+
+    } catch (UnexpectedFormatException exception) {
+      // 3. Catch the exception and assert the message matches perfectly
+      String expectedMessage = "Field 'code' with value 'not_a_number' is not in valid format.";
+      Assert.assertEquals(expectedMessage, exception.getMessage());
+    }
+  }
+
+  @Test
   public void testConvertToIntegerValue() throws ParseException {
-    Assert.assertEquals(42, ServiceNowRecordConverter.convertToIntegerValue("42").intValue());
+    Assert.assertEquals(42, ServiceNowRecordConverter.convertToIntegerValue("42", "code").intValue());
+  }
+
+  @Test
+  public void testConvertToIntegerValue_ThrowsExceptionForBadData() {
+    String badValue = "not_an_integer";
+    String testFieldName = "code";
+
+    try {
+      // Attempt the conversion with bad data
+      ServiceNowRecordConverter.convertToDoubleValue(badValue, testFieldName);
+
+      // If the line above DOES NOT throw an error, fail the test immediately
+      Assert.fail("Expected an UnexpectedFormatException to be thrown, but it was not.");
+
+    } catch (UnexpectedFormatException exception) {
+      // Catch the exception and assert the message matches perfectly
+      String expectedMessage = "Field 'code' with value 'not_an_integer' is not in valid format.";
+      Assert.assertEquals(expectedMessage, exception.getMessage());
+    }
   }
 
   @Test
   public void testConvertToBooleanValue() {
-    Assert.assertTrue(ServiceNowRecordConverter.convertToBooleanValue("true"));
+    Assert.assertTrue(ServiceNowRecordConverter.convertToBooleanValue("true", "accept"));
   }
 
   @Test(expected = UnexpectedFormatException.class)
   public void testConvertToBooleanValueForInvalidFieldValue() {
-    Assert.assertTrue(ServiceNowRecordConverter.convertToBooleanValue("1"));
+    Assert.assertTrue(ServiceNowRecordConverter.convertToBooleanValue("1", "accept"));
+  }
+
+  @Test
+  public void testConvertToBooleanValue_ThrowsExceptionForBadData() {
+    String badValue = "not_a_boolean";
+    String testFieldName = "accept";
+
+    try {
+      // Attempt the conversion with bad data
+      ServiceNowRecordConverter.convertToDoubleValue(badValue, testFieldName);
+
+      // If the line above DOES NOT throw an error, fail the test immediately
+      Assert.fail("Expected an UnexpectedFormatException to be thrown, but it was not.");
+
+    } catch (UnexpectedFormatException exception) {
+      // Catch the exception and assert the message matches perfectly
+      String expectedMessage = "Field 'accept' with value 'not_a_boolean' is not in valid format.";
+      Assert.assertEquals(expectedMessage, exception.getMessage());
+    }
   }
 
   @Test

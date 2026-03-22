@@ -121,13 +121,13 @@ public class ServiceNowRecordConverter {
         recordBuilder.set(fieldName, fieldValue);
         return;
       case DOUBLE:
-        recordBuilder.set(fieldName, convertToDoubleValue(fieldValue));
+        recordBuilder.set(fieldName, convertToDoubleValue(fieldValue, fieldName));
         return;
       case INT:
-        recordBuilder.set(fieldName, convertToIntegerValue(fieldValue));
+        recordBuilder.set(fieldName, convertToIntegerValue(fieldValue, fieldName));
         return;
       case BOOLEAN:
-        recordBuilder.set(fieldName, convertToBooleanValue(fieldValue));
+        recordBuilder.set(fieldName, convertToBooleanValue(fieldValue, fieldName));
         return;
       case ARRAY:
         recordBuilder.set(fieldName, legacyMapping.equals(Boolean.FALSE) ? convertToList(fieldValue) : fieldValue);
@@ -150,33 +150,33 @@ public class ServiceNowRecordConverter {
   }
 
   @VisibleForTesting
-  public static Double convertToDoubleValue(String fieldValue) {
+  public static Double convertToDoubleValue(String fieldValue, String fieldName) {
     try {
       return NumberFormat.getNumberInstance(Locale.US).parse(fieldValue).doubleValue();
     } catch (ParseException exception) {
       throw new UnexpectedFormatException(
-        String.format("Field with value '%s' is not in valid format.", fieldValue), exception);
+        String.format("Field '%s' with value '%s' is not in valid format.", fieldName, fieldValue), exception);
     }
   }
 
   @VisibleForTesting
-  public static Integer convertToIntegerValue(String fieldValue) {
+  public static Integer convertToIntegerValue(String fieldValue, String fieldName) {
     try {
       return NumberFormat.getNumberInstance(java.util.Locale.US).parse(fieldValue).intValue();
     } catch (ParseException exception) {
       throw new UnexpectedFormatException(
-        String.format("Field with value '%s' is not in valid format.", fieldValue), exception);
+        String.format("Field '%s' with value '%s' is not in valid format.", fieldName, fieldValue), exception);
     }
   }
 
   @VisibleForTesting
-  public static Boolean convertToBooleanValue(String fieldValue) {
+  public static Boolean convertToBooleanValue(String fieldValue, String fieldName) {
     if (fieldValue.equalsIgnoreCase(Boolean.TRUE.toString()) ||
                                       fieldValue.equalsIgnoreCase(Boolean.FALSE.toString())) {
       return Boolean.parseBoolean(fieldValue);
     }
     throw new UnexpectedFormatException(
-      String.format("Field with value '%s' is not in valid format.", fieldValue));
+      String.format("Field '%s' with value '%s' is not in valid format.", fieldName, fieldValue));
     
   }
 
