@@ -93,6 +93,11 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     return recordBuilder.build();
   }
 
+  @Override
+  protected int getPageSize() {
+    return pluginConf.getPageSize();
+  }
+
   RestAPIResponse fetchData() throws ServiceNowAPIException {
     // Get the table data
     RestAPIResponse restAPIResponse = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(),

@@ -58,9 +58,13 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
   protected final Gson gson = new Gson();
   protected final Type mapType = new TypeToken<Map<String, String>>() { }.getType();
   protected JsonReader jsonReader = null;
+  protected int expectedRecordsInPage = -1;
 
   public ServiceNowBaseRecordReader() {
   }
+
+  protected abstract int getPageSize();
+
   /**
    * This method reads the next key/value pair from the input.
    * <p>
@@ -90,17 +94,37 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
 
     if (token == JsonToken.BEGIN_OBJECT) {
       LOG.debug("Reading record object for table {} at position {}", tableName, pos);
-      this.row = gson.fromJson(jsonReader, JsonObject.class); // assign row
+      try {
+        this.row = gson.fromJson(jsonReader, JsonObject.class);
+      } catch (RuntimeException e) {
+        // JsonIOException wraps IOException; rethrow as checked so callers handle it uniformly
+        throw new IOException("Stream error reading record at position " + pos + " for table " + tableName, e);
+      }
       pos++;
       return true;
     }
     closeCurrentPage();
+    if (expectedRecordsInPage > 0 && pos < expectedRecordsInPage) {
+      throw new IOException(String.format(
+        "Stream truncated for table %s: expected %d records but read only %d (offset %d)",
+        tableName, expectedRecordsInPage, pos, split.getOffset()));
+    }
     return false;
   }
   
   public boolean openNextPage() throws IOException, ServiceNowAPIException {
     closeCurrentPage();
+    expectedRecordsInPage = -1;
     RestAPIResponse resp = fetchData();
+    String totalCountStr = resp.getHeaders().get(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
+    if (totalCountStr != null && !totalCountStr.isEmpty()) {
+      try {
+        int totalCount = Integer.parseInt(totalCountStr);
+        expectedRecordsInPage = Math.min(getPageSize(), Math.max(0, totalCount - split.getOffset()));
+      } catch (NumberFormatException ignored) {
+        // leave expectedRecordsInPage = -1 (unknown)
+      }
+    }
     InputStream in = resp.getResponseStream();
     if (in == null) {
       return false;
@@ -117,7 +141,7 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
       } catch (IOException e) {
         LOG.warn("Unexpected closure of stream while peeking JSON token for table {}", tableName, e);
         closeCurrentPage();
-        return false;
+        throw e;
       }
       if (top == JsonToken.BEGIN_OBJECT) {
         jsonReader.beginObject();

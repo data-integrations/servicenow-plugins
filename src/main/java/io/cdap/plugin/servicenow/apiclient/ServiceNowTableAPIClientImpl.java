@@ -151,6 +151,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       .setDisplayValue(valueType)
       .setLimit(limit);
 
+    requestBuilder.setResponseHeaders(ServiceNowConstants.HEADER_NAME_TOTAL_COUNT);
+
     if (offset > 0) {
       requestBuilder.setOffset(offset);
     }
