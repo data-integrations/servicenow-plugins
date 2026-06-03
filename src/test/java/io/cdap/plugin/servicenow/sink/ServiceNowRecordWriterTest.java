@@ -16,18 +16,13 @@
 package io.cdap.plugin.servicenow.sink;
 
 import com.google.gson.JsonObject;
-import io.cdap.plugin.servicenow.ServiceNowBaseConfig;
-import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
-import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
 import io.cdap.plugin.servicenow.restapi.RestAPIClient;
 import io.cdap.plugin.servicenow.restapi.RestAPIRequest;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.sink.service.ServiceNowSinkAPIRequestImpl;
 import io.cdap.plugin.servicenow.sink.transform.ServiceNowRecordWriter;
 import io.cdap.plugin.servicenow.source.ServiceNowBaseSourceConfig;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -93,15 +88,14 @@ public class ServiceNowRecordWriterTest {
     ServiceNowTableAPIClientImpl restApi = Mockito.mock(ServiceNowTableAPIClientImpl.class);
     Mockito.when(restApi.getAccessToken()).thenReturn("token");
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
-    Map<String, String> map = new HashMap<>();
-    List<Map<String, String>> result = new ArrayList<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject1 = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject1.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
     RestAPIResponse restAPIResponse = new RestAPIResponse(
-        headers, responseBody, null);
+        headers, null, null);
     Mockito.when(restApi.executePost(Mockito.any())).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(ServiceNowTableAPIClientImpl.class).withAnyArguments().thenReturn(restApi);
     OAuthJSONAccessTokenResponse accessTokenResponse = Mockito.mock(OAuthJSONAccessTokenResponse.class);
@@ -138,14 +132,13 @@ public class ServiceNowRecordWriterTest {
     ServiceNowSinkAPIRequestImpl serviceNowSinkAPIRequest = Mockito.mock(ServiceNowSinkAPIRequestImpl.class);
     PowerMockito.whenNew(ServiceNowSinkAPIRequestImpl.class).withParameterTypes(ServiceNowSinkConfig.class)
       .withArguments(Mockito.any(ServiceNowSinkConfig.class)).thenReturn(serviceNowSinkAPIRequest);
-    Map<String, String> map = new HashMap<>();
-    List<Map<String, String>> result = new ArrayList<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject1 = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject1.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, null, null);
     Mockito.when(restApi.executePost(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);
@@ -186,14 +179,13 @@ public class ServiceNowRecordWriterTest {
     ServiceNowSinkAPIRequestImpl serviceNowSinkAPIRequest = Mockito.mock(ServiceNowSinkAPIRequestImpl.class);
     PowerMockito.whenNew(ServiceNowSinkAPIRequestImpl.class).withParameterTypes(ServiceNowSinkConfig.class)
       .withArguments(Mockito.any(ServiceNowSinkConfig.class)).thenReturn(serviceNowSinkAPIRequest);
-    Map<String, String> map = new HashMap<>();
-    List<Map<String, String>> result = new ArrayList<>();
-    map.put("key", "value");
-    result.add(map);
+    JsonObject jsonObject1 = new JsonObject();
+    List<JsonObject> result = new ArrayList<>();
+    jsonObject1.addProperty("key", "value");
+    result.add(jsonObject);
     Map<String, String> headers = new HashMap<>();
-    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, responseBody, null);
+    RestAPIResponse restAPIResponse = new RestAPIResponse(headers, null, null);
     Mockito.when(restApi.executePost(Mockito.any(RestAPIRequest.class))).thenReturn(restAPIResponse);
-    Mockito.when(restApi.parseResponseToResultListOfMap(restAPIResponse.getResponseBody())).thenReturn(result);
     OAuthClient oAuthClient = Mockito.mock(OAuthClient.class);
     PowerMockito.whenNew(OAuthClient.class).
       withArguments(Mockito.any(URLConnectionClient.class)).thenReturn(oAuthClient);

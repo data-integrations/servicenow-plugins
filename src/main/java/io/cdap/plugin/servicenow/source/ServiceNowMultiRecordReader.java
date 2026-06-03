@@ -17,17 +17,30 @@
 package io.cdap.plugin.servicenow.source;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
+import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Record reader that reads the entire contents of a ServiceNow table.
@@ -55,26 +68,6 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
   }
 
   @Override
-  public boolean nextKeyValue() throws IOException {
-    try {
-      if (results == null) {
-        fetchData();
-      }
-
-      if (!iterator.hasNext()) {
-        return false;
-      }
-
-      row = iterator.next();
-
-      pos++;
-    } catch (Exception e) {
-      throw new IOException("Exception in nextKeyValue", e);
-    }
-    return true;
-  }
-
-  @Override
   public StructuredRecord getCurrentValue() throws IOException {
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(schema);
     recordBuilder.set(tableNameField, tableName);
@@ -91,14 +84,15 @@ public class ServiceNowMultiRecordReader extends ServiceNowBaseRecordReader {
     return recordBuilder.build();
   }
 
+  @Override
   @VisibleForTesting
-  void fetchData() throws ServiceNowAPIException {
+  RestAPIResponse fetchData() throws ServiceNowAPIException {
     // Get the table data
-    results = restApi.fetchTableRecordsRetryableMode(tableName, multiSourcePluginConf.getValueType(),
-            split.getFilterQuery(), split.getOffset(),
-            multiSourcePluginConf.getPageSize());
+    RestAPIResponse restAPIResponse = restApi.fetchTableRecordsRetryableMode(tableName,
+      multiSourcePluginConf.getValueType(), split.getFilterQuery(),
+        split.getOffset(), multiSourcePluginConf.getPageSize());
 
-    iterator = results.iterator();
+    return restAPIResponse;
   }
 
   private void fetchSchema(ServiceNowTableAPIClientImpl restApi) {

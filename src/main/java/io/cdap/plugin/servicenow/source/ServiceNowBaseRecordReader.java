@@ -16,20 +16,33 @@
 
 package io.cdap.plugin.servicenow.source;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
+import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.RecordReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Base Record reader class that provides a basic structure for Derived Record Reader classes.
  */
 public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritable, StructuredRecord> {
+  private static final Logger LOG = LoggerFactory.getLogger(ServiceNowRecordReader.class);
   protected ServiceNowInputSplit split;
   protected int pos;
   protected List<Schema.Field> tableFields;
@@ -37,14 +50,142 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
 
   protected String tableName;
   protected String tableNameField;
-  protected List<Map<String, String>> results;
-  protected Iterator<Map<String, String>> iterator;
-  protected Map<String, String> row;
+  protected JsonObject row;
+  protected final Gson gson = new Gson();
+  protected JsonReader jsonReader = null;
+  protected RestAPIResponse currentResponse = null;
 
   public ServiceNowBaseRecordReader() {
   }
 
-  public abstract boolean nextKeyValue() throws IOException;
+  /**
+   * This method reads the next key/value pair from the input.
+   * <p>
+   * The nextKeyValue() uses the jsonReader to read the next record from the current page.
+   * <p>
+   * Returns true, when it assigned `row` to the next record.
+   * Returns false, only when there are no more pages/records (i.e., openNextPage() returns false).
+   */
+  public boolean nextKeyValue() throws IOException {
+    // Ensure we have an active page/jsonReader
+    if (jsonReader == null) {
+      // Need to open the next page
+      boolean pageOpened;
+      try {
+        pageOpened = openNextPage();
+      } catch (ServiceNowAPIException e) {
+        throw new IOException("Exception in nextKeyValue" + tableName, e);
+      }
+      if (!pageOpened) {
+        // No more pages
+        return false;
+      }
+    }
+
+    // At this point jsonReader is positioned inside the "result" array.
+    JsonToken token = jsonReader.peek();
+
+    if (token == JsonToken.BEGIN_OBJECT) {
+      LOG.debug("Reading record object for table {} at position {}", tableName, pos);
+      try {
+        row = gson.fromJson(jsonReader, JsonObject.class); // assign row
+      } catch (JsonIOException | JsonSyntaxException e) {
+        throw new IOException("Error parsing JSON record for table " + tableName + " at position " + pos, e);
+      }
+      pos++;
+      return true;
+    } else if (token == JsonToken.END_ARRAY) {
+      // This is the only "Normal" end of a page
+      closeCurrentPage();
+      return false;
+    } else {
+      // If we get here, the JSON is malformed or truncated
+      throw new IOException("Unexpected JSON token " + token + " at position " + pos);
+    }
+  }
+  
+  public boolean openNextPage() throws IOException, ServiceNowAPIException {
+    closeCurrentPage();
+    this.currentResponse = fetchData();
+    InputStream in = this.currentResponse.getResponseStream();
+    if (in == null) {
+      closeCurrentPage();
+      return false;
+    }
+    this.jsonReader = new JsonReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+    this.jsonReader.setLenient(true);
+
+    // Position the reader to the "result" array: { "result": [ ... ], ... }
+    try {
+      JsonToken top;
+      try {
+        top = jsonReader.peek();
+        LOG.debug("Peeking JSON token for table {}: {}", tableName, top);
+      } catch (IOException e) {
+        closeCurrentPage();
+        throw new IOException("Unexpected closure of stream while peeking JSON token for table {}" + tableName, e);
+      }
+      if (top == JsonToken.BEGIN_OBJECT) {
+        jsonReader.beginObject();
+        while (jsonReader.hasNext()) {
+          String name = jsonReader.nextName();
+          if (name.equals(ServiceNowConstants.RESULT)) {
+            if (jsonReader.peek() == JsonToken.BEGIN_ARRAY) {
+              jsonReader.beginArray();
+              return true;
+            } else {
+              jsonReader.skipValue();
+              break;
+            }
+          } else {
+            jsonReader.skipValue();
+          }
+        }
+      } else if (top == JsonToken.BEGIN_ARRAY) {
+        jsonReader.beginArray();
+        return true;
+      } else if (jsonReader.peek() == JsonToken.END_ARRAY) {
+        // empty result array — treat as no-more-data for this split/page
+        LOG.debug("openNextPage: found empty result array (no records). Closing and returning false.");
+        jsonReader.endArray();
+        // cleanup
+        closeCurrentPage();
+        return false;
+      }
+    } catch (IOException e) {
+      closeCurrentPage();
+      throw e;
+    }
+
+    // No "result" array not found, close the current page and return false
+    closeCurrentPage();
+    return false;
+  }
+
+  public void closeCurrentPage() {
+    LOG.info("Closing current page for table {}", tableName);
+    if (this.jsonReader != null) {
+      try {
+        this.jsonReader.close();
+      } catch (IOException e) {
+        LOG.warn("Error closing JSON reader", e);
+      } finally {
+        this.jsonReader = null;
+      }
+    }
+
+    if (this.currentResponse != null) {
+      try {
+        this.currentResponse.close();
+      } catch (IOException e) {
+        LOG.warn("Error closing RestAPIResponse for table {}", tableName, e);
+      } finally {
+        this.currentResponse = null;
+      }
+    }
+  }
+
+  abstract RestAPIResponse fetchData() throws ServiceNowAPIException;
 
   public NullWritable getCurrentKey() {
     return NullWritable.get();
@@ -56,6 +197,11 @@ public abstract class ServiceNowBaseRecordReader extends RecordReader<NullWritab
     return pos / (float) split.getLength();
   }
 
+  public int getPos() {
+    return pos;
+  }
+
   public void close() throws IOException {
+    closeCurrentPage();
   }
 }

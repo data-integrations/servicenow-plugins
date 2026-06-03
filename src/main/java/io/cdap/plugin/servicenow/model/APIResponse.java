@@ -16,6 +16,8 @@
 
 package io.cdap.plugin.servicenow.model;
 
+import com.google.gson.JsonObject;
+
 import java.util.List;
 import java.util.Map;
 
@@ -24,9 +26,9 @@ import java.util.Map;
  */
 public class APIResponse {
   
-  private List<Map<String, String>> result;
+  private List<JsonObject> result;
 
-  public List<Map<String, String>> getResult() {
+  public List<JsonObject> getResult() {
     return result;
   }
 

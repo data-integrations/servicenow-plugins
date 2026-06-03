@@ -8,6 +8,7 @@ import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -69,6 +70,7 @@ public class ServiceNowAPIException extends Exception {
     return t instanceof OAuthSystemException
         || t instanceof ConnectTimeoutException
         || t instanceof SocketException
+        || t instanceof SocketTimeoutException
         || (this.getMessage() != null
         && this.getMessage().contains(ServiceNowConstants.MAXIMUM_EXECUTION_TIME_EXCEEDED))
         || RETRYABLE_CODES.contains(getStatusCode());

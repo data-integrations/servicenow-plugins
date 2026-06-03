@@ -21,6 +21,7 @@ import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.connector.ServiceNowRecordConverter;
+import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.util.ServiceNowTableInfo;
 import io.cdap.plugin.servicenow.util.SourceQueryMode;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -64,27 +65,6 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
   }
 
   @Override
-  public boolean nextKeyValue() throws IOException {
-    try {
-      if (results == null) {
-        fetchData();
-      }
-
-      if (!iterator.hasNext()) {
-        return false;
-      }
-
-      row = iterator.next();
-
-      pos++;
-    } catch (Exception e) {
-      LOG.error("Error in nextKeyValue", e);
-      throw new IOException("Exception in nextKeyValue", e);
-    }
-    return true;
-  }
-
-  @Override
   public StructuredRecord getCurrentValue() throws IOException {
     StructuredRecord.Builder recordBuilder = StructuredRecord.builder(schema);
 
@@ -105,14 +85,15 @@ public class ServiceNowRecordReader extends ServiceNowBaseRecordReader {
     return recordBuilder.build();
   }
 
-  private void fetchData() throws ServiceNowAPIException {
+    @Override
+    RestAPIResponse fetchData() throws ServiceNowAPIException {
+    LOG.info("Fetching data for table: {}, with offset: {} and page size: {}", tableName, split.getOffset(),
+      pluginConf.getPageSize());
     // Get the table data
-    results = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(), split.getFilterQuery(),
-            split.getOffset(),
-                                                     pluginConf.getPageSize());
-    LOG.debug("Results size={}", results.size());
+    RestAPIResponse restAPIResponse = restApi.fetchTableRecordsRetryableMode(tableName, pluginConf.getValueType(),
+     split.getFilterQuery() , split.getOffset(), pluginConf.getPageSize());
 
-    iterator = results.iterator();
+    return restAPIResponse;
   }
 
   protected void initialize(InputSplit split) {
