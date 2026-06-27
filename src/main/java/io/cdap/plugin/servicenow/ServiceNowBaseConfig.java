@@ -89,13 +89,16 @@ public class ServiceNowBaseConfig extends PluginConfig {
       restApi.getAccessToken();
     } catch (Exception e) {
       collector.addFailure("Unable to connect to ServiceNow Instance.",
-                           "Ensure properties like Client ID, Client Secret, API Endpoint, User Name, Password " +
-                             "are correct.")
+                           "Ensure properties like Client ID, Client Secret, API Endpoint, User Name, " +
+                                   "Password and Proxy Properties are correct.")
         .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_ID)
         .withConfigProperty(ServiceNowConstants.PROPERTY_CLIENT_SECRET)
         .withConfigProperty(ServiceNowConstants.PROPERTY_API_ENDPOINT)
         .withConfigProperty(ServiceNowConstants.PROPERTY_USER)
         .withConfigProperty(ServiceNowConstants.PROPERTY_PASSWORD)
+        .withConfigProperty(ServiceNowConstants.PROPERTY_PROXY_URL)
+        .withConfigProperty(ServiceNowConstants.PROPERTY_PROXY_USERNAME)
+        .withConfigProperty(ServiceNowConstants.PROPERTY_PROXY_PASSWORD)
         .withStacktrace(e.getStackTrace());
     }
   }
@@ -108,7 +111,10 @@ public class ServiceNowBaseConfig extends PluginConfig {
       !containsMacro(ServiceNowConstants.PROPERTY_CLIENT_SECRET) &&
       !containsMacro(ServiceNowConstants.PROPERTY_API_ENDPOINT) &&
       !containsMacro(ServiceNowConstants.PROPERTY_USER) &&
-      !containsMacro(ServiceNowConstants.PROPERTY_PASSWORD);
+      !containsMacro(ServiceNowConstants.PROPERTY_PASSWORD) &&
+      !containsMacro(ServiceNowConstants.PROPERTY_PROXY_URL)  &&
+      !containsMacro(ServiceNowConstants.PROPERTY_PROXY_USERNAME)  &&
+      !containsMacro(ServiceNowConstants.PROPERTY_PROXY_PASSWORD);
   }
 
   public boolean shouldGetSchema() {
