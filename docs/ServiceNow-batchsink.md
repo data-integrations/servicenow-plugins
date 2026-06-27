@@ -24,6 +24,15 @@ You also can use the macro function ${conn(connection-name)}.
 
 **Password**: The password for ServiceNow Instance.
 
+**Proxy URL**: Proxy URL through which all the ServiceNow API calls are routed. For example,
+`http://proxy.example.com:8080`. If no scheme is specified (for example, `proxy.example.com:8080`),
+it defaults to `http`. Specify `https://` explicitly
+when using an HTTPS proxy. Leave it empty to connect to ServiceNow directly.
+
+**Proxy Username**: The username to authenticate with the proxy server, if the proxy requires authentication.
+
+**Proxy Password**: The password to authenticate with the proxy server, if the proxy requires authentication.
+
 **Reference Name**: Name used to uniquely identify this source for lineage, annotating metadata, etc.
 
 **Table Name**: The name of the ServiceNow table into which data is to be pushed.
