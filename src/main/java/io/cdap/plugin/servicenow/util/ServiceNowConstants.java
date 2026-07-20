@@ -87,6 +87,21 @@ public interface ServiceNowConstants {
   String PROPERTY_PASSWORD = "password";
 
   /**
+   * Configuration property name used to specify the proxy URL. Must contain a protocol, address and port.
+   */
+  String PROPERTY_PROXY_URL = "proxyUrl";
+
+  /**
+   * Configuration property name used to specify the proxy username.
+   */
+  String PROPERTY_PROXY_USERNAME = "proxyUsername";
+
+  /**
+   * Configuration property name used to specify the proxy password.
+   */
+  String PROPERTY_PROXY_PASSWORD = "proxyPassword";
+
+  /**
    * Configuration property name used to specify the type of operation.
    */
   String PROPERTY_OPERATION = "operation";

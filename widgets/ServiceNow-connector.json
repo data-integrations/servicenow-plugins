@@ -48,7 +48,49 @@
           }
         }
       ]
+    },
+    {
+      "label": "Proxy",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Proxy URL",
+          "name": "proxyUrl",
+          "widget-attributes" : {
+            "placeholder": "Proxy URL e.g. http://proxy.example.com:8080"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Proxy Username",
+          "name": "proxyUsername"
+        },
+        {
+          "widget-type": "password",
+          "label": "Proxy Password",
+          "name": "proxyPassword"
+        }
+      ]
     }
     ],
-  "outputs": []
+  "outputs": [],
+  "filters": [
+    {
+      "name": "Proxy authentication",
+      "condition": {
+        "property": "proxyUrl",
+        "operator": "exists"
+      },
+      "show": [
+        {
+          "name": "proxyUsername",
+          "type": "property"
+        },
+        {
+          "name": "proxyPassword",
+          "type": "property"
+        }
+      ]
+    }
+  ]
 }

@@ -70,6 +70,24 @@
           "widget-attributes": {
             "placeholder": "ServiceNow User Password"
           }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Proxy URL",
+          "name": "proxyUrl",
+          "widget-attributes": {
+            "placeholder": "Proxy URL e.g. http://proxy.example.com:8080"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Proxy Username",
+          "name": "proxyUsername"
+        },
+        {
+          "widget-type": "password",
+          "label": "Proxy Password",
+          "name": "proxyPassword"
         }
       ]
     },
@@ -272,6 +290,10 @@
         {
           "type": "property",
           "name": "password"
+        },
+        {
+          "type": "property",
+          "name": "proxyUrl"
         }
 
       ]
@@ -285,6 +307,23 @@
         {
           "type": "property",
           "name": "connection"
+        }
+      ]
+    },
+    {
+      "name": "Proxy authentication",
+      "condition": {
+        "property": "proxyUrl",
+        "operator": "exists"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "proxyUsername"
+        },
+        {
+          "type": "property",
+          "name": "proxyPassword"
         }
       ]
     }

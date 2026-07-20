@@ -49,7 +49,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
@@ -86,6 +85,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   public static JsonArray serviceNowJsonResultArray;
 
   public ServiceNowTableAPIClientImpl(ServiceNowConnectorConfig conf, Boolean useConnection) {
+    super(conf.getProxyUrl(), conf.getProxyUsername(), conf.getProxyPassword());
     this.conf = conf;
     this.schemaType = getSchemaTypeBasedOnUseConnection(useConnection);
   }
@@ -561,7 +561,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     deleteRequest.setHeader("Authorization", "Bearer " + accessToken);
     deleteRequest.setHeader("Accept", "application/json");
 
-    try (CloseableHttpClient httpClient = HttpClients.createDefault();
+    try (CloseableHttpClient httpClient = getHttpClientBuilder().build();
          CloseableHttpResponse response = httpClient.execute(deleteRequest)) {
 
       int statusCode = response.getStatusLine().getStatusCode();
