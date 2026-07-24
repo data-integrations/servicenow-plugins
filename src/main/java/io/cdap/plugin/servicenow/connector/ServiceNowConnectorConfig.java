@@ -23,6 +23,7 @@ import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.Util;
+import org.apache.http.HttpHost;
 
 import javax.annotation.Nullable;
 
@@ -62,13 +63,41 @@ public class ServiceNowConnectorConfig extends PluginConfig {
   @Description("The password for ServiceNow Instance.")
   private final String password;
 
+  @Name(ServiceNowConstants.PROPERTY_PROXY_URL)
+  @Macro
+  @Nullable
+  @Description("Proxy URL through which all the ServiceNow API calls are routed. " +
+    "Must contain a protocol, address and port. For example, http://proxy.example.com:8080")
+  private final String proxyUrl;
+
+  @Name(ServiceNowConstants.PROPERTY_PROXY_USERNAME)
+  @Macro
+  @Nullable
+  @Description("The username to authenticate with the proxy server, if the proxy requires authentication.")
+  private final String proxyUsername;
+
+  @Name(ServiceNowConstants.PROPERTY_PROXY_PASSWORD)
+  @Macro
+  @Nullable
+  @Description("The password to authenticate with the proxy server, if the proxy requires authentication.")
+  private final String proxyPassword;
+
   public ServiceNowConnectorConfig(String clientId, String clientSecret, String restApiEndpoint,
                                    String user, String password) {
+    this(clientId, clientSecret, restApiEndpoint, user, password, null, null, null);
+  }
+
+  public ServiceNowConnectorConfig(String clientId, String clientSecret, String restApiEndpoint,
+                                   String user, String password, String proxyUrl, String proxyUsername,
+                                   String proxyPassword) {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.restApiEndpoint = restApiEndpoint;
     this.user = user;
     this.password = password;
+    this.proxyUrl = proxyUrl;
+    this.proxyUsername = proxyUsername;
+    this.proxyPassword = proxyPassword;
   }
 
   public String getClientId() {
@@ -89,6 +118,28 @@ public class ServiceNowConnectorConfig extends PluginConfig {
 
   public String getPassword() {
     return password;
+  }
+
+  @Nullable
+  public String getProxyUrl() {
+    return proxyUrl;
+  }
+
+  @Nullable
+  public String getProxyUsername() {
+    return proxyUsername;
+  }
+
+  @Nullable
+  public String getProxyPassword() {
+    return proxyPassword;
+  }
+
+  /**
+   * Returns true if the proxy properties do not contain macros and a proxy URL has been configured.
+   */
+  public boolean hasProxyConfigured() {
+    return !containsMacro(ServiceNowConstants.PROPERTY_PROXY_URL) && !Util.isNullOrEmpty(proxyUrl);
   }
 
 
@@ -119,6 +170,43 @@ public class ServiceNowConnectorConfig extends PluginConfig {
     if (Util.isNullOrEmpty(getPassword())) {
       collector.addFailure("Password must be specified.", null)
         .withConfigProperty(ServiceNowConstants.PROPERTY_PASSWORD);
+    }
+
+    validateProxyFields(collector);
+  }
+
+  /**
+   * Validates the optional proxy fields. The proxy URL must be a valid host with a protocol and port, and a proxy
+   * username and password must be provided together.
+   */
+  public void validateProxyFields(FailureCollector collector) {
+    if (!containsMacro(ServiceNowConstants.PROPERTY_PROXY_URL) && !Util.isNullOrEmpty(proxyUrl)) {
+      try {
+        HttpHost host = HttpHost.create(proxyUrl);
+        if (host.getPort() == -1) {
+          throw new IllegalArgumentException();
+        }
+      } catch (IllegalArgumentException e) {
+        collector.addFailure("Proxy URL is not valid.",
+                             "Ensure the Proxy URL contains a protocol, address and port. " +
+                               "For example, http://proxy.example.com:8080.")
+          .withConfigProperty(ServiceNowConstants.PROPERTY_PROXY_URL);
+      }
+    }
+
+    if (containsMacro(ServiceNowConstants.PROPERTY_PROXY_USERNAME)
+      || containsMacro(ServiceNowConstants.PROPERTY_PROXY_PASSWORD)) {
+      return;
+    }
+
+    boolean hasUsername = !Util.isNullOrEmpty(proxyUsername);
+    boolean hasPassword = !Util.isNullOrEmpty(proxyPassword);
+    if (hasUsername && !hasPassword) {
+      collector.addFailure("Proxy password must be specified when a proxy username is provided.", null)
+        .withConfigProperty(ServiceNowConstants.PROPERTY_PROXY_PASSWORD);
+    } else if (!hasUsername && hasPassword) {
+      collector.addFailure("Proxy username must be specified when a proxy password is provided.", null)
+        .withConfigProperty(ServiceNowConstants.PROPERTY_PROXY_USERNAME);
     }
   }
 

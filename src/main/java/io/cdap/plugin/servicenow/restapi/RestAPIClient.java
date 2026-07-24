@@ -22,13 +22,19 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
+import com.google.common.base.Strings;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.oltu.oauth2.client.OAuthClient;
@@ -48,13 +54,14 @@ import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * An abstract class to call Rest API.
  */
 public abstract class RestAPIClient {
   private static final Logger LOG = LoggerFactory.getLogger(RestAPIClient.class);
-  
+
   /* Connect Timout in ms for establishing the conenction with the server */
   private static final int DEFAULT_CONNECT_TIMEOUT_MS = 120000;
 
@@ -66,6 +73,43 @@ public abstract class RestAPIClient {
     .setSocketTimeout(DEFAULT_READ_TIMEOUT_MS)
     .build();
 
+  /* Optional proxy through which all the API calls are routed. */
+  private final String proxyUrl;
+  private final String proxyUsername;
+  private final String proxyPassword;
+
+  protected RestAPIClient() {
+    this(null, null, null);
+  }
+
+  protected RestAPIClient(@Nullable String proxyUrl, @Nullable String proxyUsername, @Nullable String proxyPassword) {
+    this.proxyUrl = proxyUrl;
+    this.proxyUsername = proxyUsername;
+    this.proxyPassword = proxyPassword;
+  }
+
+  /**
+   * Builds an {@link HttpClientBuilder} pre-configured with the default request timeouts and, when a proxy is
+   * configured, the proxy host along with its credentials. All ServiceNow API calls go through the resulting client
+   * so that, if a proxy is set, traffic is routed to the proxy first and then to the ServiceNow instance.
+   *
+   * @return an HttpClientBuilder configured with timeouts and optional proxy settings.
+   */
+  protected HttpClientBuilder getHttpClientBuilder() {
+    HttpClientBuilder httpClientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig);
+    if (!Strings.isNullOrEmpty(proxyUrl)) {
+      HttpHost proxyHost = HttpHost.create(proxyUrl);
+      if (!Strings.isNullOrEmpty(proxyUsername) && !Strings.isNullOrEmpty(proxyPassword)) {
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(new AuthScope(proxyHost),
+                                           new UsernamePasswordCredentials(proxyUsername, proxyPassword));
+        httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+      }
+      httpClientBuilder.setProxy(proxyHost);
+    }
+    return httpClientBuilder;
+  }
+
   /**
    * Executes the Rest API request and returns the response.
    *
@@ -76,7 +120,7 @@ public abstract class RestAPIClient {
     HttpGet httpGet = new HttpGet(request.getUrl());
     request.getHeaders().entrySet().forEach(e -> httpGet.addHeader(e.getKey(), e.getValue()));
 
-    try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build()) {
+    try (CloseableHttpClient httpClient = getHttpClientBuilder().build()) {
       try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
         return RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
       }
@@ -154,7 +198,7 @@ public abstract class RestAPIClient {
     // We're retrying all transport exceptions while executing the HTTP POST method and the generic transport
     // exceptions in HttpClient are represented by the standard java.io.IOException class
     // https://hc.apache.org/httpclient-legacy/exception-handling.html
-    try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build()) {
+    try (CloseableHttpClient httpClient = getHttpClientBuilder().build()) {
       try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
         return RestAPIResponse.parse(httpResponse, request.getResponseHeaders());
       }
@@ -176,7 +220,11 @@ public abstract class RestAPIClient {
                                        String password) throws OAuthSystemException, OAuthProblemException {
     String token = "NO-VALUE";
 
-    OAuthClient client = new OAuthClient(new URLConnectionClient());
+    // When a proxy is configured, route the OAuth token request through the same proxy-aware HTTP client as the rest
+    // of the ServiceNow API calls. Otherwise, keep using the default URLConnectionClient for backward compatibility.
+    org.apache.oltu.oauth2.client.HttpClient oltuHttpClient = Strings.isNullOrEmpty(proxyUrl)
+      ? new URLConnectionClient() : new ProxyOltuHttpClient(getHttpClientBuilder());
+    OAuthClient client = new OAuthClient(oltuHttpClient);
     OAuthClientRequest request = OAuthClientRequest.tokenLocation(restApiEndpoint)
       .setGrantType(GrantType.PASSWORD)
       .setClientId(clientId)
