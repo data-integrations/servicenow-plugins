@@ -90,7 +90,7 @@ public class ServiceNowTableAPIClientImplTest {
     OAuthSystemException oauthSysEx = new OAuthSystemException("Transient OAuth system error");
     ServiceNowAPIException retryableEx =
       new ServiceNowAPIException("An error occurred while authenticating. Transient OAuth system error",
-                                 oauthSysEx, null, true);
+                                 oauthSysEx, null);
     Mockito.doThrow(retryableEx)
       .doReturn("valid-access-token")
       .when(implSpy).getAccessToken();
@@ -111,7 +111,7 @@ public class ServiceNowTableAPIClientImplTest {
     ServiceNowAPIException nonRetryableEx =
       new ServiceNowAPIException(
         String.format("An error occurred while authenticating. %s", oauthProblemEx.getMessage()),
-        oauthProblemEx, null, false);
+        oauthProblemEx, null);
     Mockito.doThrow(nonRetryableEx).when(implSpy).getAccessToken();
     ServiceNowAPIException actualException = null;
 

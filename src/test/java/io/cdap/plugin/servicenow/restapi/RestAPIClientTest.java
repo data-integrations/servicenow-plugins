@@ -1,9 +1,13 @@
 package io.cdap.plugin.servicenow.restapi;
 
+import com.github.rholder.retry.WaitStrategies;
+import com.github.rholder.retry.WaitStrategy;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIRequestBuilder;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
+import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -22,6 +26,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.Collections;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
@@ -29,7 +34,8 @@ import java.net.SocketException;
   HttpClientBuilder.class,
   RestAPIResponse.class,
   ServiceNowTableAPIClientImpl.class,
-  EntityUtils.class
+  EntityUtils.class,
+  WaitStrategies.class
 })
 public class RestAPIClientTest {
 
@@ -146,6 +152,7 @@ public class RestAPIClientTest {
     ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
     RestAPIResponse actualResponse = client.executeGet(request);
     Assert.assertNotNull(actualResponse.getException());
+    Assert.assertNull(actualResponse.getException().getMessage());
     Assert.assertTrue(actualResponse.getException().isErrorRetryable());
     Throwable ex = actualResponse.getException().getCause();
     Assert.assertTrue("Expected SocketException or similar, got: " + ex, ex instanceof SocketException);
@@ -173,5 +180,41 @@ public class RestAPIClientTest {
                       rootCause, actualException.getCause());
     Assert.assertEquals("Unexpected transport failure", actualException.getMessage());
     Assert.assertEquals("Unexpected transport failure", actualException.getUnderlyingMessage());
+    Assert.assertFalse(actualException.isErrorRetryable());
+  }
+
+  @Test
+  public void testExecuteGetWithRetries_whenRetriesExhausted_marksErrorNonRetryable() throws IOException {
+    WaitStrategy noWait = WaitStrategies.noWait();
+    PowerMockito.mockStatic(WaitStrategies.class);
+    PowerMockito.when(WaitStrategies.exponentialWait(Mockito.anyLong(), Mockito.any()))
+      .thenReturn(noWait);
+
+    ServiceNowTableAPIRequestBuilder builder = new ServiceNowTableAPIRequestBuilder("url");
+    RestAPIRequest request = builder.build();
+    ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
+    ServiceNowTableAPIClientImpl clientSpy = Mockito.spy(new ServiceNowTableAPIClientImpl(config, true));
+
+    HttpResponse mockHttpResponse = Mockito.mock(HttpResponse.class);
+    StatusLine statusLine = Mockito.mock(StatusLine.class);
+    Mockito.when(statusLine.getStatusCode()).thenReturn(429);
+    Mockito.when(mockHttpResponse.getStatusLine()).thenReturn(statusLine);
+    ServiceNowAPIException retryableEx = new ServiceNowAPIException("Too Many Requests", mockHttpResponse);
+    RestAPIResponse errorResponse = new RestAPIResponse(Collections.emptyMap(), null, retryableEx);
+    Mockito.doReturn(errorResponse).when(clientSpy).executeGet(request);
+
+    ServiceNowAPIException actualException = null;
+    try {
+      clientSpy.executeGetWithRetries(request);
+      Assert.fail("Expected ServiceNowAPIException");
+    } catch (ServiceNowAPIException e) {
+      actualException = e;
+    }
+
+    Assert.assertNotNull(actualException);
+    Assert.assertEquals("Too Many Requests", actualException.getMessage());
+    Assert.assertEquals(429, actualException.getStatusCode());
+    Assert.assertFalse(actualException.isErrorRetryable());
+    Mockito.verify(clientSpy, Mockito.times(ServiceNowConstants.MAX_NUMBER_OF_RETRY_ATTEMPTS)).executeGet(request);
   }
 }

@@ -162,11 +162,15 @@ public abstract class RestAPIClient {
           // last execution attempt was successful but has an error response
           // if execution is successful, it's expected to have a exception in response object
           RestAPIResponse response = (RestAPIResponse) apiResponseAttempt.getResult();
-          throw response.getException();
+          ServiceNowAPIException apiException = response.getException();
+          throw new ServiceNowAPIException(apiException.getMessage(), apiException.getCause(),
+              apiException.getHttpResponse(), false);
         }
       }
       // Execution failed with error
-      throw new ServiceNowAPIException(e.getCause(), null);
+      Throwable cause = e.getCause();
+      throw new ServiceNowAPIException(
+          cause != null ? cause.getMessage() : null, cause, null, false);
     }
   }
 

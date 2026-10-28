@@ -32,8 +32,12 @@ public class ServiceNowAPIException extends Exception {
   }
 
   public ServiceNowAPIException(Throwable t, @Nullable HttpResponse httpResponse) {
-    this(t == null ? null : (t.getMessage() != null ? t.getMessage() : t.toString()),
-        t, httpResponse, null);
+    this(t != null ? t.getMessage() : null, t, httpResponse, null);
+  }
+
+  public ServiceNowAPIException(String message, Throwable t,
+      @Nullable HttpResponse httpResponse) {
+    this(message, t, httpResponse, null);
   }
 
   public ServiceNowAPIException(String message, Throwable t,

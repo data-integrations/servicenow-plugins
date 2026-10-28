@@ -98,7 +98,7 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       String errorMessage = !Strings.isNullOrEmpty(e.getMessage())
         ? String.format("An error occurred while authenticating. %s", e.getMessage())
         : "An error occurred while authenticating.";
-      throw new ServiceNowAPIException(errorMessage, e, null, e instanceof OAuthSystemException);
+      throw new ServiceNowAPIException(errorMessage, e, null);
     }
   }
 
