@@ -20,6 +20,7 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -120,6 +121,9 @@ public class ServiceNowSinkAPIRequestImpl {
       StringEntity stringEntity = new StringEntity(gson.toJson(payloadRequest), ContentType.APPLICATION_JSON);
       requestBuilder.setEntity(stringEntity);
       apiResponse = restApi.executePost(requestBuilder.build());
+      if (apiResponse.hasException()) {
+        throw apiResponse.getException();
+      }
 
       JsonObject responseJSON = jsonParser.parse(apiResponse.getResponseBody()).getAsJsonObject();
       JsonArray servicedRequestsArray = responseJSON.get(ServiceNowConstants.SERVICED_REQUESTS).getAsJsonArray();
@@ -164,7 +168,10 @@ public class ServiceNowSinkAPIRequestImpl {
       }
     } catch (IOException e) {
       LOG.error("Error while connecting to ServiceNow", e.getMessage());
-      throw new ServiceNowAPIException("Error while connecting to ServiceNow", e, null, true);
+      String errorMessage = !Strings.isNullOrEmpty(e.getMessage())
+        ? String.format("Error while connecting to ServiceNow. %s", e.getMessage())
+        : "Error while connecting to ServiceNow";
+      throw new ServiceNowAPIException(errorMessage, e, null, true);
     }
   }
 
@@ -202,21 +209,33 @@ public class ServiceNowSinkAPIRequestImpl {
    *
    * @param restRequestsMap The map of rest Requests
    */
-  public void createPostRequestRetryableMode(Map<String, RestRequest> restRequestsMap) throws ExecutionException,
-    RetryException {
+  public void createPostRequestRetryableMode(Map<String, RestRequest> restRequestsMap) throws ServiceNowAPIException {
     String accessToken = restApi.getAccessTokenRetryableMode();
     Callable<Boolean> fetchRecords = () -> {
       createPostRequest(restRequestsMap, accessToken);
       return true;
     };
 
-    Retryer retryer = RetryerBuilder.newBuilder()
+    Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+      .retryIfException(t -> t instanceof ServiceNowAPIException && ((ServiceNowAPIException) t).isErrorRetryable())
       .retryIfExceptionOfType(RetryableException.class)
       .withWaitStrategy(WaitStrategies.fixedWait(ServiceNowConstants.BASE_DELAY, TimeUnit.MILLISECONDS))
       .withStopStrategy(StopStrategies.stopAfterAttempt(ServiceNowConstants.MAX_NUMBER_OF_RETRY_ATTEMPTS))
       .build();
 
-    retryer.call(fetchRecords);
+    try {
+      retryer.call(fetchRecords);
+    } catch (RetryException | ExecutionException e) {
+      Throwable cause = e.getCause();
+      String errorMessage = (cause != null && !Strings.isNullOrEmpty(cause.getMessage()))
+        ? cause.getMessage()
+        : "Error while connecting to ServiceNow";
+      if (cause instanceof ServiceNowAPIException) {
+        ServiceNowAPIException apiException = (ServiceNowAPIException) cause;
+        throw new ServiceNowAPIException(errorMessage, apiException.getCause(), apiException.getHttpResponse(), false);
+      }
+      throw new ServiceNowAPIException(errorMessage, cause, null, false);
+    }
   }
 
   /**

@@ -15,8 +15,8 @@
  */
 package io.cdap.plugin.servicenow.sink.transform;
 
-import com.github.rholder.retry.RetryException;
 import com.google.gson.JsonObject;
+import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.model.RestRequest;
 import io.cdap.plugin.servicenow.sink.ServiceNowSinkConfig;
 import io.cdap.plugin.servicenow.sink.service.ServiceNowSinkAPIRequestImpl;
@@ -28,7 +28,6 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 /**
  *  ServiceNow Record Writer class to insert/update records
@@ -50,7 +49,7 @@ public class ServiceNowRecordWriter extends RecordWriter<NullWritable, JsonObjec
     if (restRequestsMap.size() == ServiceNowConstants.RECORDS_PER_BATCH) {
       try {
         servicenowSinkAPIImpl.createPostRequestRetryableMode(restRequestsMap);
-      } catch (RetryException | ExecutionException exception) {
+      } catch (ServiceNowAPIException exception) {
         restRequestsMap.clear();
         throw new IOException("Error writing to ServiceNow", exception);
       }
@@ -64,7 +63,7 @@ public class ServiceNowRecordWriter extends RecordWriter<NullWritable, JsonObjec
     if (!restRequestsMap.isEmpty()) {
       try {
         servicenowSinkAPIImpl.createPostRequestRetryableMode(restRequestsMap);
-      } catch (RetryException | ExecutionException exception) {
+      } catch (ServiceNowAPIException exception) {
         throw new IOException("Error writing to ServiceNow", exception);
       }
     }

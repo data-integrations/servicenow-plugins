@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 public class ServiceNowAPIException extends Exception {
 
   @Nullable private final HttpResponse httpResponse;
-  @Nullable private final boolean manualRetry;
+  @Nullable private final Boolean manualRetry;
 
   private static final Set<Integer> RETRYABLE_CODES = new HashSet<>(Arrays.asList(429,
       HttpStatus.SC_BAD_GATEWAY,
@@ -28,15 +28,25 @@ public class ServiceNowAPIException extends Exception {
       HttpStatus.SC_GATEWAY_TIMEOUT));
 
   public ServiceNowAPIException(String message, @Nullable HttpResponse httpResponse) {
-    this(message, null, httpResponse, false);
+    this(message, null, httpResponse, null);
   }
 
   public ServiceNowAPIException(Throwable t, @Nullable HttpResponse httpResponse) {
-    this(null, t, httpResponse, false);
+    this(t != null ? t.getMessage() : null, t, httpResponse, null);
+  }
+
+  public ServiceNowAPIException(String message, Throwable t,
+      @Nullable HttpResponse httpResponse) {
+    this(message, t, httpResponse, null);
   }
 
   public ServiceNowAPIException(String message, Throwable t,
       @Nullable HttpResponse httpResponse, boolean manualRetry) {
+    this(message, t, httpResponse, Boolean.valueOf(manualRetry));
+  }
+
+  private ServiceNowAPIException(String message, Throwable t,
+      @Nullable HttpResponse httpResponse, @Nullable Boolean manualRetry) {
     super(message, t);
     this.httpResponse = httpResponse;
     this.manualRetry = manualRetry;
@@ -62,8 +72,8 @@ public class ServiceNowAPIException extends Exception {
   }
 
   public boolean isErrorRetryable() {
-    if (manualRetry) {
-      return true;
+    if (manualRetry != null) {
+      return manualRetry;
     }
     Throwable t = this.getCause();
     return t instanceof OAuthSystemException
