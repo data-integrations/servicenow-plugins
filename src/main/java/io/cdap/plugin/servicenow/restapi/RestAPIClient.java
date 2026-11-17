@@ -17,11 +17,14 @@
 package io.cdap.plugin.servicenow.restapi;
 
 import com.github.rholder.retry.Attempt;
+import com.github.rholder.retry.BlockStrategies;
+import com.github.rholder.retry.BlockStrategy;
 import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.util.ServiceNowConstants;
@@ -172,23 +175,30 @@ public abstract class RestAPIClient {
     }
   }
 
-  private Retryer<RestAPIResponse> getRetryer() {
+  @VisibleForTesting
+  protected Retryer<RestAPIResponse> getRetryer() {
+    return getRetryer(BlockStrategies.threadSleepStrategy());
+  }
+
+  @VisibleForTesting
+  protected Retryer<RestAPIResponse> getRetryer(BlockStrategy blockStrategy) {
     return RetryerBuilder.<RestAPIResponse>newBuilder()
-            .retryIfResult(
-                    restAPIResponse ->
-                            restAPIResponse.hasException() && restAPIResponse.getException().isErrorRetryable())
-            .withWaitStrategy(
-                    WaitStrategies.join(
-                            // Base exponential backoff starting at 4s, capped at WAIT_TIME (120s)
-                            WaitStrategies.exponentialWait(
-                                    4000L,
-                                    ServiceNowConstants.WAIT_TIME,
-                                    TimeUnit.MILLISECONDS),
-                            // Random jitter between 0 ms and 4000 ms (4 seconds)
-                            WaitStrategies.randomWait(4000L, TimeUnit.MILLISECONDS)))
-            .withStopStrategy(
-                    StopStrategies.stopAfterAttempt(ServiceNowConstants.MAX_NUMBER_OF_RETRY_ATTEMPTS))
-            .build();
+        .retryIfResult(
+            restAPIResponse ->
+                restAPIResponse.hasException() && restAPIResponse.getException().isErrorRetryable())
+        .withWaitStrategy(
+            WaitStrategies.join(
+                // Base exponential backoff starting at 4s, capped at WAIT_TIME (120s)
+                WaitStrategies.exponentialWait(
+                    4000L,
+                    ServiceNowConstants.WAIT_TIME,
+                    TimeUnit.MILLISECONDS),
+                // Random jitter between 0 ms and 4000 ms (4 seconds)
+                WaitStrategies.randomWait(4000L, TimeUnit.MILLISECONDS)))
+        .withBlockStrategy(blockStrategy)
+        .withStopStrategy(
+            StopStrategies.stopAfterAttempt(ServiceNowConstants.MAX_NUMBER_OF_RETRY_ATTEMPTS))
+        .build();
   }
 
   /**

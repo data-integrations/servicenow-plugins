@@ -2,7 +2,6 @@ package io.cdap.plugin.servicenow.restapi;
 
 import com.github.rholder.retry.Attempt;
 import com.github.rholder.retry.Retryer;
-import com.github.rholder.retry.WaitStrategies;
 import com.github.rholder.retry.WaitStrategy;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowAPIException;
 import io.cdap.plugin.servicenow.apiclient.ServiceNowTableAPIClientImpl;
@@ -28,7 +27,6 @@ import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.concurrent.TimeUnit;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
@@ -36,8 +34,7 @@ import java.util.concurrent.TimeUnit;
   HttpClientBuilder.class,
   RestAPIResponse.class,
   ServiceNowTableAPIClientImpl.class,
-    EntityUtils.class,
-    WaitStrategies.class
+  EntityUtils.class
 })
 public class RestAPIClientTest {
 
@@ -166,7 +163,7 @@ public class RestAPIClientTest {
   public void testGetRetryer_computeSleepTime_appliesExponentialMultiplierAndJitter() throws Exception {
     ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
     ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
-    Retryer<RestAPIResponse> retryer = Whitebox.invokeMethod(client, "getRetryer");
+    Retryer<RestAPIResponse> retryer = client.getRetryer();
     WaitStrategy waitStrategy = Whitebox.getInternalState(retryer, "waitStrategy");
     Attempt<?> firstAttempt = Mockito.mock(Attempt.class);
     Mockito.when(firstAttempt.getAttemptNumber()).thenReturn(1L);
@@ -193,7 +190,7 @@ public class RestAPIClientTest {
       throws Exception {
     ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
     ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
-    Retryer<RestAPIResponse> retryer = Whitebox.invokeMethod(client, "getRetryer");
+    Retryer<RestAPIResponse> retryer = client.getRetryer();
     WaitStrategy waitStrategy = Whitebox.getInternalState(retryer, "waitStrategy");
     Attempt<?> fifthAttempt = Mockito.mock(Attempt.class);
     Mockito.when(fifthAttempt.getAttemptNumber()).thenReturn(5L);
@@ -227,25 +224,21 @@ public class RestAPIClientTest {
         .thenReturn(okHttpResponse);
     PowerMockito.mockStatic(EntityUtils.class);
     PowerMockito.when(EntityUtils.toString(Mockito.any())).thenReturn("{\"result\":[]}");
-    WaitStrategy noWaitStrategy = WaitStrategies.fixedWait(0L, TimeUnit.MILLISECONDS);
-    PowerMockito.spy(WaitStrategies.class);
-    PowerMockito.doReturn(noWaitStrategy)
-        .when(WaitStrategies.class, "join", Mockito.any(WaitStrategy.class), Mockito.any(WaitStrategy.class));
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder("url");
     RestAPIRequest request = requestBuilder.build();
     ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
+    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true) {
+      @Override
+      protected Retryer<RestAPIResponse> getRetryer() {
+        return getRetryer(attempt -> { });
+      }
+    };
 
     RestAPIResponse actualResponse = client.executeGetWithRetries(request);
 
     Assert.assertFalse(actualResponse.hasException());
     Assert.assertEquals("{\"result\":[]}", actualResponse.getResponseBody());
     Mockito.verify(httpClient, Mockito.times(2)).execute(Mockito.any());
-    PowerMockito.verifyStatic(WaitStrategies.class);
-    WaitStrategies.exponentialWait(
-        BASE_MULTIPLIER_MS, ServiceNowConstants.WAIT_TIME, TimeUnit.MILLISECONDS);
-    PowerMockito.verifyStatic(WaitStrategies.class);
-    WaitStrategies.randomWait(MAX_JITTER_MS, TimeUnit.MILLISECONDS);
   }
 
   @Test
@@ -260,14 +253,15 @@ public class RestAPIClientTest {
     PowerMockito.when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
     Mockito.when(httpClientBuilder.build()).thenReturn(httpClient);
     Mockito.when(httpClient.execute(Mockito.any())).thenReturn(retryableHttpResponse);
-    WaitStrategy noWaitStrategy = WaitStrategies.fixedWait(0L, TimeUnit.MILLISECONDS);
-    PowerMockito.spy(WaitStrategies.class);
-    PowerMockito.doReturn(noWaitStrategy)
-        .when(WaitStrategies.class, "join", Mockito.any(WaitStrategy.class), Mockito.any(WaitStrategy.class));
     ServiceNowTableAPIRequestBuilder requestBuilder = new ServiceNowTableAPIRequestBuilder("url");
     RestAPIRequest request = requestBuilder.build();
     ServiceNowConnectorConfig config = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true);
+    ServiceNowTableAPIClientImpl client = new ServiceNowTableAPIClientImpl(config, true) {
+      @Override
+      protected Retryer<RestAPIResponse> getRetryer() {
+        return getRetryer(attempt -> { });
+      }
+    };
 
     ServiceNowAPIException thrownException = null;
     try {
