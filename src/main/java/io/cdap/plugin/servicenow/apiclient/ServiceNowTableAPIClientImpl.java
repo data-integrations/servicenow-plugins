@@ -27,7 +27,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
@@ -96,7 +95,10 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
           conf.getClientId(),
           conf.getClientSecret(), conf.getUser(), conf.getPassword());
     } catch (OAuthProblemException | OAuthSystemException e) {
-      throw new ServiceNowAPIException("An error occurred while authenticating.", e, null, false);
+      String errorMessage = !Strings.isNullOrEmpty(e.getMessage())
+        ? String.format("An error occurred while authenticating. %s", e.getMessage())
+        : "An error occurred while authenticating.";
+      throw new ServiceNowAPIException(errorMessage, e, null);
     }
   }
 
@@ -107,9 +109,8 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   /**
    * Retries to get the access token and returns the same when OAuthSystemException is thrown
    */
-  public String getAccessTokenRetryableMode() throws ExecutionException, RetryException {
-
-    Callable fetchToken = this::getAccessToken;
+  public String getAccessTokenRetryableMode() throws ServiceNowAPIException {
+    Callable<String> fetchToken = this::getAccessToken;
 
     Retryer<String> retryer = RetryerBuilder.<String>newBuilder()
       .retryIfException(this::isExceptionRetryable)
@@ -118,7 +119,22 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
       .withStopStrategy(StopStrategies.stopAfterAttempt(ServiceNowConstants.MAX_NUMBER_OF_RETRY_ATTEMPTS))
       .build();
 
-    return retryer.call(fetchToken);
+    try {
+      return retryer.call(fetchToken);
+    } catch (RetryException | ExecutionException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof ServiceNowAPIException) {
+        ServiceNowAPIException apiException = (ServiceNowAPIException) cause;
+        String errorMessage = !Strings.isNullOrEmpty(apiException.getMessage())
+          ? apiException.getMessage()
+          : "An error occurred while authenticating.";
+        throw new ServiceNowAPIException(errorMessage, apiException.getCause(), apiException.getHttpResponse(), false);
+      }
+      String errorMessage = (cause != null && !Strings.isNullOrEmpty(cause.getMessage()))
+        ? String.format("An error occurred while authenticating. %s", cause.getMessage())
+        : "An error occurred while authenticating.";
+      throw new ServiceNowAPIException(errorMessage, cause, null, false);
+    }
   }
 
   /**
@@ -227,9 +243,16 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
     try {
       retryer.call(fetchRecords);
     } catch (RetryException | ExecutionException e) {
-      throw new ServiceNowAPIException(
-          String.format("Data Recovery failed for batch %s to %s.", offset, (offset + limit)),
-          e, null, false);
+      Throwable cause = e.getCause();
+      String batchMessage = String.format("Data Recovery failed for batch %s to %s.", offset, (offset + limit));
+      String errorMessage = (cause != null && !Strings.isNullOrEmpty(cause.getMessage()))
+        ? String.format("%s %s", batchMessage, cause.getMessage())
+        : batchMessage;
+      if (cause instanceof ServiceNowAPIException) {
+        ServiceNowAPIException apiException = (ServiceNowAPIException) cause;
+        throw new ServiceNowAPIException(errorMessage, apiException.getCause(), apiException.getHttpResponse(), false);
+      }
+      throw new ServiceNowAPIException(errorMessage, cause, null, false);
     }
 
     return results;
