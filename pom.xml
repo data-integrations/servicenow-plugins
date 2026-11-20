@@ -558,6 +558,17 @@
           </plugin>
         </plugins>
       </build>
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-bom</artifactId>
+            <version>4.1.96.Final</version>
+            <type>pom</type>
+            <scope>import</scope>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
       <dependencies>
         <dependency>
           <groupId>io.cdap.tests.e2e</groupId>
