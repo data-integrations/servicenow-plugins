@@ -200,39 +200,27 @@ public class ServiceNowTableAPIClientImpl extends RestAPIClient {
   }
 
   /**
-   * Attempt four times with an exponential delay of 120 seconds to fetch the list of records from ServiceNow table when
-   * RetryableException is thrown          .
+   * Fetches the list of records from a ServiceNow table with HTTP GET retries handled by
+   * {@link #executeGetWithRetries}, wrapping any unrecovered failure with batch offset context.
    *
-   * @param tableName The ServiceNow table name
-   * @param valueType The value type
-   * @param offset    The number of records to skip
-   * @param limit     The number of records to be fetched
+   * @param tableName   The ServiceNow table name
+   * @param valueType   The value type
+   * @param filterQuery An encoded query to filter the records
+   * @param offset      The number of records to skip
+   * @param limit       The number of records to be fetched
    * @return The list of Map; each Map representing a table row
+   * @throws ServiceNowAPIException If fetching the batch fails after retries or due to a non-retryable error
    */
   public List<Map<String, String>> fetchTableRecordsRetryableMode(String tableName, SourceValueType valueType,
                                                                   String filterQuery, int offset,
                                                                   int limit) throws ServiceNowAPIException {
-    final List<Map<String, String>> results = new ArrayList<>();
-    Callable<Boolean> fetchRecords = () -> {
-      results.addAll(fetchTableRecords(tableName, valueType, filterQuery, offset, limit));
-      return true;
-    };
-
-    Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
-      .retryIfException(this::isExceptionRetryable)
-      .withWaitStrategy(WaitStrategies.exponentialWait(ServiceNowConstants.WAIT_TIME, TimeUnit.MILLISECONDS))
-      .withStopStrategy(StopStrategies.stopAfterAttempt(ServiceNowConstants.MAX_NUMBER_OF_RETRY_ATTEMPTS))
-      .build();
-
     try {
-      retryer.call(fetchRecords);
-    } catch (RetryException | ExecutionException e) {
+      return fetchTableRecords(tableName, valueType, filterQuery, offset, limit);
+    } catch (ServiceNowAPIException e) {
       throw new ServiceNowAPIException(
           String.format("Data Recovery failed for batch %s to %s.", offset, (offset + limit)),
           e, null, false);
     }
-
-    return results;
   }
 
   /**
