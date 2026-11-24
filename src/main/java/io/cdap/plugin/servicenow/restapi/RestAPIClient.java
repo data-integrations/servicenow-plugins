@@ -154,21 +154,23 @@ public abstract class RestAPIClient {
         throw response.getException();
       }
       return response;
-    } catch (RetryException e) {
-      // Execution successful, returned retryable error and retries exhausted
-      Attempt<?> apiResponseAttempt = e.getLastFailedAttempt();
-      if (apiResponseAttempt.hasException()) {
-        // last attempt has execution failure
-        throw new ServiceNowAPIException(apiResponseAttempt.getExceptionCause(), null);
-      } else {
-        // last execution attempt was successful but has an error response
-        // if execution is successful, it's expected to have a exception in response object
-        RestAPIResponse response = (RestAPIResponse) apiResponseAttempt.getResult();
-        throw response.getException();
+    } catch (RetryException | ExecutionException e) {
+      if (e instanceof RetryException) {
+        // Execution successful, returned retryable error and retries exhausted
+        Attempt<?> apiResponseAttempt = ((RetryException) e).getLastFailedAttempt();
+        if (!apiResponseAttempt.hasException()) {
+          // last execution attempt was successful but has an error response
+          // if execution is successful, it's expected to have a exception in response object
+          RestAPIResponse response = (RestAPIResponse) apiResponseAttempt.getResult();
+          ServiceNowAPIException apiException = response.getException();
+          throw new ServiceNowAPIException(apiException.getMessage(), apiException.getCause(),
+              apiException.getHttpResponse(), false);
+        }
       }
-    } catch (ExecutionException e) {
       // Execution failed with error
-      throw new ServiceNowAPIException(e, null);
+      Throwable cause = e.getCause();
+      throw new ServiceNowAPIException(
+          cause != null ? cause.getMessage() : null, cause, null, false);
     }
   }
 
