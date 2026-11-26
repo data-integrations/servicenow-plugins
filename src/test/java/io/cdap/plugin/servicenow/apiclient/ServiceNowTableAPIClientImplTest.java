@@ -1,83 +1,144 @@
 package io.cdap.plugin.servicenow.apiclient;
 
+import com.github.rholder.retry.Retryer;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.plugin.servicenow.connector.ServiceNowConnectorConfig;
+import io.cdap.plugin.servicenow.restapi.RestAPIRequest;
 import io.cdap.plugin.servicenow.restapi.RestAPIResponse;
 import io.cdap.plugin.servicenow.util.SchemaType;
+import io.cdap.plugin.servicenow.util.ServiceNowConstants;
 import io.cdap.plugin.servicenow.util.SourceValueType;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+
 public class ServiceNowTableAPIClientImplTest {
 
-  @Rule
-  public ExpectedException exceptionRule = ExpectedException.none();
-  @Test
-  public void testFetchTableRecordsRetryableMode_RetriesAndSucceeds() throws ServiceNowAPIException {
-    ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
-    ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
-    List<Map<String, String>> mockResults = new ArrayList<>();
-    mockResults.add(new HashMap<String, String>() {{
-      put("keyTest", "valueTest");
-    }});
+  private static RestAPIResponse buildErrorResponse(int statusCode, String message) {
     HttpResponse mockResponse = Mockito.mock(HttpResponse.class);
-    Mockito.when(mockResponse.getStatusLine()).thenReturn(Mockito.mock(StatusLine.class));
-    Mockito.when(mockResponse.getStatusLine().getStatusCode()).thenReturn(HttpStatus.SC_REQUEST_TIMEOUT);
-    Mockito.doThrow(new ServiceNowAPIException("Retryable Error", mockResponse))
-            .doReturn(mockResults)
-                .when(implSpy).fetchTableRecords(
-            Mockito.anyString(),
-            Mockito.any(),
-            Mockito.anyString(),
-            Mockito.anyInt(),
-            Mockito.anyInt());
-    List<Map<String, String>> receivedResults =
-        implSpy.fetchTableRecordsRetryableMode(
-            "test", SourceValueType.SHOW_DISPLAY_VALUE, "", 0, 0);
-    Mockito.verify(implSpy, Mockito.times(2)).fetchTableRecords(
-        Mockito.anyString(),
-        Mockito.any(),
-        Mockito.anyString(),
-        Mockito.anyInt(),
-        Mockito.anyInt());
-    Assert.assertEquals(receivedResults, mockResults);
+    StatusLine statusLine = Mockito.mock(StatusLine.class);
+    Mockito.when(statusLine.getStatusCode()).thenReturn(statusCode);
+    Mockito.when(mockResponse.getStatusLine()).thenReturn(statusLine);
+    return new RestAPIResponse(
+        Collections.emptyMap(), null, new ServiceNowAPIException(message, mockResponse));
+  }
+
+  private static class FakeTableAPIClient extends ServiceNowTableAPIClientImpl {
+    private final Queue<RestAPIResponse> responses;
+    private final RestAPIResponse fallbackResponse;
+    private int fetchTableRecordsCalls;
+    private int executeGetCalls;
+
+    FakeTableAPIClient(
+        ServiceNowConnectorConfig conf,
+        RestAPIResponse fallbackResponse,
+        RestAPIResponse... scriptedResponses) {
+      super(conf, true);
+      this.responses = new ArrayDeque<>(Arrays.asList(scriptedResponses));
+      this.fallbackResponse = fallbackResponse;
+    }
+
+    @Override
+    public String getAccessToken() {
+      return "dummy-access-token";
+    }
+
+    @Override
+    public List<Map<String, String>> fetchTableRecords(
+        String tableName, SourceValueType valueType, String filterQuery, int offset, int limit)
+        throws ServiceNowAPIException {
+      fetchTableRecordsCalls++;
+      return super.fetchTableRecords(tableName, valueType, filterQuery, offset, limit);
+    }
+
+    @Override
+    public RestAPIResponse executeGet(RestAPIRequest request) {
+      executeGetCalls++;
+      return responses.isEmpty() ? fallbackResponse : responses.poll();
+    }
+
+    @Override
+    protected Retryer<RestAPIResponse> getRetryer() {
+      return getRetryer(attempt -> { });
+    }
   }
 
   @Test
-  public void testFetchTableRecordsRetryableMode_nonRetryable()
-      throws ServiceNowAPIException {
+  public void testFetchTableRecordsRetryableMode_RetriesAndSucceeds() throws ServiceNowAPIException {
     ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
-    ServiceNowTableAPIClientImpl impl = new ServiceNowTableAPIClientImpl(mockConfig, true);
-    ServiceNowTableAPIClientImpl implSpy = Mockito.spy(impl);
-    HttpResponse mockResponse = Mockito.mock(HttpResponse.class);
-    Mockito.when(mockResponse.getStatusLine()).thenReturn(Mockito.mock(StatusLine.class));
-    Mockito.when(mockResponse.getStatusLine().getStatusCode()).thenReturn(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-    Mockito.doThrow(
-        new ServiceNowAPIException("Non-retryable Error", mockResponse))
-        .doReturn(new ArrayList<>())
-        .when(implSpy).fetchTableRecords(
-            Mockito.anyString(),
-            Mockito.any(),
-            Mockito.anyString(),
-            Mockito.anyInt(),
-            Mockito.anyInt());
-    exceptionRule.expect(ServiceNowAPIException.class);
-    exceptionRule.expectMessage("Data Recovery failed for batch 0 to 0.");
-    implSpy.fetchTableRecordsRetryableMode(
-        "test", SourceValueType.SHOW_DISPLAY_VALUE, "", 0, 0);
+    Mockito.when(mockConfig.getRestApiEndpoint()).thenReturn("https://example.service-now.com");
+    RestAPIResponse timeoutResponse =
+        buildErrorResponse(HttpStatus.SC_REQUEST_TIMEOUT, "Retryable Error");
+    RestAPIResponse successResponse =
+        new RestAPIResponse(
+            Collections.emptyMap(), "{\"result\":[{\"keyTest\":\"valueTest\"}]}", null);
+    FakeTableAPIClient client =
+        new FakeTableAPIClient(mockConfig, successResponse, timeoutResponse, successResponse);
+
+    List<Map<String, String>> receivedResults =
+        client.fetchTableRecordsRetryableMode(
+            "test", SourceValueType.SHOW_DISPLAY_VALUE, "", 0, 10);
+
+    Assert.assertEquals(1, client.fetchTableRecordsCalls);
+    Assert.assertEquals(2, client.executeGetCalls);
+    Assert.assertEquals(
+        Collections.singletonList(Collections.singletonMap("keyTest", "valueTest")),
+        receivedResults);
+  }
+
+  @Test
+  public void testFetchTableRecordsRetryableMode_RetriesExhausted_DoesNotMultiplyRetries() {
+    ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
+    Mockito.when(mockConfig.getRestApiEndpoint()).thenReturn("https://example.service-now.com");
+    RestAPIResponse rateLimitResponse = buildErrorResponse(429, "Too Many Requests");
+    FakeTableAPIClient client = new FakeTableAPIClient(mockConfig, rateLimitResponse);
+
+    ServiceNowAPIException thrownException = null;
+    try {
+      client.fetchTableRecordsRetryableMode(
+          "test", SourceValueType.SHOW_DISPLAY_VALUE, "", 0, 100);
+    } catch (ServiceNowAPIException e) {
+      thrownException = e;
+    }
+
+    Assert.assertNotNull(thrownException);
+    Assert.assertEquals("Data Recovery failed for batch 0 to 100.", thrownException.getMessage());
+    Assert.assertFalse(thrownException.isErrorRetryable());
+    Assert.assertEquals(1, client.fetchTableRecordsCalls);
+    Assert.assertEquals(ServiceNowConstants.MAX_NUMBER_OF_RETRY_ATTEMPTS, client.executeGetCalls);
+  }
+
+  @Test
+  public void testFetchTableRecordsRetryableMode_nonRetryable() throws ServiceNowAPIException {
+    ServiceNowConnectorConfig mockConfig = Mockito.mock(ServiceNowConnectorConfig.class);
+    Mockito.when(mockConfig.getRestApiEndpoint()).thenReturn("https://example.service-now.com");
+    RestAPIResponse serverErrorResponse =
+        buildErrorResponse(HttpStatus.SC_INTERNAL_SERVER_ERROR, "Non-retryable Error");
+    FakeTableAPIClient client = new FakeTableAPIClient(mockConfig, serverErrorResponse);
+
+    ServiceNowAPIException thrownException = null;
+    try {
+      client.fetchTableRecordsRetryableMode(
+          "test", SourceValueType.SHOW_DISPLAY_VALUE, "", 0, 0);
+    } catch (ServiceNowAPIException e) {
+      thrownException = e;
+    }
+
+    Assert.assertNotNull(thrownException);
+    Assert.assertEquals("Data Recovery failed for batch 0 to 0.", thrownException.getMessage());
+    Assert.assertFalse(thrownException.isErrorRetryable());
+    Assert.assertEquals(1, client.fetchTableRecordsCalls);
+    Assert.assertEquals(1, client.executeGetCalls);
   }
 
   @Test
