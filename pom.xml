@@ -55,12 +55,12 @@
     <!-- properties for script build step that creates the config files for the artifacts -->
     <widgets.dir>widgets</widgets.dir>
     <docs.dir>docs</docs.dir>
-    <app.parents>system:cdap-data-pipeline[6.12.0-SNAPSHOT,7.0.0-SNAPSHOT)</app.parents>
+    <app.parents>system:cdap-data-pipeline[6.11.2-SNAPSHOT,6.11.7-SNAPSHOT]</app.parents>
     <!-- this is here because project.basedir evaluates to null in the script build step -->
     <main.basedir>${project.basedir}</main.basedir>
     <jee.version>7</jee.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <cdap.version>6.12.0-SNAPSHOT</cdap.version>
+    <cdap.version>6.11.7-SNAPSHOT</cdap.version>
     <cdap.plugin.version>2.10.0</cdap.plugin.version>
     <guava.version>33.8.0-jre</guava.version>
     <hadoop.version>3.3.6</hadoop.version>
@@ -427,8 +427,8 @@
         <version>1.1.0</version>
         <configuration>
           <cdapArtifacts>
-            <parent>system:cdap-data-pipeline[6.12.0-SNAPSHOT,7.0.0-SNAPSHOT)</parent>
-            <parent>system:cdap-data-streams[6.12.0-SNAPSHOT,7.0.0-SNAPSHOT)</parent>
+            <parent>system:cdap-data-pipeline[6.11.2-SNAPSHOT,6.11.7-SNAPSHOT]</parent>
+            <parent>system:cdap-data-streams[6.11.2-SNAPSHOT,6.11.7-SNAPSHOT]</parent>
           </cdapArtifacts>
         </configuration>
         <executions>
